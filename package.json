@@ -1,9 +1,9 @@
 {
-  "name": "my-v0-project",
+  "name": "convoai-quickstart-web-nextjs",
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "20.10.0"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "next dev",
