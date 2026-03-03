@@ -11,6 +11,7 @@ export interface ClientStartRequest {
   rtc_codec?: number;
   input_modalities?: string[];
   output_modalities?: string[];
+  use_custom_llm?: boolean;
 }
 
 interface MicrosoftTTSParams {

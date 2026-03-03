@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import {
   ClientStartRequest,
@@ -7,6 +7,65 @@ import {
   TTSConfig,
   TTSVendor,
 } from '@/types/conversation';
+
+// Helper function to build ASR configuration based on vendor
+function getASRConfig() {
+  const vendor = process.env.NEXT_ASR_VENDOR || 'ares';
+
+  if (vendor === 'ares') {
+    // Agora's built-in ASR — no external API key required
+    return {
+      language: 'en-US',
+      vendor: 'ares',
+      params: {},
+    };
+  }
+
+  if (vendor === 'soniox') {
+    if (!process.env.NEXT_SONIOX_API_KEY) {
+      throw new Error('NEXT_SONIOX_API_KEY is required when NEXT_ASR_VENDOR=soniox');
+    }
+    return {
+      language: 'en-US',
+      vendor: 'soniox',
+      params: {
+        api_key: process.env.NEXT_SONIOX_API_KEY,
+        language_hints: ['en', 'es'],
+      },
+    };
+  }
+
+  if (vendor === 'microsoft') {
+    if (!process.env.NEXT_MICROSOFT_STT_KEY || !process.env.NEXT_MICROSOFT_STT_REGION) {
+      throw new Error('NEXT_MICROSOFT_STT_KEY and NEXT_MICROSOFT_STT_REGION are required when NEXT_ASR_VENDOR=microsoft');
+    }
+    return {
+      language: 'en-US',
+      vendor: 'microsoft',
+      params: {
+        key: process.env.NEXT_MICROSOFT_STT_KEY,
+        region: process.env.NEXT_MICROSOFT_STT_REGION,
+      },
+    };
+  }
+
+  if (vendor === 'deepgram') {
+    if (!process.env.NEXT_DEEPGRAM_API_KEY) {
+      throw new Error('NEXT_DEEPGRAM_API_KEY is required when NEXT_ASR_VENDOR=deepgram');
+    }
+    return {
+      vendor: 'deepgram',
+      params: {
+        url: 'wss://api.deepgram.com/v1/listen',
+        key: process.env.NEXT_DEEPGRAM_API_KEY,
+        model: process.env.NEXT_DEEPGRAM_MODEL || 'nova-3',
+        language: process.env.NEXT_DEEPGRAM_LANGUAGE || 'en',
+      },
+    };
+  }
+
+  throw new Error(`Unsupported ASR vendor: ${vendor}`);
+}
 
 // Helper function to validate TTS configuration and return config
 function getTTSConfig(vendor: TTSVendor): TTSConfig {
@@ -95,9 +154,7 @@ function getValidatedConfig() {
   };
 
   // Get ASR Configuration
-  const asrConfig = {
-    api_key: process.env.NEXT_SONIOX_API_KEY || '',
-  };
+  const asrConfig = getASRConfig();
 
   return {
     agora: agoraConfig,
@@ -108,12 +165,46 @@ function getValidatedConfig() {
   };
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const config = getValidatedConfig();
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name, input_modalities, output_modalities } =
-      body;
+    const {
+      requester_id,
+      channel_name,
+      input_modalities,
+      output_modalities,
+      use_custom_llm,
+    } = body;
+
+    // When use_custom_llm=true, Agora's cloud calls our /api/chat/completions
+    // endpoint. Because Agora makes the request from its own servers, the URL
+    // must be publicly reachable — localhost won't work.
+    //
+    // In development:  run `ngrok http 3000` and set NEXT_CUSTOM_LLM_URL to
+    //                  https://<your-ngrok-subdomain>.ngrok.io/api/chat/completions
+    // In production:   set NEXT_CUSTOM_LLM_URL to
+    //                  https://<your-deployed-domain>/api/chat/completions
+    // Resolve the LLM URL — either the custom proxy or the direct LLM endpoint.
+    let llmUrl: string;
+    if (use_custom_llm) {
+      const rawCustomUrl = process.env.NEXT_CUSTOM_LLM_URL;
+      if (!rawCustomUrl) {
+        return NextResponse.json(
+          { error: 'NEXT_CUSTOM_LLM_URL must be set when use_custom_llm=true. Point it at your publicly reachable domain (ngrok in dev, deployed URL in prod).' },
+          { status: 500 }
+        );
+      }
+      // Accept bare domain or full path — normalise to always end with the
+      // /api/chat/completions path that Agora's agent must call.
+      const base = rawCustomUrl.replace(/\/+$/, '');
+      llmUrl = base.endsWith('/api/chat/completions')
+        ? base
+        : `${base}/api/chat/completions`;
+    } else {
+      llmUrl = config.llm.url!;
+    }
+
 
     // Generate a unique name for the conversation
     const timestamp = Date.now();
@@ -312,20 +403,17 @@ Ask these, adapting to their answers:
         remote_rtc_uids: [requester_id],
         enable_string_uid: isStringUID(config.agora.agentUid),
         idle_timeout: 30,
-        asr: {
-          language: "en-US",
-          vendor: "soniox",
-          params: {
-            api_key: config.asr.api_key,
-            language_hints: [
-              "es",
-              "en"
-            ]
-          }
-        },
+        asr: config.asr,
         llm: {
-          url: config.llm.url,
-          api_key: config.llm.api_key,
+          url: llmUrl,
+          // In custom LLM mode Agora forwards api_key as a Bearer token to our
+          // proxy. We use a dedicated shared secret (NEXT_CUSTOM_LLM_SECRET) so
+          // the proxy can authenticate Agora's requests without exposing the real
+          // LLM key. Fall back to empty string if the secret isn't configured
+          // (acceptable for local dev, not for production).
+          api_key: use_custom_llm
+            ? (process.env.NEXT_CUSTOM_LLM_SECRET ?? '')
+            : config.llm.api_key,
           system_messages: [
             {
               role: 'system',
@@ -336,7 +424,7 @@ Ask these, adapting to their answers:
           failure_message: 'Please wait a moment.',
           max_history: 10,
           params: {
-            model: config.llm.model || 'ep-20250112091547-ddq88',
+            model: config.llm.model || 'gpt-4o',
             max_tokens: 1024,
             temperature: 0.7,
             top_p: 0.95,
