@@ -15,8 +15,8 @@ Thank you for your interest in contributing! This document provides guidelines f
 1. Fork and clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/conversational-ai-nextjs-client.git
-cd conversational-ai-nextjs-client
+git clone https://github.com/YOUR_USERNAME/agent-quickstart-nextjs.git
+cd agent-quickstart-nextjs
 ```
 
 2. Install dependencies:

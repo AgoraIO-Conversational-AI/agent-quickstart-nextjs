@@ -34,8 +34,8 @@ You must have an Agora account and a project to use this application.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/AgoraIO-Community/conversational-ai-nextjs-client
-cd conversational-ai-nextjs-client
+git clone https://github.com/AgoraIO-Conversational-AI/agent-quickstart-nextjs.git
+cd agent-quickstart-nextjs
 ```
 
 2. Install dependencies:
@@ -85,7 +85,7 @@ pnpm dev
 
 This project is configured for quick deployments to Vercel.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAgoraIO-Community%2Fconversational-ai-nextjs-client&project-name=conversational-ai-nextjs-client&repository-name=conversational-ai-nextjs-client&env=NEXT_PUBLIC_AGORA_APP_ID,NEXT_AGORA_APP_CERTIFICATE,NEXT_PUBLIC_AGENT_UID,NEXT_LLM_URL,NEXT_LLM_API_KEY,NEXT_DEEPGRAM_API_KEY,NEXT_ELEVENLABS_API_KEY&envDescription=API%20keys%20and%20credentials%20needed%20to%20run%20the%20app&envLink=https://github.com/AgoraIO-Community/conversational-ai-nextjs-client%23prerequisites&demo-title=Conversational%20AI%20Demo&demo-description=A%20Next.js-based%20web-app%20for%20conversational%20AI%20agents&demo-image=https://raw.githubusercontent.com/AgoraIO-Community/conversational-ai-nextjs-client/main/.github/assets/Conversation-Ai-Client.gif&defaultValues=NEXT_LLM_URL=https://api.openai.com/v1/chat/completions)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs&project-name=agent-quickstart-nextjs&repository-name=agent-quickstart-nextjs&env=NEXT_PUBLIC_AGORA_APP_ID,NEXT_AGORA_APP_CERTIFICATE,NEXT_PUBLIC_AGENT_UID,NEXT_LLM_URL,NEXT_LLM_API_KEY,NEXT_DEEPGRAM_API_KEY,NEXT_ELEVENLABS_API_KEY&envDescription=API%20keys%20and%20credentials%20needed%20to%20run%20the%20app&envLink=https%3A%2F%2Fgithub.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs%23prerequisites&demo-title=Conversational%20AI%20Demo&demo-description=A%20Next.js-based%20web-app%20for%20conversational%20AI%20agents&demo-image=https%3A%2F%2Fraw.githubusercontent.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs%2Fmain%2F.github%2Fassets%2FConversation-Ai-Client.gif&defaultValues=NEXT_LLM_URL=https://api.openai.com/v1/chat/completions)
 
 This will:
 
