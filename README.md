@@ -16,15 +16,13 @@ This application demonstrates how to build a production-ready conversational AI 
 ## Guides and Documentation
 
 - [Guide.md](./DOCS/GUIDE.md) - Complete step-by-step guide on how to build this application from scratch.
-- [User Interaction Diagram](./DOCS/User-Interaction-Diagram.md) - Visual diagram showing how the application interacts with different services.
-- [Text Streaming Guide](./DOCS/TEXT_STREAMING_GUIDE.md) - Deep dive into implementing real-time conversation transcriptions.
-- [Microphone Selector Implementation](./DOCS/MICROPHONE_SELECTOR_IMPLEMENTATION.md) - Guide for adding device selection functionality.
+- [Text Streaming Guide](./DOCS/TEXT_STREAMING_GUIDE.md) - Deep dive into real-time conversation transcriptions using the toolkit and UI kit.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- [Node.js](https://nodejs.org/) (version 16.x or higher)
+- [Node.js](https://nodejs.org/) (version 22.x or higher)
 - [pnpm](https://pnpm.io/) (version 8.x or higher)
 
 You must have an Agora account and a project to use this application.
@@ -49,7 +47,7 @@ pnpm install
 3. Create a `.env.local` file in the root directory and add your environment variables:
 
 ```bash
-cp .env.local.example .env.local
+cp env.local.example .env.local
 ```
 
 The following environment variables are required:
@@ -146,18 +144,21 @@ The application is built with a modular component architecture:
 
 - **`LandingPage.tsx`**: Entry point that invites the agent when you click "Try it now!" and manages the conversation lifecycle with proper agent cleanup on end
 - **`ConversationComponent.tsx`**: Main conversation container handling RTC and RTM connections, audio/text streaming, and the End Conversation flow
-- **`MicrophoneButton.tsx`**: Interactive button with built-in audio visualization for microphone control
 - **`MicrophoneSelector.tsx`**: Dropdown component for selecting audio input devices with hot-swap support
-- **`ConvoTextStream.tsx`**: Real-time text transcription display with smart scrolling and message management
-- **`AudioVisualizer.tsx`**: Visual feedback component showing audio frequency data for remote users
+
+### Agora Packages
+
+- **`agora-agent-uikit`**: Pre-built conversation UI components used directly in `ConversationComponent`:
+  - `AudioVisualizer` — animated frequency bars that respond to the agent's audio track
+  - `ConvoTextStream` — floating chat panel showing live and completed transcript turns
+  - `MicButtonWithVisualizer` (from `agora-agent-uikit/rtc`) — mic button with built-in Web Audio visualization
+  - `transcriptToMessageList` — converts toolkit transcript items into UI-ready message objects
+- **`agora-agent-client-toolkit`**: `AgoraVoiceAI` class that subscribes to RTM transcript events and normalizes them into a simple message list
+- **`agora-agent-server-sdk`**: Server-side SDK used in API routes to start and stop the AI agent
 
 ### Utilities
 
-- **`lib/conversational-ai-api/`**: Official Agora ConversationalAIAPI toolkit for managing RTC/RTM conversations
-  - `index.ts`: Main ConversationalAIAPI class with event handling
-  - `type.ts`: TypeScript type definitions for the toolkit
-  - `utils/`: Event helpers, logging, and transcript rendering
-- **`lib/utils.ts`**: Helper functions including markdown rendering for chat messages
+- **`lib/utils.ts`**: Helper functions including the shadcn `cn` class merge utility
 - **`types/conversation.ts`**: TypeScript type definitions for conversation data structures
 
 ## Contributing
@@ -208,19 +209,17 @@ The application provides the following API endpoints:
 
 ### Text Streaming Architecture
 
-The text streaming feature uses Agora's official ConversationalAIAPI toolkit with RTM for reliable real-time transcriptions:
+The text streaming feature uses `agora-agent-client-toolkit` with RTM for reliable real-time transcriptions:
 
 1. **RTM Client** establishes a real-time messaging connection alongside RTC for audio
-2. **ConversationalAIAPI** (`lib/conversational-ai-api/`) processes incoming RTM messages and manages conversation state
-3. **Event Subscriptions** handle transcript updates, agent state changes, metrics, and errors
-4. **ConversationComponent** manages message state and updates, separating in-progress messages from completed ones
-5. **ConvoTextStream** renders the UI with smart scrolling and visual indicators for message status
+2. **`AgoraVoiceAI`** (from `agora-agent-client-toolkit`) subscribes to the RTM channel, processes transcript events, and emits `TRANSCRIPT_UPDATED`
+3. **`ConversationComponent`** handles the event, remaps local user UIDs, and updates React state with separated in-progress and completed turns
+4. **`ConvoTextStream`** (from `agora-agent-uikit`) renders the chat panel with smart scrolling and streaming indicators
 
 Key features:
 - **Dual RTC + RTM tokens** for secure access to both audio and messaging channels
 - **Audio PTS metadata** enabled for accurate transcription timing synchronization
-- **Modern turn detection** with configurable interrupt behavior (replaces deprecated VAD)
-- **Agent metrics and error reporting** via RTM data channel
+- **Modern turn detection** with configurable interrupt behavior
 - **Proper resource cleanup** when conversations end
 
 ### Microphone Device Management
@@ -234,10 +233,9 @@ The MicrophoneSelector component provides:
 
 ### Audio Visualization
 
-Both the MicrophoneButton and AudioVisualizer components use the Web Audio API:
+`AudioVisualizer` and `MicButtonWithVisualizer` (from `agora-agent-uikit`) use the Web Audio API:
 
-- Creates an `AudioContext` and `AnalyserNode`
-- Connects to the Agora audio track's MediaStream
+- Connects to the Agora audio track's `MediaStream` via an `AnalyserNode`
 - Uses `getByteFrequencyData()` to extract frequency information
 - Animates visual bars using `requestAnimationFrame` for smooth 60fps updates
 
@@ -252,7 +250,7 @@ This application uses a dual-channel architecture for optimal performance:
 - **Audio PTS Metadata**: Enables precise synchronization between audio playback and transcription display
 
 ### Conversation Management
-- **ConversationalAIAPI Toolkit**: Official Agora toolkit managing the complete conversation lifecycle
+- **`agora-agent-client-toolkit`**: `AgoraVoiceAI` class managing the complete transcript lifecycle
 - **Event-Driven Architecture**: Real-time updates for transcripts, agent state changes, and system events
 - **Turn Detection**: Modern voice activity detection with configurable interrupt behavior
 - **Resource Cleanup**: Automatic cleanup of RTC, RTM, and agent resources when conversations end

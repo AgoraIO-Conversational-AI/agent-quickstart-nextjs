@@ -25,6 +25,12 @@ body {
 
 .chatbox.expanded {
   height: 600px;
+  overflow: hidden; /* clip scroll area at rounded corners */
+}
+
+/* flex-1 scroll area needs min-height:0 or it grows past the container height */
+.chatbox.expanded > div:last-child {
+  min-height: 0;
 }
 
 /* Mobile responsive heights */
@@ -119,4 +125,44 @@ strong {
 
 .animate-chat-pulse {
   animation: chat-pulse 2s ease-in-out infinite;
+}
+
+/* ConvoTextStream: force fixed width and push it higher above the mic controls */
+#chatbox {
+  width: 24rem !important;  /* 384px — same as the md min/max-w-96 the uikit already uses */
+  left: auto !important;
+  bottom: 7rem !important;  /* ~112px — clears the mic button (3.5rem) with comfortable margin */
+}
+
+/* Chat bubble toggle button: remove the border-2 border-white ring from the uikit default */
+#chatbox button[aria-label="Open transcription"] {
+  border: none !important;
+}
+
+/* MicButtonWithVisualizer: parent flex can stretch the <button> unevenly — force a true circle */
+.conversation-mic-host {
+  flex-shrink: 0;
+}
+.conversation-mic-host > button {
+  aspect-ratio: 1 / 1;
+  width: 3rem;
+  height: 3rem;
+  min-width: 3rem;
+  min-height: 3rem;
+  max-width: 3rem;
+  max-height: 3rem;
+  border-radius: 9999px;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible; /* Web Audio bar visualizer in bottom band; avoid clipping */
+}
+@media (min-width: 640px) {
+  .conversation-mic-host > button {
+    width: 3.5rem;
+    height: 3.5rem;
+    min-width: 3.5rem;
+    min-height: 3.5rem;
+    max-width: 3.5rem;
+    max-height: 3.5rem;
+  }
 }

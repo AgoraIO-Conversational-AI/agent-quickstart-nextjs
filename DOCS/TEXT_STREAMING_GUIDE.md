@@ -8,21 +8,23 @@ This guide focuses on adding real-time text transcriptions to your audio-based A
 
 ## Prerequisites
 
-Install the Agora client toolkit for text streaming:
+Install the Agora client toolkit and UI kit:
 
 ```bash
-pnpm add agora-client-toolkit
+pnpm add agora-agent-client-toolkit agora-agent-uikit agora-rtm
 ```
 
-The `agora-client-toolkit` provides the `AgoraVoiceAI` class (and related types) for receiving transcription data over RTM, managing message state, and emitting updates via events.
+- **`agora-agent-client-toolkit`** provides the `AgoraVoiceAI` class for receiving transcription data over RTM, managing message state, and emitting updates via events.
+- **`agora-agent-uikit`** provides the `ConvoTextStream` component and helpers that turn toolkit events into a chat UI with no custom implementation required.
+- **`agora-rtm`** is the Agora Real-Time Messaging SDK — the transport layer that carries transcript data from the agent to the client.
 
 Why bother adding text when the primary interaction is voice? Good question! Here's why it's a game-changer:
 
-1.  **Accessibility is Key**: Text opens up your app to users with hearing impairments. Inclusivity matters!
-2.  **Memory Aid**: Let's be honest, we all forget things. A text transcript lets users quickly scan back through the conversation.
-3.  **Loud Places, No Problem**: Ever tried having a voice call in a noisy cafe? Text transcriptions ensure the message gets through, even if the audio is hard to hear.
-4.  **Did it Hear Me Right?**: Seeing the transcription confirms the AI understood the user correctly (or reveals when it didn't!).
-5.  **Beyond Voice**: Sometimes, information like lists, code snippets, or website URLs are just easier to digest visually. Text streaming enables true multi-modal interaction.
+1. **Accessibility is Key**: Text opens up your app to users with hearing impairments. Inclusivity matters!
+2. **Memory Aid**: A text transcript lets users quickly scan back through the conversation.
+3. **Loud Places, No Problem**: Transcriptions ensure the message gets through, even if the audio is hard to hear.
+4. **Did it Hear Me Right?**: Seeing the transcription confirms the AI understood the user correctly (or reveals when it didn't!).
+5. **Beyond Voice**: Lists, code snippets, and URLs are easier to digest visually. Text streaming enables true multi-modal interaction.
 
 Ready to add this superpower to your app? Let's dive in.
 
@@ -30,820 +32,309 @@ Ready to add this superpower to your app? Let's dive in.
 
 Adding text streaming involves three main players in your codebase:
 
-1.  **The Brains (`agora-client-toolkit`)**: The `AgoraVoiceAI` class from the `agora-client-toolkit` package. It uses both RTC and RTM to receive transcription data, manages message states (e.g., "is the AI still talking?"), and emits updates via events.
-2.  **The Face (`components/ConvoTextStream.tsx`)**: This is your UI component. It takes the processed messages from the `ConversationComponent` and displays them. Think chat bubbles, scrolling, and animations for streaming text. Customize it to match your app's look and feel.
-3.  **The Conductor (`components/ConversationComponent.tsx`)**: This component handles the Agora RTC/RTM connection, initializes `AgoraVoiceAI` from `agora-client-toolkit`, subscribes to transcript events, maps the data to message items, and passes it down to `ConvoTextStream`.
+1. **The Brains (`agora-agent-client-toolkit`)**: The `AgoraVoiceAI` class. It uses RTM to receive transcription data, manages message states (e.g., "is the AI still talking?"), and emits updates via events.
+2. **The Face (`ConvoTextStream` from `agora-agent-uikit`)**: The pre-built chat UI component. It takes the processed messages from `ConversationComponent` and displays them — chat bubbles, smart scrolling, streaming indicators — all included.
+3. **The Conductor (`ConversationComponent.tsx`)**: Handles the Agora RTC/RTM connection, initializes `AgoraVoiceAI`, subscribes to transcript events, remaps UIDs, and passes data down to `ConvoTextStream`.
 
-Here's a simplified view of how they communicate:
+Here's how they communicate:
 
 ```mermaid
 flowchart LR
-    A[User/AI via Agora RTC/RTM] -- Raw Data --> B(AgoraVoiceAI)
+    A[User/AI via Agora RTM] -- Raw Data --> B(AgoraVoiceAI)
     B -- TRANSCRIPT_UPDATED --> C(ConversationComponent State)
-    C -- Data Props --> D(ConvoTextStream UI)
-    A --> C
+    C -- messageList + currentInProgressMessage --> D(ConvoTextStream UI)
 ```
 
-Essentially, raw data comes from Agora via RTM, `AgoraVoiceAI` processes it and emits transcript events, the `ConversationComponent` maps the event payload to message items and updates state, then passes the data to `ConvoTextStream` for display.
+Raw data arrives from the agent over RTM. `AgoraVoiceAI` processes it and emits transcript events. `ConversationComponent` remaps UIDs and updates state. `ConvoTextStream` renders the result.
 
 ## Following the Data: The Message Lifecycle
-
-Understanding how a transcription message travels from the network to the screen:
 
 ```mermaid
 graph LR
     A[Raw Data via RTM] --> B(AgoraVoiceAI Processes);
     B --> C(TRANSCRIPT_UPDATED Event);
     C --> D(ConversationComponent Maps & Updates State);
-    D --> E(UI Renders the Update);
+    D --> E(ConvoTextStream Renders);
 
     subgraph RTM [Agora RTM]
         A
     end
-    subgraph API [AgoraVoiceAI]
+    subgraph Toolkit [agora-agent-client-toolkit]
         B
         C
     end
     subgraph ConvoComp [ConversationComponent]
         D
     end
-    subgraph ConvoStream [ConvoTextStream]
+    subgraph UIKit [agora-agent-uikit]
         E
     end
 ```
 
-1.  **RTM Stream**: Transcription data arrives via Agora RTM. This can be user speech or AI agent output.
-2.  **Message Processing**: The `AgoraVoiceAI` processes these raw chunks, identifies user vs. agent, and tracks turn status.
-3.  **Event Emission**: The API emits `TRANSCRIPT_UPDATED` with a `chatHistory` array of `ITranscriptHelperItem` objects.
-4.  **State Updates**: The `ConversationComponent` maps the event payload to message items (e.g., `TurnStatus.END` → completed), separates completed and in-progress messages, and updates React state.
-5.  **UI Rendering**: React re-renders `ConvoTextStream` with the new message list, displaying the latest text.
+1. **RTM Stream**: Transcription data arrives via Agora RTM — both user speech and AI agent output.
+2. **Message Processing**: `AgoraVoiceAI` processes raw chunks, identifies user vs. agent, and tracks turn status.
+3. **Event Emission**: Emits `TRANSCRIPT_UPDATED` with a `TranscriptHelperItem[]` array.
+4. **State Updates**: `ConversationComponent` remaps UIDs, separates completed and in-progress turns, updates React state.
+5. **UI Rendering**: `ConvoTextStream` re-renders with the new message list.
 
-This pipeline ensures text appears smoothly and in real-time, handling messages that are still streaming ("in-progress"), fully delivered ("completed"), or cut off ("interrupted").
+This pipeline handles messages that are still streaming ("in-progress"), fully delivered ("completed"), or cut off ("interrupted").
 
 ## Decoding the Data: Message Types
-
-The `MessageEngine` needs to understand different kinds of transcription messages flowing through the RTC data channel. Here are the main ones:
 
 ### User Transcriptions (What the User Said)
 
 ```typescript
-// Represents a transcription of the user's speech
-export interface IUserTranscription extends ITranscriptionBase {
-  object: ETranscriptionObjectType.USER_TRANSCRIPTION; // Identifies as "user.transcription"
-  final: boolean; // Is this the final, complete transcription? (true/false)
+interface UserTranscription {
+  object: 'user.transcription';
+  final: boolean; // Is this the final, complete transcription?
 }
 ```
 
-This tells us what the speech-to-text system thinks the user said. The `final` flag is important – intermediate results might change slightly.
+The `final` flag is important — intermediate results may change slightly before the turn ends.
 
 ### Agent Transcriptions (What the AI is Saying)
 
 ```typescript
-// Represents a transcription of the AI agent's speech
-export interface IAgentTranscription extends ITranscriptionBase {
-  object: ETranscriptionObjectType.AGENT_TRANSCRIPTION; // Identifies as "assistant.transcription"
-  quiet: boolean; // Was this generated during a quiet period? (Useful for debugging)
-  turn_seq_id: number; // Unique ID for this conversational turn
-  turn_status: TurnStatus; // Is this message IN_PROGRESS, END, or INTERRUPTED?
+interface AgentTranscription {
+  object: 'assistant.transcription';
+  quiet: boolean;       // Was this generated during a quiet period?
+  turn_seq_id: number;  // Unique ID for this conversational turn
+  turn_status: TurnStatus; // IN_PROGRESS, END, or INTERRUPTED
 }
 ```
 
-This is the text the AI is generating, often sent word-by-word or phrase-by-phrase to the text-to-speech engine _and_ to the API for display. The `turn_status` is crucial for knowing when the AI starts and finishes speaking.
+Agent messages often arrive word-by-word or phrase-by-phrase. The `turn_status` tells you when the AI starts and finishes speaking.
 
 ### Message Interruptions
 
-```typescript
-// Signals that a previous message was interrupted
-export interface IMessageInterrupt {
-  object: ETranscriptionObjectType.MSG_INTERRUPTED; // Identifies as "message.interrupt"
-  message_id: string; // Which message got interrupted?
-  data_type: 'message';
-  turn_id: number; // The turn ID of the interrupted message
-  start_ms: number; // Timestamp info
-  send_ts: number; // Timestamp info
-}
-```
+When a user starts talking while the AI is still speaking, an interrupt is sent. `AgoraVoiceAI` uses this to mark the in-progress AI message as `INTERRUPTED` in the transcript history.
 
-This happens if, for example, the user starts talking while the AI is still speaking. The API uses this to mark the AI's interrupted message accordingly in the UI.
+## Meet `AgoraVoiceAI`: The Heart of Text Streaming
 
-The API intelligently handles these different types:
+The `AgoraVoiceAI` class from `agora-agent-client-toolkit` handles:
 
-- User messages often arrive as complete thoughts.
-- Agent messages frequently stream in piece by piece.
-- Interruptions update the status of messages already being processed.
+1. **Listening**: Subscribes to the RTM channel to receive transcription data.
+2. **Processing**: Decodes messages, identifies user vs. agent, and tracks turn status.
+3. **Managing State**: Tracks whether each message is streaming (`IN_PROGRESS`), finished (`END`), or cut off (`INTERRUPTED`).
+4. **Ordering & Buffering**: Ensures messages are handled in the correct sequence.
+5. **Notifying**: Emits `TRANSCRIPT_UPDATED` whenever the transcript history changes.
 
-It juggles all this using an internal queue and state management so your UI component doesn't have to worry about the raw complexity.
-
-## Meet the `AgoraVoiceAI`: The Heart of Text Streaming
-
-The `AgoraVoiceAI` class from the `agora-client-toolkit` package is Agora's toolkit for text streaming. It uses both RTC and RTM. Its main jobs are:
-
-1.  **Listening**: It subscribes to RTM channels to receive transcription data.
-2.  **Processing**: It decodes messages, identifies user vs. agent, and tracks turn status.
-3.  **Managing State**: It tracks whether each message is streaming (`IN_PROGRESS`), finished (`END`), or cut off (`INTERRUPTED`).
-4.  **Ordering & Buffering**: It ensures messages are handled in the correct sequence.
-5.  **Notifying**: It emits `TRANSCRIPT_UPDATED` whenever the chat history changes.
-
-### Key Concepts
-
-#### Message Status: Is it Done Yet?
-
-Every message has a status. The `agora-client-toolkit` uses `TurnStatus`; your UI can use the same or map to your own types:
+### Message Status
 
 ```typescript
-// From agora-client-toolkit
+// From agora-agent-client-toolkit
 export enum TurnStatus {
-  IN_PROGRESS = 0, // Still being received/streamed (e.g., AI is talking)
-  END = 1,         // Finished normally.
-  INTERRUPTED = 2, // Cut off before completion.
+  IN_PROGRESS = 0, // Still being received/streamed (AI is talking)
+  END = 1,         // Finished normally
+  INTERRUPTED = 2, // Cut off before completion
 }
 ```
 
-This helps your UI know how to display each message (e.g., add a "..." or a pulsing animation for in-progress messages).
+Your UI uses this to decide whether to show a streaming indicator or treat the message as final.
 
-#### Render Modes
-
-The toolkit supports different render modes via `TranscriptHelperMode`:
+### Render Modes
 
 ```typescript
-// From agora-client-toolkit
 export enum TranscriptHelperMode {
-  TEXT = 'text',   // Treats each agent message chunk as a complete block.
-  WORD = 'word',   // Word-by-word streaming when timing info is available.
-  CHUNK = 'chunk', // Chunk-based streaming.
+  TEXT = 'text',   // Each agent message chunk is a complete block (recommended)
+  WORD = 'word',   // Word-by-word streaming when timing info is available
+  CHUNK = 'chunk', // Chunk-based streaming
 }
 ```
 
 This quickstart uses `TranscriptHelperMode.TEXT`.
 
-#### The Output: What Your UI Gets
+## Wiring Up `AgoraVoiceAI` in `ConversationComponent`
 
-The `TRANSCRIPT_UPDATED` event provides `TranscriptHelperItem[]`. You can use these directly or map to your own display types:
-
-```typescript
-// TranscriptHelperItem from agora-client-toolkit includes:
-// uid, turn_id, text, status (TurnStatus), etc.
-```
-
-### Wiring Up the API
-
-Initialize `AgoraVoiceAI` from `agora-client-toolkit` inside `ConversationComponent` in a `useEffect` when the RTC client is connected and you have an RTM client.
+Initialize `AgoraVoiceAI` inside a `useEffect` that fires only after `joinSuccess` — this ensures the RTC client is connected and avoids React StrictMode double-initialization.
 
 ```typescript
-// Inside ConversationComponent.tsx - TRANSCRIPT_UPDATED handler
-import { AgoraVoiceAI, AgoraVoiceAIEvents } from 'agora-client-toolkit';
+import {
+  AgoraVoiceAI,
+  AgoraVoiceAIEvents,
+  TranscriptHelperMode,
+  TurnStatus,
+  type TranscriptHelperItem,
+  type UserTranscription,
+  type AgentTranscription,
+} from 'agora-agent-client-toolkit';
+import {
+  ConvoTextStream,
+  transcriptToMessageList,
+} from 'agora-agent-uikit';
 
-api.on(AgoraVoiceAIEvents.TRANSCRIPT_UPDATED, (chatHistory) => {
-  const mappedMessages = chatHistory.map((item) => ({
-    uid: parseInt(item.uid) || 0,
-    turn_id: item.turn_id,
-    text: item.text,
-    status: item.status === TurnStatus.END ? TurnStatus.END : TurnStatus.IN_PROGRESS,
-  }));
+type ToolkitMessage = TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>>;
 
-  const inProgressMsg = mappedMessages.find((m) => m.status === TurnStatus.IN_PROGRESS);
-  const finalMessages = mappedMessages.filter((m) => m.status === TurnStatus.END);
+// Inside ConversationComponent:
+const voiceAIRef = useRef<AgoraVoiceAI | null>(null);
+const [transcript, setTranscript] = useState<ToolkitMessage[]>([]);
 
-  setMessageList(finalMessages);
-  setCurrentInProgressMessage(inProgressMsg || null);
-});
-```
-
-The implementation also: creates an RTM client, logs in with the same token as RTC, subscribes to the channel, calls `AgoraVoiceAI.init()` (or the equivalent factory) with `rtcEngine`, `rtmEngine`, and `renderMode: TranscriptHelperMode.TEXT`, then `api.subscribeMessage(channel)`. On unmount, call `api.unsubscribe()`, `api.destroy()`, and RTM `logout()`. When token renewal is needed, renew both RTC and RTM tokens.
-
-## Building the UI: The `ConvoTextStream` Component
-
-Now, let's look at the example `ConvoTextStream` component (`components/ConvoTextStream.tsx`). Its job is to take the message data from the `ConversationComponent` and make it look like a chat interface.
-
-### Inputs (Props)
-
-It needs data from its parent (`ConversationComponent`):
-
-```typescript
-interface ConvoTextStreamProps {
-  messageList: TranscriptHelperItem[];
-  currentInProgressMessage?: TranscriptHelperItem | null;
-  agentUID: string | undefined;  // e.g. process.env.NEXT_AGENT_UID
-}
-```
-
-These props are directly populated from the state variables (`messageList`, `currentInProgressMessage`) that the `TRANSCRIPT_UPDATED` handler updates in the `ConversationComponent`.
-
-### Core UX Features
-
-A good chat UI needs more than just displaying text. Our example focuses on:
-
-#### Smart Scrolling
-
-Users hate losing their place when new messages arrive, _unless_ they're already at the bottom wanting to see the latest.
-
-```typescript
-// Ref for the scrollable chat area
-const scrollRef = useRef<HTMLDivElement>(null);
-// State to track if we should automatically scroll down
-const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-
-// Function to force scroll to the bottom
-const scrollToBottom = () => {
-  scrollRef.current?.scrollTo({
-    top: scrollRef.current.scrollHeight,
-    behavior: 'smooth', // Optional: make it smooth
-  });
-};
-
-// Detects when the user scrolls manually
-const handleScroll = () => {
-  if (!scrollRef.current) return;
-  const { scrollHeight, scrollTop, clientHeight } = scrollRef.current;
-  // Is the user within ~100px of the bottom?
-  const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-  // Only auto-scroll if the user is near the bottom
-  if (isNearBottom !== shouldAutoScroll) {
-    setShouldAutoScroll(isNearBottom);
-  }
-};
-
-// Effect to actually perform the auto-scroll when needed
 useEffect(() => {
-  // Check if a new message arrived OR if we should be auto-scrolling
-  const hasNewMessage = messageList.length > prevMessageLengthRef.current; // Track previous length
+  if (!joinSuccess || !client) return;
 
-  if ((hasNewMessage || shouldAutoScroll) && scrollRef.current) {
-    scrollToBottom();
-  }
+  let cancelled = false;
 
-  // Update previous length ref for next render
-  prevMessageLengthRef.current = messageList.length;
-}, [messageList, currentInProgressMessage?.text, shouldAutoScroll]); // Re-run when messages change or scroll state changes
+  (async () => {
+    try {
+      const ai = await AgoraVoiceAI.init({
+        rtcEngine: client,
+        rtmConfig: { rtmEngine: rtmClient },
+        renderMode: TranscriptHelperMode.TEXT,
+        enableLog: true,
+      });
 
-// Add the onScroll handler to the scrollable div
-// <div ref={scrollRef} onScroll={handleScroll} className="overflow-auto...">
-```
+      if (cancelled) {
+        try { ai.destroy(); } catch { /* ignore */ }
+        return;
+      }
 
-This logic ensures:
+      voiceAIRef.current = ai;
+      ai.on(AgoraVoiceAIEvents.TRANSCRIPT_UPDATED, (messages) => {
+        if (cancelled) return;
+        // The toolkit uses uid="0" as a sentinel for the local user's speech.
+        // The uikit treats uid===0 as an AI message, so we replace it with
+        // the actual RTC UID so user transcripts render on the correct side.
+        const localUID = String(client.uid);
+        const remapped = messages.map((m) =>
+          m.uid === '0' ? { ...m, uid: localUID } : m
+        );
+        setTranscript(remapped as ToolkitMessage[]);
+      });
 
-- If the user scrolls up to read history, the view stays put.
-- If the user is at the bottom, new messages automatically scroll into view.
-
-#### Throttled Scrolling During Streaming (Optional Enhancement)
-
-The previous `useEffect` for scrolling might trigger on _every single word_ update if using `WORD` mode. This can feel jittery. We can improve this by only scrolling significantly when _enough_ new text has arrived.
-
-```typescript
-// --- Add these refs ---
-const prevMessageTextRef = useRef(''); // Track the text of the last in-progress message
-const significantChangeScrollTimer = useRef<NodeJS.Timeout | null>(null); // Timer ref
-
-// --- New function to check for significant change ---
-const hasContentChangedSignificantly = (threshold = 20): boolean => {
-  if (!currentInProgressMessage) return false;
-
-  const currentText = currentInProgressMessage.text || '';
-  const textLengthDiff = currentText.length - prevMessageTextRef.current.length;
-
-  // Only trigger if a decent chunk of text arrived
-  const hasSignificantChange = textLengthDiff >= threshold;
-
-  // Update the ref *only if* it changed significantly
-  if (
-    hasSignificantChange ||
-    currentInProgressMessage.status !== TurnStatus.IN_PROGRESS
-  ) {
-    prevMessageTextRef.current = currentText;
-  }
-
-  return hasSignificantChange;
-};
-
-// --- Modify the scrolling useEffect ---
-useEffect(() => {
-  const hasNewCompleteMessage =
-    messageList.length > prevMessageLengthRef.current;
-  const streamingContentChanged = hasContentChangedSignificantly(); // Use the new check
-
-  // Clear any pending scroll timer if conditions change
-  if (significantChangeScrollTimer.current) {
-    clearTimeout(significantChangeScrollTimer.current);
-    significantChangeScrollTimer.current = null;
-  }
-
-  if (
-    (hasNewCompleteMessage || (streamingContentChanged && shouldAutoScroll)) &&
-    scrollRef.current
-  ) {
-    // Introduce a small delay to batch scrolls during rapid streaming
-    significantChangeScrollTimer.current = setTimeout(() => {
-      scrollToBottom();
-      significantChangeScrollTimer.current = null;
-    }, 50); // 50ms delay, adjust as needed
-  }
-
-  prevMessageLengthRef.current = messageList.length;
-
-  // Cleanup timer on unmount
-  return () => {
-    if (significantChangeScrollTimer.current) {
-      clearTimeout(significantChangeScrollTimer.current);
+      ai.subscribeMessage(agoraData.channel);
+      console.log('[ConversationalAI] toolkit connected, listening for transcripts');
+    } catch (error) {
+      if (!cancelled) console.error('[ConversationalAI] init error:', error);
     }
+  })();
+
+  return () => {
+    cancelled = true;
+    const ai = voiceAIRef.current;
+    if (ai) {
+      try { ai.unsubscribe(); ai.destroy(); } catch { /* ignore */ }
+      voiceAIRef.current = null;
+    }
+    setTranscript([]);
   };
-}, [messageList, currentInProgressMessage?.text, shouldAutoScroll]);
+  // client and rtmClient are stable for the component lifetime
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [joinSuccess]);
 ```
 
-This refined approach checks if more than, say, 20 characters have been added to the streaming message before triggering a scroll, making the experience smoother. It also uses a small `setTimeout` to batch scrolls that happen in quick succession.
+### Why `joinSuccess` instead of mount?
 
-#### Displaying the Streaming Message
+React StrictMode mounts components twice in development. The fake first mount's `joinSuccess` is always `false`, so the guard prevents any double-init. By the time `joinSuccess` becomes `true`, the double-mount cycle is already done.
 
-We need to decide when and how to show the `currentInProgressMessage`:
+### Why remap `uid === '0'`?
+
+The toolkit assigns `uid = "0"` to the local user's speech (since the user's actual UID is unknown at init time). The uikit's `isAIMessage` check treats `uid === 0` as an AI message. Without remapping, your own speech appears on the wrong side of the chat.
+
+## Separating In-Progress from Completed Messages
+
+`ConvoTextStream` takes two props: a list of completed turns and the currently streaming turn. Split them using `transcriptToMessageList` and the `TurnStatus` filter:
 
 ```typescript
-// Helper to decide if the streaming message should be shown
-const shouldShowStreamingMessage = (): boolean => {
-  return (
-    // Is there an in-progress message?
-    currentInProgressMessage !== null &&
-    // Is it *actually* in progress?
-    currentInProgressMessage.status === TurnStatus.IN_PROGRESS &&
-    // Does it have any text content yet?
-    currentInProgressMessage.text.trim().length > 0
-  );
-};
+import { TurnStatus } from 'agora-agent-client-toolkit';
+import { transcriptToMessageList } from 'agora-agent-uikit';
 
-// In the JSX, combine the lists for rendering:
-const allMessagesToRender = [...messageList];
-if (shouldShowStreamingMessage() && currentInProgressMessage) {
-  // Add the streaming message to the end of the list to be rendered
-  allMessagesToRender.push(currentInProgressMessage);
-}
+// Completed turns (END + INTERRUPTED) become the scrollable message history.
+// INTERRUPTED must be included — if the agent's first turn is cut off,
+// messageList stays empty and ConvoTextStream never auto-opens.
+const messageList = useMemo(
+  () =>
+    transcriptToMessageList(
+      transcript.filter((m) => m.status !== TurnStatus.IN_PROGRESS)
+    ),
+  [transcript]
+);
 
-// Then map over `allMessagesToRender`
-// {allMessagesToRender.map((message, index) => ( ... render message bubble ... ))}
+// The single in-progress turn, if any, is shown as a live streaming bubble.
+const currentInProgressMessage = useMemo(() => {
+  const m = transcript.find((x) => x.status === TurnStatus.IN_PROGRESS);
+  return m ? transcriptToMessageList([m])[0] ?? null : null;
+}, [transcript]);
 ```
 
-This ensures we only render the streaming message bubble when it's actively receiving non-empty text.
+## Rendering with `ConvoTextStream`
 
-#### Chat Controls (Toggle Open/Close, Expand)
-
-Basic UI controls enhance usability:
+Drop `ConvoTextStream` into your JSX. It handles smart scrolling, auto-open on first message, mobile responsiveness, and streaming indicators — no additional code needed.
 
 ```typescript
-const [isOpen, setIsOpen] = useState(false); // Is the chat window visible?
-const [isChatExpanded, setIsChatExpanded] = useState(false); // Is it in expanded mode?
-const hasSeenFirstMessageRef = useRef(false); // Track if the user has interacted or seen the first message
+import { ConvoTextStream } from 'agora-agent-uikit';
 
-// Toggle chat open/closed
-const toggleChat = () => {
-  const newState = !isOpen;
-  setIsOpen(newState);
-  // If opening, mark that the user has now 'seen' the chat
-  if (newState) {
-    hasSeenFirstMessageRef.current = true;
-  }
-};
-
-// Toggle between normal and expanded height
-const toggleChatExpanded = () => {
-  setIsChatExpanded(!isChatExpanded);
-};
-
-// --- Auto-Open Logic ---
-useEffect(() => {
-  const hasAnyMessage = messageList.length > 0 || shouldShowStreamingMessage();
-
-  // If there's a message, we haven't opened it yet automatically, and it's currently closed...
-  if (hasAnyMessage && !hasSeenFirstMessageRef.current && !isOpen) {
-    setIsOpen(true); // Open it!
-    hasSeenFirstMessageRef.current = true; // Mark as seen/auto-opened
-  }
-}, [messageList, currentInProgressMessage, isOpen]); // Rerun when messages or open state change
-```
-
-This includes logic to automatically pop open the chat window the first time a message appears, but only if the user hasn't manually closed it or interacted with it before.
-
-### Rendering the Messages
-
-The core rendering logic maps over the combined message list (`allMessagesToRender`) and creates styled divs for each message:
-
-```typescript
-// Inside the map function:
-<div
-  key={`${message.turn_id}-${message.uid}-${index}`} // More robust key
-  ref={index === allMessagesToRender.length - 1 ? lastMessageRef : null} // Ref for potential scrolling logic
-  className={cn(
-    'flex items-start gap-2 w-full mb-2', // Basic layout styles
-    // Is this message from the AI? Align left. Otherwise, align right.
-    isAIMessage(message) ? 'flex-row' : 'flex-row-reverse'
-  )}
->
-  {/* Conditionally render Avatar based on sender if needed */}
-  {/* {isAgent && <Avatar ... />} */}
-
-  {/* Message Bubble */}
-  <div
-    className={cn(
-      'max-w-[80%] rounded-xl px-3 py-2 text-sm md:text-base shadow-sm', // Slightly softer corners, shadow
-      isAgent ? 'bg-gray-100 text-gray-800' : 'bg-blue-500 text-white',
-      // Optional: Dim user message slightly if interrupted while IN_PROGRESS
-      message.status === TurnStatus.IN_PROGRESS && !isAgent && 'opacity-80'
-    )}
-  >
-    {message.text}
-  </div>
-</div>
-```
-
-This uses `tailwindcss` and the `cn` utility for conditional classes to:
-
-- Align user messages to the right, AI messages to the left.
-- Apply different background colors.
-
-## Putting It All Together: Integration in `ConversationComponent`
-
-Integrating the `ConvoTextStream` into your main `ConversationComponent` is straightforward once the `AgoraVoiceAI` from `agora-client-toolkit` is initialized and handling transcript events.
-
-1.  **Initialize AgoraVoiceAI**: Set up the API in a `useEffect` (with RTM client, login, channel subscription), subscribe to transcript events, map the payload to message items, and update `messageList` and `currentInProgressMessage`.
-2.  **Render `ConvoTextStream`**: In the `ConversationComponent`'s return JSX, include the `ConvoTextStream` and pass the necessary props:
-
-```typescript
+// In your ConversationComponent return:
 <ConvoTextStream
   messageList={messageList}
   currentInProgressMessage={currentInProgressMessage}
-  agentUID={agentUID}
+  agentUID={agentUID}  // e.g. process.env.NEXT_PUBLIC_AGENT_UID
 />
 ```
 
-The `AgoraVoiceAI` handles the data flow from RTM, the transcript event handler updates state in `ConversationComponent`, which then passes the data down to `ConvoTextStream` for display.
+`agentUID` tells the component which messages came from the AI vs. the user, so it can render them on the correct side of the chat.
 
-## Making It Your Own: Styling and Customization
+### What `ConvoTextStream` does for you
 
-The provided `ConvoTextStream` is a starting point. You'll likely want to customize its appearance.
+- **Smart auto-scroll**: Follows new messages when you're at the bottom; stays put when you scroll up to read history
+- **Auto-open**: Panel opens automatically when the first message arrives (desktop only)
+- **Streaming indicator**: Shows a live animation while the agent's current turn is in progress
+- **Interrupted turns**: Displays completed text even for turns the user cut off
+- **Mobile layout**: Fixed-width panel that positions above the mic controls
 
-### Styling Message Bubbles
+## Setting Up the RTM Client
 
-Modify the `tailwindcss` classes within `ConvoTextStream.tsx` to match your app's design system. Change colors, fonts, padding, border-radius, etc.
+The RTM client must be created, logged in, and subscribed to the channel **before** `ConversationComponent` mounts — the toolkit needs a fully connected RTM client at init time.
 
-```typescript
-// Example: Change AI bubble color
-    message.uid === 0 || message.uid.toString() === agentUID
-  ? 'bg-purple-100 text-purple-900' // Changed from gray
-  : 'bg-blue-500 text-white',
-```
-
-### Chat Window Appearance
-
-Adjust the positioning (`fixed`, `absolute`), size (`w-96`), background (`bg-white`), shadows (`shadow-lg`), etc., of the main chat container (`#chatbox` div and its children).
-
-### Streaming Indicator
-
-The `animate-pulse` class is a basic indicator. You could replace it with:
-
-- A custom CSS animation.
-- Adding an ellipsis (...) to the end of the `message.text`.
-- Displaying a small typing indicator icon next to the bubble.
+Create it in `LandingPage` as part of the session setup:
 
 ```typescript
-// Example: Adding ellipsis instead of pulse
-{
-  message.text;
-}
-{
-  message.status === TurnStatus.IN_PROGRESS ? '...' : '';
-}
-
-// Remove the animate-pulse class if using ellipsis
-// className={cn( ... , message.status === TurnStatus.IN_PROGRESS && 'animate-pulse' )}
+const { default: AgoraRTM } = await import('agora-rtm');
+const rtm = new AgoraRTM.RTM(
+  process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+  String(Date.now())
+);
+await rtm.login({ token: responseData.token });
+await rtm.subscribe(responseData.channel);
 ```
 
-### Expanding/Collapsing Behavior
+Then pass it as a prop to `ConversationComponent`. On end conversation, call `rtmClient.logout()` in `LandingPage` — RTM is owned by the same scope that created it.
 
-Modify the `toggleChatExpanded` function and the associated conditional classes (`isChatExpanded && 'expanded'`) to change how the chat window resizes or behaves when expanded. You might want it to take up more screen space or dock differently.
+## Token Requirements
 
-## Under the Hood: Message Processing Flow
-
-For the curious, here's how the `AgoraVoiceAI` processes transcription data from Agora RTM:
-
-```mermaid
-sequenceDiagram
-    participant RTM as Agora RTM
-    participant API as AgoraVoiceAI
-    participant Handler as Internal Transcript Handler
-    participant Callback as TRANSCRIPT_UPDATED Handler (in ConversationComponent)
-    participant State as ConversationComponent State
-
-    RTM-->>API: Receives transcription messages
-    API->>Handler: Process and update chat history
-    Handler->>Handler: Decode, identify user/agent, track turn status
-    API-->>Callback: emit TRANSCRIPT_UPDATED(chatHistory)
-    Callback->>State: setState({ messageList, currentInProgressMessage })
-```
-
-This shows: RTM delivers raw data, the API processes it and maintains chat history, then emits transcript events with the updated list. Your handler maps it to message items and updates React state.
-
-## Full Component Code (`ConvoTextStream.tsx`)
+The token used for RTM login must be generated with `RtcTokenBuilder.buildTokenWithRtm()` — a standard RTC-only token does not grant RTM access.
 
 ```typescript
-/* eslint-disable react-hooks/exhaustive-deps */
-'use client';
+// In your token generation route:
+import { RtcTokenBuilder, RtcRole } from 'agora-token';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  MessageCircle,
-  X,
-  ChevronsUpDown, // Changed icon
-  ArrowDownToLine, // Changed icon
-  Expand, // Added icon for expand
-  Shrink, // Added icon for shrink
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-  TranscriptHelperItem,
-  TurnStatus,
-  type UserTranscription,
-  type AgentTranscription,
-} from 'agora-client-toolkit';
-
-interface ConvoTextStreamProps {
-  messageList: TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>>[];
-  currentInProgressMessage?: TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>> | null;
-  agentUID: string | number | undefined; // Allow number or string
-}
-
-export default function ConvoTextStream({
-  messageList,
-  currentInProgressMessage = null,
-  agentUID,
-}: ConvoTextStreamProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const prevMessageLengthRef = useRef(messageList.length);
-  const prevMessageTextRef = useRef('');
-  const [isChatExpanded, setIsChatExpanded] = useState(false);
-  const hasSeenFirstMessageRef = useRef(false);
-  const significantChangeScrollTimer = useRef<NodeJS.Timeout | null>(null);
-
-  // --- Scrolling Logic ---
-
-  const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }, []);
-
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
-    const { scrollHeight, scrollTop, clientHeight } = scrollRef.current;
-    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150; // Increased threshold slightly
-    if (isNearBottom !== shouldAutoScroll) {
-      setShouldAutoScroll(isNearBottom);
-    }
-  }, [shouldAutoScroll]);
-
-  const hasContentChangedSignificantly = useCallback(
-    (threshold = 20): boolean => {
-      if (!currentInProgressMessage) return false;
-      const currentText = currentInProgressMessage.text || '';
-      // Only compare if the message is actually in progress
-      const baseText =
-        currentInProgressMessage.status === TurnStatus.IN_PROGRESS
-          ? prevMessageTextRef.current
-          : currentText;
-      const textLengthDiff = currentText.length - baseText.length;
-      const hasSignificantChange = textLengthDiff >= threshold;
-
-      // Update ref immediately if it's a significant change or message finished/interrupted
-      if (
-        hasSignificantChange ||
-        currentInProgressMessage.status !== TurnStatus.IN_PROGRESS
-      ) {
-        prevMessageTextRef.current = currentText;
-      }
-      return hasSignificantChange;
-    },
-    [currentInProgressMessage]
-  );
-
-  useEffect(() => {
-    const hasNewCompleteMessage =
-      messageList.length > prevMessageLengthRef.current;
-    // Check significance *only* if we should be auto-scrolling
-    const streamingContentChanged =
-      shouldAutoScroll && hasContentChangedSignificantly();
-
-    if (significantChangeScrollTimer.current) {
-      clearTimeout(significantChangeScrollTimer.current);
-      significantChangeScrollTimer.current = null;
-    }
-
-    if (
-      (hasNewCompleteMessage || streamingContentChanged) &&
-      scrollRef.current
-    ) {
-      // Debounce scrolling slightly
-      significantChangeScrollTimer.current = setTimeout(() => {
-        scrollToBottom();
-        significantChangeScrollTimer.current = null;
-      }, 50);
-    }
-
-    prevMessageLengthRef.current = messageList.length;
-
-    return () => {
-      if (significantChangeScrollTimer.current) {
-        clearTimeout(significantChangeScrollTimer.current);
-      }
-    };
-  }, [
-    messageList,
-    currentInProgressMessage?.text,
-    shouldAutoScroll,
-    scrollToBottom,
-    hasContentChangedSignificantly,
-  ]);
-
-  // --- Component Logic ---
-
-  const shouldShowStreamingMessage = useCallback((): boolean => {
-    return (
-      currentInProgressMessage !== null &&
-      currentInProgressMessage.status === TurnStatus.IN_PROGRESS &&
-      currentInProgressMessage.text.trim().length > 0
-    );
-  }, [currentInProgressMessage]);
-
-  const toggleChat = useCallback(() => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    if (newState) {
-      hasSeenFirstMessageRef.current = true; // Mark as seen if manually opened
-    }
-  }, [isOpen]);
-
-  const toggleChatExpanded = useCallback(() => {
-    setIsChatExpanded(!isChatExpanded);
-    // Attempt to scroll to bottom after expanding/shrinking
-    setTimeout(scrollToBottom, 50);
-  }, [isChatExpanded, scrollToBottom]);
-
-  // Auto-open logic
-  useEffect(() => {
-    const hasAnyMessage =
-      messageList.length > 0 || shouldShowStreamingMessage();
-    if (hasAnyMessage && !hasSeenFirstMessageRef.current && !isOpen) {
-      setIsOpen(true);
-      hasSeenFirstMessageRef.current = true;
-    }
-  }, [
-    messageList,
-    currentInProgressMessage,
-    isOpen,
-    shouldShowStreamingMessage,
-  ]);
-
-  // Combine messages for rendering
-  const allMessagesToRender = [...messageList];
-  if (shouldShowStreamingMessage() && currentInProgressMessage) {
-    allMessagesToRender.push(currentInProgressMessage);
-  }
-
-  // --- JSX ---
-  return (
-    // Use a more descriptive ID if needed, ensure z-index is appropriate
-    <div
-      id="agora-text-stream-chatbox"
-      className="fixed bottom-24 right-4 md:right-8 z-50"
-    >
-      {isOpen ? (
-        <div
-          className={cn(
-            'bg-white rounded-lg shadow-xl w-80 md:w-96 flex flex-col text-black transition-all duration-300 ease-in-out', // Adjusted width and added transition
-            // Dynamic height based on expanded state
-            isChatExpanded ? 'h-[60vh] max-h-[500px]' : 'h-80'
-          )}
-        >
-          {/* Header */}
-          <div className="p-2 border-b flex justify-between items-center shrink-0 bg-gray-50 rounded-t-lg">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleChatExpanded}
-              aria-label={isChatExpanded ? 'Shrink chat' : 'Expand chat'}
-            >
-              {isChatExpanded ? (
-                <Shrink className="h-4 w-4" />
-              ) : (
-                <Expand className="h-4 w-4" />
-              )}
-            </Button>
-            <h3 className="font-semibold text-sm md:text-base">Conversation</h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleChat}
-              aria-label="Close chat"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Message Area */}
-          <div
-            className="flex-1 overflow-y-auto scroll-smooth" // Use overflow-y-auto
-            ref={scrollRef}
-            onScroll={handleScroll}
-          >
-            <div className="p-3 md:p-4 space-y-3">
-              {allMessagesToRender.map((message, index) => {
-                const isAgent =
-                  message.uid === 0 ||
-                  message.uid?.toString() === agentUID?.toString();
-                return (
-                  <div
-                    key={`${message.turn_id}-${message.uid}-${index}`} // Use index as last resort for key part
-                    className={cn(
-                      'flex items-start gap-2 w-full',
-                      isAgent ? 'justify-start' : 'justify-end'
-                    )}
-                  >
-                    {/* Optional: Render avatar only for AI or based on settings */}
-                    {/* {isAgent && <Avatar ... />} */}
-
-                    {/* Message Bubble */}
-                    <div
-                      className={cn(
-                        'max-w-[80%] rounded-xl px-3 py-2 text-sm md:text-base shadow-sm', // Slightly softer corners, shadow
-                        isAgent
-                          ? 'bg-gray-100 text-gray-800'
-                          : 'bg-blue-500 text-white'
-                      )}
-                    >
-                      {message.text}
-                    </div>
-                  </div>
-                );
-              })}
-              {/* Add a small spacer at the bottom */}
-              <div className="h-2"></div>
-            </div>
-          </div>
-          {/* Optional Footer Area (e.g., for input later) */}
-          {/* <div className="p-2 border-t shrink-0">...</div> */}
-        </div>
-      ) : (
-        // Floating Action Button (FAB) to open chat
-        <Button
-          onClick={toggleChat}
-          className="rounded-full w-14 h-14 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:scale-105 transition-all duration-200"
-          aria-label="Open chat"
-        >
-          <MessageCircle className="h-6 w-6" />
-        </Button>
-      )}
-    </div>
-  );
-}
+const token = RtcTokenBuilder.buildTokenWithRtm(
+  APP_ID,
+  APP_CERTIFICATE,
+  channelName,
+  uid,
+  RtcRole.PUBLISHER,
+  expirationTime,
+  expirationTime,
+);
 ```
 
-This example component provides:
+When the token nears expiry, renew both the RTC and RTM tokens — they share the same token value:
 
-- Collapsed FAB (Floating Action Button) state.
-- Expandable chat window with smooth transitions.
-- Improved scrolling logic with debouncing.
-- Clearer styling distinctions between user and AI.
-- Basic accessibility attributes (`aria-label`, `aria-live`).
+```typescript
+const newToken = await onTokenWillExpire(joinedUID.toString());
+await client?.renewToken(newToken);
+await rtmClient.renewToken(newToken);
+```
 
-Remember to adapt the styling, icons (`lucide-react` used here), and specific UX behaviors to fit your application's needs.
+## Agent-Side Configuration
 
-## The Big Picture: How it Connects in the Main App
+Text streaming requires the agent to be started with RTM enabled. In `app/api/invite-agent/route.ts`:
 
-Let's quickly recap the data flow within the context of the entire application:
+```typescript
+const agent = new Agent({
+  // ...
+  advancedFeatures: { enable_rtm: true },
+});
+```
 
-1.  **User Speaks / AI Generates**: Audio happens in the Agora channel. STT and AI processing generate transcription data.
-2.  **RTM Channel**: This data (user transcriptions, AI transcriptions, interrupts) is sent over Agora RTM.
-3.  **`AgoraVoiceAI` Listens**: The API subscribes to the RTM channel and processes incoming messages.
-4.  **API Processes**: It decodes the data, manages message state (`IN_PROGRESS`, `END`, etc.), and maintains chat history.
-5.  **Event Emitted**: The API emits `TRANSCRIPT_UPDATED` with the updated `ITranscriptHelperItem[]`.
-6.  **`ConversationComponent` State Update**: Your handler maps the payload to `TranscriptHelperItem` and calls `setMessageList` and `setCurrentInProgressMessage`.
-7.  **React Re-renders**: The state update triggers a re-render of `ConversationComponent`.
-8.  **`ConvoTextStream` Receives Props**: The component receives the fresh `messageList` and `currentInProgressMessage` as props.
-9.  **UI Updates**: `ConvoTextStream` renders the new text (optionally via `renderMarkdownToHtml`), applies styles (e.g., pulse for in-progress), and handles scrolling.
-
-This cycle repeats as the conversation progresses, creating the real-time text streaming effect.
-
-## Where to Go Next
-
-You've now got the tools and understanding to add slick, real-time text streaming to your Agora conversational AI application! This isn't just a cosmetic addition; it significantly boosts usability and accessibility.
-
-**Your next steps:**
-
-1.  **Integrate**: Drop the `AgoraVoiceAI` initialization (with RTM) into your `ConversationComponent` and render the `ConvoTextStream` (or your custom version).
-2.  **Customize**: Style the `ConvoTextStream` to perfectly match your app's design language. Tweak animations and scrolling behavior for the best UX.
-3.  **Test**: Try it out in different scenarios – long messages, quick interruptions, noisy environments (if testing STT).
-4.  **Refine**: Based on testing, adjust VAD settings in your backend or fine-tune the UI behavior.
-
-For deeper dives into specific Agora features related to this, check out the [Official Documentation for "Live Subtitles"](https://docs.agora.io/en/conversational-ai/develop/subtitles?platform=web), which covers the underlying data channel mechanisms.
-
-Happy building, and enjoy building more engaging and accessible conversational experiences!
+Without `enable_rtm: true`, the agent joins the channel but never sends transcript messages over RTM, so `TRANSCRIPT_UPDATED` will never fire.

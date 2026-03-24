@@ -21,8 +21,11 @@ export interface AgentResponse {
   state: string;
 }
 
+import type { RTMClient } from 'agora-rtm';
+
 export interface ConversationComponentProps {
   agoraData: AgoraTokenData;
+  rtmClient: RTMClient;
   onTokenWillExpire: (uid: string) => Promise<string>;
   onEndConversation: () => void;
 }

@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@ai-sdk/openai':
         specifier: ^3.0.39
-        version: 3.0.41(zod@3.25.76)
+        version: 3.0.47(zod@3.25.76)
       '@hookform/resolvers':
         specifier: ^3.10.0
-        version: 3.10.0(react-hook-form@7.71.2(react@19.2.4))
+        version: 3.10.0(react-hook-form@7.72.0(react@19.2.4))
       '@radix-ui/react-accordion':
         specifier: ^1.2.2
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -95,27 +95,33 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.1.6
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      agent-server-sdk-ts:
+      agora-agent-client-toolkit:
+        specifier: ^1.1.0
+        version: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3))
+      agora-agent-client-toolkit-react:
+        specifier: ^1.1.0
+        version: 1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
+      agora-agent-server-sdk:
         specifier: ^1.0.0
         version: 1.0.0
-      agora-agent-client-toolkit:
-        specifier: ^0.1.0
-        version: 0.1.0(agora-rtc-sdk-ng@4.23.0)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.23.0))
+      agora-agent-uikit:
+        specifier: ^1.0.0
+        version: 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       agora-rtc-react:
         specifier: latest
         version: 2.5.1(react@19.2.4)
       agora-rtc-sdk-ng:
-        specifier: 4.23.0
-        version: 4.23.0
+        specifier: ^4.23.4
+        version: 4.24.3
       agora-rtm:
         specifier: latest
-        version: 2.2.3-2(agora-rtc-sdk-ng@4.23.0)
+        version: 2.2.3-2(agora-rtc-sdk-ng@4.24.3)
       agora-token:
         specifier: latest
         version: 2.0.5
       ai:
         specifier: ^6.0.107
-        version: 6.0.116(zod@3.25.76)
+        version: 6.0.136(zod@3.25.76)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.27(postcss@8.5.8)
@@ -142,7 +148,7 @@ importers:
         version: 0.454.0(react@19.2.4)
       next:
         specifier: ^16.1.6
-        version: 16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.1(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-themes:
         specifier: ^0.4.4
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -160,7 +166,7 @@ importers:
         version: 19.2.4(react@19.2.4)
       react-hook-form:
         specifier: ^7.54.2
-        version: 7.71.2(react@19.2.4)
+        version: 7.72.0(react@19.2.4)
       react-resizable-panels:
         specifier: ^2.1.7
         version: 2.1.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -207,29 +213,32 @@ importers:
 
 packages:
 
-  '@agora-js/media@4.23.0':
-    resolution: {integrity: sha512-rV0CGP5nhvd7XrzpCqN7Fud+W//c/+f0dMe7wPB+DS/ckeTVxSdg96cTfEJS9poeTdDUvfhHyi0iECLPfUjkKA==}
+  '@agora-js/media@4.24.3':
+    resolution: {integrity: sha512-aC471uaWWGSXnruoaJggi9Ltbp3ldYxMyIi61jOew960zVsHaw78YhTDVv27XX1NvPRqEPLyfyMGEX4av0xOKA==}
 
-  '@agora-js/report@4.23.0':
-    resolution: {integrity: sha512-ti2HZc8ITRgbmukHRa+ZlH4ecCByHdQpPVT6v3vIn+ihvqrxs3A871iLe1jbjbeGNuOwqcaznSoRXOVsREeq2A==}
+  '@agora-js/protocol@4.24.3':
+    resolution: {integrity: sha512-GWAV+J9wv53u5T/k4KAjsxQ9Y+n73bWc3dSBe7OHjWcSZQikcWRJoOtygQiZKWmpYV/ZW5LQ0R12jHI7GAG0cQ==}
 
-  '@agora-js/shared@4.23.0':
-    resolution: {integrity: sha512-gfcEJu/+vPvMKYcjyWqmQKo4d0r0yggl9AhktsTWjg6mhScv4Lt3B8JdGGXvlIP6R+horRHjxsqPCdCVs1N4/w==}
+  '@agora-js/report@4.24.3':
+    resolution: {integrity: sha512-A2Q13JbRlSYkEF0W6eMCJmnzmHSBzaWZORNnsS23GElwACSxoa2KTMcDp0MQhlsI9Ht6277ZuVSCdkT48A6Pwg==}
 
-  '@ai-sdk/gateway@3.0.66':
-    resolution: {integrity: sha512-SIQ0YY0iMuv+07HLsZ+bB990zUJ6S4ujORAh+Jv1V2KGNn73qQKnGO0JBk+w+Res8YqOFSycwDoWcFlQrVxS4A==}
+  '@agora-js/shared@4.24.3':
+    resolution: {integrity: sha512-PyKelGEuV/g4fTjDjANpBqPZMaY0NFdd0W4UcGtJ2rayVU+YAeztLvu4tpDbm14U4BG5dmz/N+VHckxFPgoIjQ==}
+
+  '@ai-sdk/gateway@3.0.78':
+    resolution: {integrity: sha512-wqfkgOyqWKKxGL47k8biYcm5i5ZHXjs58ZiQUroDoIcu158EpCZa2qDxdcmeLHDMzx7Pu5Ei/JUmA7OrZ5d8xA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@3.0.41':
-    resolution: {integrity: sha512-IZ42A+FO+vuEQCVNqlnAPYQnnUpUfdJIwn1BEDOBywiEHa23fw7PahxVtlX9zm3/zMvTW4JKPzWyvAgDu+SQ2A==}
+  '@ai-sdk/openai@3.0.47':
+    resolution: {integrity: sha512-bRsb2sDN5u+pKO3Kdr0flpxtL+cPwQ2uCo/pVyzIbj2I4AkKAokJHhw5JWLVOeEwdlYzWfmv+hzaiGarzUcTFQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@4.0.19':
-    resolution: {integrity: sha512-3eG55CrSWCu2SXlqq2QCsFjo3+E7+Gmg7i/oRVoSZzIodTuDSfLb3MRje67xE9RFea73Zao7Lm4mADIfUETKGg==}
+  '@ai-sdk/provider-utils@4.0.21':
+    resolution: {integrity: sha512-MtFUYI1/8mgDvRmaBDjbLJPFFrMG777AvSgyIFQtZHIMzm88R/12vYBBpnk7pfiWLFE1DSZzY4WDYzGbKAcmiw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -250,24 +259,27 @@ packages:
     resolution: {integrity: sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/parser@7.29.0':
-    resolution: {integrity: sha512-IyDgFV5GeDUVX4YdF/3CPULtVGSXXMLh1xVIgdCgxApktqnQV0r7/8Nqthg+8YLGaAtdyIlo2qIdZrbCv4+7ww==}
+  '@babel/parser@7.29.2':
+    resolution: {integrity: sha512-4GgRzy/+fsBa72/RZVJmGKPmZu9Byn8o4MoLpmNe1m8ZfYnz5emHLQz3U4gLud6Zwl0RZIcgiLD7Uq7ySFuDLA==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  '@babel/runtime@7.28.6':
-    resolution: {integrity: sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA==}
+  '@babel/runtime@7.29.2':
+    resolution: {integrity: sha512-JiDShH45zKHWyGe4ZNVRrCjBz8Nh9TMmZG1kh4QTK8hCBTWBi8Da+i7s1fJw7/lYpM4ccepSNfqzZ/QvABBi5g==}
     engines: {node: '>=6.9.0'}
 
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
+  '@bufbuild/protobuf@2.11.0':
+    resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
+
   '@date-fns/tz@1.4.1':
     resolution: {integrity: sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA==}
 
-  '@emnapi/runtime@1.9.0':
-    resolution: {integrity: sha512-QN75eB0IH2ywSpRpNddCRfQIhmJYBCJ1x5Lb3IscKAL8bMnVAKnRg8dCoXbHzVLLH7P38N2Z3mtulB7W0J0FKw==}
+  '@emnapi/runtime@1.9.1':
+    resolution: {integrity: sha512-VYi5+ZVLhpgK4hQ0TAjiQiZ6ol0oe4mBx7mVv7IflsiEp0OWoVsp/+f9Vc1hOhE0TtkORVrI1GvzyreqpgWtkA==}
 
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
@@ -443,53 +455,61 @@ packages:
     resolution: {integrity: sha512-VFHSsQAQp8y1NJvAJBpLs9I2shHE6hz9TwukocDObuUgGVAq62yZGbTgJg04Z3Fj0XSMWe0sJqGg5dhKGTV92A==}
     engines: {node: '>=v12.0.0'}
 
-  '@next/env@16.1.6':
-    resolution: {integrity: sha512-N1ySLuZjnAtN3kFnwhAwPvZah8RJxKasD7x1f8shFqhncnWZn4JMfg37diLNuoHsLAlrDfM3g4mawVdtAG8XLQ==}
+  '@lottiefiles/dotlottie-react@0.17.15':
+    resolution: {integrity: sha512-4wYAjsJhM28eUvJ/gT3KRM6fcyT7EM9n7PDrP71LaBTacc6bSN43qFTSJc1Li3QxUiraz23p0Q8EJBzXo8DsRw==}
+    peerDependencies:
+      react: ^17 || ^18 || ^19
 
-  '@next/swc-darwin-arm64@16.1.6':
-    resolution: {integrity: sha512-wTzYulosJr/6nFnqGW7FrG3jfUUlEf8UjGA0/pyypJl42ExdVgC6xJgcXQ+V8QFn6niSG2Pb8+MIG1mZr2vczw==}
+  '@lottiefiles/dotlottie-web@0.63.0':
+    resolution: {integrity: sha512-oYIkvu6E4n8fZH7ciQsVqamlUDeBnd6JbNYa1UWC/npkNzEHqM5saL3vk/nNorqdfjYwdcdmhLtYbnuwVy+3/Q==}
+
+  '@next/env@16.2.1':
+    resolution: {integrity: sha512-n8P/HCkIWW+gVal2Z8XqXJ6aB3J0tuM29OcHpCsobWlChH/SITBs1DFBk/HajgrwDkqqBXPbuUuzgDvUekREPg==}
+
+  '@next/swc-darwin-arm64@16.2.1':
+    resolution: {integrity: sha512-BwZ8w8YTaSEr2HIuXLMLxIdElNMPvY9fLqb20LX9A9OMGtJilhHLbCL3ggyd0TwjmMcTxi0XXt+ur1vWUoxj2Q==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@next/swc-darwin-x64@16.1.6':
-    resolution: {integrity: sha512-BLFPYPDO+MNJsiDWbeVzqvYd4NyuRrEYVB5k2N3JfWncuHAy2IVwMAOlVQDFjj+krkWzhY2apvmekMkfQR0CUQ==}
+  '@next/swc-darwin-x64@16.2.1':
+    resolution: {integrity: sha512-/vrcE6iQSJq3uL3VGVHiXeaKbn8Es10DGTGRJnRZlkNQQk3kaNtAJg8Y6xuAlrx/6INKVjkfi5rY0iEXorZ6uA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@next/swc-linux-arm64-gnu@16.1.6':
-    resolution: {integrity: sha512-OJYkCd5pj/QloBvoEcJ2XiMnlJkRv9idWA/j0ugSuA34gMT6f5b7vOiCQHVRpvStoZUknhl6/UxOXL4OwtdaBw==}
+  '@next/swc-linux-arm64-gnu@16.2.1':
+    resolution: {integrity: sha512-uLn+0BK+C31LTVbQ/QU+UaVrV0rRSJQ8RfniQAHPghDdgE+SlroYqcmFnO5iNjNfVWCyKZHYrs3Nl0mUzWxbBw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-arm64-musl@16.1.6':
-    resolution: {integrity: sha512-S4J2v+8tT3NIO9u2q+S0G5KdvNDjXfAv06OhfOzNDaBn5rw84DGXWndOEB7d5/x852A20sW1M56vhC/tRVbccQ==}
+  '@next/swc-linux-arm64-musl@16.2.1':
+    resolution: {integrity: sha512-ssKq6iMRnHdnycGp9hCuGnXJZ0YPr4/wNwrfE5DbmvEcgl9+yv97/Kq3TPVDfYome1SW5geciLB9aiEqKXQjlQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-x64-gnu@16.1.6':
-    resolution: {integrity: sha512-2eEBDkFlMMNQnkTyPBhQOAyn2qMxyG2eE7GPH2WIDGEpEILcBPI/jdSv4t6xupSP+ot/jkfrCShLAa7+ZUPcJQ==}
+  '@next/swc-linux-x64-gnu@16.2.1':
+    resolution: {integrity: sha512-HQm7SrHRELJ30T1TSmT706IWovFFSRGxfgUkyWJZF/RKBMdbdRWJuFrcpDdE5vy9UXjFOx6L3mRdqH04Mmx0hg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-linux-x64-musl@16.1.6':
-    resolution: {integrity: sha512-oicJwRlyOoZXVlxmIMaTq7f8pN9QNbdes0q2FXfRsPhfCi8n8JmOZJm5oo1pwDaFbnnD421rVU409M3evFbIqg==}
+  '@next/swc-linux-x64-musl@16.2.1':
+    resolution: {integrity: sha512-aV2iUaC/5HGEpbBkE+4B8aHIudoOy5DYekAKOMSHoIYQ66y/wIVeaRx8MS2ZMdxe/HIXlMho4ubdZs/J8441Tg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-win32-arm64-msvc@16.1.6':
-    resolution: {integrity: sha512-gQmm8izDTPgs+DCWH22kcDmuUp7NyiJgEl18bcr8irXA5N2m2O+JQIr6f3ct42GOs9c0h8QF3L5SzIxcYAAXXw==}
+  '@next/swc-win32-arm64-msvc@16.2.1':
+    resolution: {integrity: sha512-IXdNgiDHaSk0ZUJ+xp0OQTdTgnpx1RCfRTalhn3cjOP+IddTMINwA7DXZrwTmGDO8SUr5q2hdP/du4DcrB1GxA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@next/swc-win32-x64-msvc@16.1.6':
-    resolution: {integrity: sha512-NRfO39AIrzBnixKbjuo2YiYhB6o9d8v/ymU9m/Xk8cyVk+k7XylniXkHwjs4s70wedVffc6bQNbufk5v0xEm0A==}
+  '@next/swc-win32-x64-msvc@16.2.1':
+    resolution: {integrity: sha512-qvU+3a39Hay+ieIztkGSbF7+mccbbg1Tk25hc4JDylf8IHjYmY/Zm64Qq1602yPyQqvie+vf5T/uPwNxDNIoeg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -1245,6 +1265,9 @@ packages:
   '@types/node@22.19.15':
     resolution: {integrity: sha512-F0R/h2+dsy5wJAUe3tAU6oqa2qbWY5TpNfL/RGmo1y38hiyO1w3x2jPtt76wmuaJI4DQnOBu21cNXQ2STIUUWg==}
 
+  '@types/pako@2.0.4':
+    resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
+
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
     peerDependencies:
@@ -1252,6 +1275,9 @@ packages:
 
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
+
+  '@types/trusted-types@2.0.7':
+    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
   '@vercel/oidc@3.1.0':
     resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
@@ -1267,12 +1293,16 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  agent-server-sdk-ts@1.0.0:
-    resolution: {integrity: sha512-GFdGwhbo3wyQ8cB8Saf3UBukfZDbf03eQrmYpsNli6wrzThGqtbz1oav2iLldF3kgP04TnHO6+jamRmv7/+UAQ==}
+  agora-agent-client-toolkit-react@1.1.0:
+    resolution: {integrity: sha512-OgfpSSnpROnwbwtvyxtSbh3t/2V5+G8jRixzbfJbabU2oFSdsYdRt1ANk7GJTuQphW9Ji4PqBApcT67GMelv9w==}
     engines: {node: '>=18.0.0'}
+    peerDependencies:
+      agora-agent-client-toolkit: workspace:*
+      agora-rtc-react: '>=2.0.0'
+      react: '>=18.0.0'
 
-  agora-agent-client-toolkit@0.1.0:
-    resolution: {integrity: sha512-jWcOuC7by8fxkf55KhsyzFj3tH9Aup/tjn00+tZ5ML+vJaKnk5FerCefBrTXsj/XE42Bzwr0HAttzvowa4o74g==}
+  agora-agent-client-toolkit@1.1.0:
+    resolution: {integrity: sha512-BwPv1GU7ntgeI6KGy/szO6vZ7+Yw3CEnxj2gw9eUlcx7vd6d0j+on+BuufyKOOuA2AJ2DrSp93X1+EOIEN9QyQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       agora-rtc-sdk-ng: '>=4.23.4'
@@ -1281,14 +1311,37 @@ packages:
       agora-rtm:
         optional: true
 
+  agora-agent-server-sdk@1.0.0:
+    resolution: {integrity: sha512-FTuLqdb9yBJYpqsz5cbRvgNN1AEpW9oFyfzmc3lnbSpeTUhTqxGR+cavoSKqAWhuSklPFCTYbYqX9SPxoGqghg==}
+    engines: {node: '>=18.0.0'}
+
+  agora-agent-uikit@1.0.0:
+    resolution: {integrity: sha512-ASoboLqUj4a0y9L1Mc8G9/5/QML1xKMsbPa3aQhD8uFHT+hTT4fZVlM8A4d4sxXEC4yXTrzvQqwEO0wE5Gd75A==}
+    peerDependencies:
+      agora-agent-client-toolkit: ^1.1.0
+      agora-agent-client-toolkit-react: ^1.1.0
+      agora-rtc-react: '>=2.0.0'
+      agora-rtm-sdk: '>=2.0.0'
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+    peerDependenciesMeta:
+      agora-agent-client-toolkit:
+        optional: true
+      agora-agent-client-toolkit-react:
+        optional: true
+      agora-rtc-react:
+        optional: true
+      agora-rtm-sdk:
+        optional: true
+
   agora-rtc-react@2.5.1:
     resolution: {integrity: sha512-ORPbV02p8dZ2GhQxo5kTarc0BYjObc2IeqRPv9mi5/fxDI5nMY6kg54R5fUvLQU05H3Q5Kecq7M2kuZzHfNo5Q==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>=16.8'
 
-  agora-rtc-sdk-ng@4.23.0:
-    resolution: {integrity: sha512-/DVTowwsU0PpwTT/xXOa9UAB3qlVpLty2Cxsn+B0mEKHbXTd4P4cgeLaSCbxQFqDhYQAqpwyClxC5ABYBal5yA==}
+  agora-rtc-sdk-ng@4.24.3:
+    resolution: {integrity: sha512-DEz0+/jgsajZgWFG/uHijoMeheqr7YWUJ5AyubiqKt5vC1TF0/3v51vVl2aqupY+YkmJOg0q64B4AJcdpj/TBQ==}
 
   agora-rte-extension@1.2.4:
     resolution: {integrity: sha512-0ovZz1lbe30QraG1cU+ji7EnQ8aUu+Hf3F+a8xPml3wPOyUQEK6CTdxV9kMecr9t+fIDrGeW7wgJTsM1DQE7Nw==}
@@ -1301,8 +1354,8 @@ packages:
   agora-token@2.0.5:
     resolution: {integrity: sha512-0NcbzC3iuutlksv3b4bCMKHrW3pko6gdiGEMRo6APDice24kfXAuWyAlG9hRBrrPBVDShwm9/GUz2Scd3zuZQw==}
 
-  ai@6.0.116:
-    resolution: {integrity: sha512-7yM+cTmyRLeNIXwt4Vj+mrrJgVQ9RMIW5WO0ydoLoYkewIvsMcvUmqS4j2RJTUXaF1HphwmSKUMQ/HypNRGOmA==}
+  ai@6.0.136:
+    resolution: {integrity: sha512-cStC2i6FzQxHj9yVShcxq14yxP6Mbhp2kAheQTFvbIFd6hsn+izW7WrWW+AUH0Ek8Er8WImNkoYVDQ5Vy+rBjQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1344,8 +1397,8 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
-  baseline-browser-mapping@2.10.7:
-    resolution: {integrity: sha512-1ghYO3HnxGec0TCGBXiDLVns4eCSx4zJpxnHrlqFQajmhfKMQBzUGDdkMK7fUW7PTHTeLf+j87aTuKuuwWzMGw==}
+  baseline-browser-mapping@2.10.10:
+    resolution: {integrity: sha512-sUoJ3IMxx4AyRqO4MLeHlnGDkyXRoUG0/AI9fjK+vS72ekpV0yWVY7O0BVjmBcRtkNcsAO2QDZ4tdKKGoI6YaQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -1376,8 +1429,8 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
-  caniuse-lite@1.0.30001778:
-    resolution: {integrity: sha512-PN7uxFL+ExFJO61aVmP1aIEG4i9whQd4eoSCebav62UwDyp5OHh06zN4jqKSMePVgxHifCw1QJxdRkA1Pisekg==}
+  caniuse-lite@1.0.30001781:
+    resolution: {integrity: sha512-RdwNCyMsNBftLjW6w01z8bKEvT6e/5tpPVEgtn22TiLGlstHOVecsX2KHFkD5e/vRnIE4EGzpuIODb3mtswtkw==}
 
   catharsis@0.9.0:
     resolution: {integrity: sha512-prMTQVpcns/tzFgFVkVp6ak6RykZyWb3gu8ckUpd6YkTlacOd3DXGJjIpD4Q6zJirizvaiAjSSHlOsA+6sNh2A==}
@@ -1406,6 +1459,12 @@ packages:
 
   cmdk@1.0.4:
     resolution: {integrity: sha512-AnsjfHyHpQ/EFeAnG216WY7A5LiYCoZzCSygiLvfXC3H3LFGCprErteUcszaVluGOhuOTbJS3jWHrSDYPBBygg==}
+    peerDependencies:
+      react: ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^18 || ^19 || ^19.0.0-rc
+
+  cmdk@1.1.1:
+    resolution: {integrity: sha512-Vsv7kFaXm+ptHDMZ7izaRsP70GgrW9NBNGswt9OZaVBLlE0SNpDq8eu/VGXyF9r7M0azK3Wy7OlYXsuyYLFzHg==}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
@@ -1523,12 +1582,15 @@ packages:
   dom-helpers@5.2.1:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
 
+  dompurify@3.3.3:
+    resolution: {integrity: sha512-Oj6pzI2+RqBfFG+qOaOLbFXLQ90ARpcGG6UePL82bJLtdsa6CYJD7nmiU8MW9nQNOtCHV3lZ/Bzq1X0QYbBZCA==}
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  electron-to-chromium@1.5.313:
-    resolution: {integrity: sha512-QBMrTWEf00GXZmJyx2lbYD45jpI3TUFnNIzJ5BBc8piGUDwMPa1GV6HJWTZVvY/eiN3fSopl7NRbgGp9sZ9LTA==}
+  electron-to-chromium@1.5.321:
+    resolution: {integrity: sha512-L2C7Q279W2D/J4PLZLk7sebOILDSWos7bMsMNN06rK482umHUrh/3lM8G7IlHFOYip2oAg5nha1rCMxr/rs6ZQ==}
 
   embla-carousel-react@8.5.1:
     resolution: {integrity: sha512-z9Y0K84BJvhChXgqn2CFYbfEi6AwEr+FFVVKm/MqbTQ2zIzO1VQri6w67LcfpVF0AjbhwVMywDZqY4alYkjW5w==}
@@ -1887,8 +1949,8 @@ packages:
       react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
       react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
 
-  next@16.1.6:
-    resolution: {integrity: sha512-hkyRkcu5x/41KoqnROkfTm2pZVbKxvbZRuNvKXLRXxs3VfyO0WhY50TQS40EuKO9SW3rBj/sF3WbVwDACeMZyw==}
+  next@16.2.1:
+    resolution: {integrity: sha512-VaChzNL7o9rbfdt60HUj8tev4m6d7iC1igAy157526+cJlXOQu5LzsBXNT+xaJnTP/k+utSX5vMv7m0G+zKH+Q==}
     engines: {node: '>=20.9.0'}
     hasBin: true
     peerDependencies:
@@ -2056,8 +2118,8 @@ packages:
     peerDependencies:
       react: ^19.2.4
 
-  react-hook-form@7.71.2:
-    resolution: {integrity: sha512-1CHvcDYzuRUNOflt4MOq3ZM46AronNJtQ1S7tnX6YN4y72qhgiUItpacZUAQ0TyWYci3yz1X+rXaSxiuEm86PA==}
+  react-hook-form@7.72.0:
+    resolution: {integrity: sha512-V4v6jubaf6JAurEaVnT9aUPKFbNtDgohj5CIgVGyPHvT9wRx5OZHVjz31GsxnPNI278XMu+ruFz+wGOscHaLKw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -2226,6 +2288,9 @@ packages:
   tailwind-merge@2.6.1:
     resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
 
+  tailwind-merge@3.5.0:
+    resolution: {integrity: sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==}
+
   tailwindcss-animate@1.0.7:
     resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
     peerDependencies:
@@ -2357,44 +2422,55 @@ packages:
 
 snapshots:
 
-  '@agora-js/media@4.23.0':
+  '@agora-js/media@4.24.3':
     dependencies:
-      '@agora-js/report': 4.23.0
-      '@agora-js/shared': 4.23.0
+      '@agora-js/report': 4.24.3
+      '@agora-js/shared': 4.24.3
       agora-rte-extension: 1.2.4
       axios: 1.13.6
       webrtc-adapter: 8.2.0
     transitivePeerDependencies:
       - debug
 
-  '@agora-js/report@4.23.0':
+  '@agora-js/protocol@4.24.3':
     dependencies:
-      '@agora-js/shared': 4.23.0
+      '@agora-js/media': 4.24.3
+      '@agora-js/report': 4.24.3
+      '@agora-js/shared': 4.24.3
+      '@bufbuild/protobuf': 2.11.0
+      '@types/pako': 2.0.4
+      pako: 2.1.0
+    transitivePeerDependencies:
+      - debug
+
+  '@agora-js/report@4.24.3':
+    dependencies:
+      '@agora-js/shared': 4.24.3
       axios: 1.13.6
     transitivePeerDependencies:
       - debug
 
-  '@agora-js/shared@4.23.0':
+  '@agora-js/shared@4.24.3':
     dependencies:
       axios: 1.13.6
       ua-parser-js: 0.7.41
     transitivePeerDependencies:
       - debug
 
-  '@ai-sdk/gateway@3.0.66(zod@3.25.76)':
+  '@ai-sdk/gateway@3.0.78(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.19(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.21(zod@3.25.76)
       '@vercel/oidc': 3.1.0
       zod: 3.25.76
 
-  '@ai-sdk/openai@3.0.41(zod@3.25.76)':
+  '@ai-sdk/openai@3.0.47(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.19(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.21(zod@3.25.76)
       zod: 3.25.76
 
-  '@ai-sdk/provider-utils@4.0.19(zod@3.25.76)':
+  '@ai-sdk/provider-utils@4.0.21(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@standard-schema/spec': 1.1.0
@@ -2411,20 +2487,22 @@ snapshots:
 
   '@babel/helper-validator-identifier@7.28.5': {}
 
-  '@babel/parser@7.29.0':
+  '@babel/parser@7.29.2':
     dependencies:
       '@babel/types': 7.29.0
 
-  '@babel/runtime@7.28.6': {}
+  '@babel/runtime@7.29.2': {}
 
   '@babel/types@7.29.0':
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@bufbuild/protobuf@2.11.0': {}
+
   '@date-fns/tz@1.4.1': {}
 
-  '@emnapi/runtime@1.9.0':
+  '@emnapi/runtime@1.9.1':
     dependencies:
       tslib: 2.8.1
     optional: true
@@ -2446,9 +2524,9 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@hookform/resolvers@3.10.0(react-hook-form@7.71.2(react@19.2.4))':
+  '@hookform/resolvers@3.10.0(react-hook-form@7.72.0(react@19.2.4))':
     dependencies:
-      react-hook-form: 7.71.2(react@19.2.4)
+      react-hook-form: 7.72.0(react@19.2.4)
 
   '@img/colour@1.1.0':
     optional: true
@@ -2535,7 +2613,7 @@ snapshots:
 
   '@img/sharp-wasm32@0.34.5':
     dependencies:
-      '@emnapi/runtime': 1.9.0
+      '@emnapi/runtime': 1.9.1
     optional: true
 
   '@img/sharp-win32-arm64@0.34.5':
@@ -2565,30 +2643,37 @@ snapshots:
     dependencies:
       lodash: 4.17.23
 
-  '@next/env@16.1.6': {}
+  '@lottiefiles/dotlottie-react@0.17.15(react@19.2.4)':
+    dependencies:
+      '@lottiefiles/dotlottie-web': 0.63.0
+      react: 19.2.4
 
-  '@next/swc-darwin-arm64@16.1.6':
+  '@lottiefiles/dotlottie-web@0.63.0': {}
+
+  '@next/env@16.2.1': {}
+
+  '@next/swc-darwin-arm64@16.2.1':
     optional: true
 
-  '@next/swc-darwin-x64@16.1.6':
+  '@next/swc-darwin-x64@16.2.1':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@16.1.6':
+  '@next/swc-linux-arm64-gnu@16.2.1':
     optional: true
 
-  '@next/swc-linux-arm64-musl@16.1.6':
+  '@next/swc-linux-arm64-musl@16.2.1':
     optional: true
 
-  '@next/swc-linux-x64-gnu@16.1.6':
+  '@next/swc-linux-x64-gnu@16.2.1':
     optional: true
 
-  '@next/swc-linux-x64-musl@16.1.6':
+  '@next/swc-linux-x64-musl@16.2.1':
     optional: true
 
-  '@next/swc-win32-arm64-msvc@16.1.6':
+  '@next/swc-win32-arm64-msvc@16.2.1':
     optional: true
 
-  '@next/swc-win32-x64-msvc@16.1.6':
+  '@next/swc-win32-x64-msvc@16.2.1':
     optional: true
 
   '@nodelib/fs.scandir@2.1.5':
@@ -3368,6 +3453,8 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/pako@2.0.4': {}
+
   '@types/react-dom@19.2.3(@types/react@19.2.14)':
     dependencies:
       '@types/react': 19.2.14
@@ -3375,6 +3462,9 @@ snapshots:
   '@types/react@19.2.14':
     dependencies:
       csstype: 3.2.3
+
+  '@types/trusted-types@2.0.7':
+    optional: true
 
   '@vercel/oidc@3.1.0': {}
 
@@ -3384,29 +3474,61 @@ snapshots:
 
   acorn@8.16.0: {}
 
-  agent-server-sdk-ts@1.0.0:
+  agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4):
     dependencies:
-      agora-token: 2.0.5
+      agora-agent-client-toolkit: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3))
+      agora-rtc-react: 2.5.1(react@19.2.4)
+      react: 19.2.4
 
-  agora-agent-client-toolkit@0.1.0(agora-rtc-sdk-ng@4.23.0)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.23.0)):
+  agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)):
     dependencies:
-      agora-rtc-sdk-ng: 4.23.0
+      agora-rtc-sdk-ng: 4.24.3
     optionalDependencies:
-      '@agora-js/report': 4.23.0
-      agora-rtm: 2.2.3-2(agora-rtc-sdk-ng@4.23.0)
+      '@agora-js/report': 4.24.3
+      agora-rtm: 2.2.3-2(agora-rtc-sdk-ng@4.24.3)
       jszip: 3.10.1
     transitivePeerDependencies:
       - debug
+
+  agora-agent-server-sdk@1.0.0:
+    dependencies:
+      agora-token: 2.0.5
+
+  agora-agent-uikit@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      '@lottiefiles/dotlottie-react': 0.17.15(react@19.2.4)
+      '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@radix-ui/react-dropdown-menu': 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@radix-ui/react-popover': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@radix-ui/react-select': 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@radix-ui/react-slot': 1.2.4(@types/react@19.2.14)(react@19.2.4)
+      '@radix-ui/react-switch': 1.2.6(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      cmdk: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      dompurify: 3.3.3
+      lucide-react: 0.454.0(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      tailwind-merge: 3.5.0
+    optionalDependencies:
+      agora-agent-client-toolkit: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3))
+      agora-agent-client-toolkit-react: 1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
+      agora-rtc-react: 2.5.1(react@19.2.4)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
 
   agora-rtc-react@2.5.1(react@19.2.4):
     dependencies:
       react: 19.2.4
 
-  agora-rtc-sdk-ng@4.23.0:
+  agora-rtc-sdk-ng@4.24.3:
     dependencies:
-      '@agora-js/media': 4.23.0
-      '@agora-js/report': 4.23.0
-      '@agora-js/shared': 4.23.0
+      '@agora-js/media': 4.24.3
+      '@agora-js/protocol': 4.24.3
+      '@agora-js/report': 4.24.3
+      '@agora-js/shared': 4.24.3
       agora-rte-extension: 1.2.4
       axios: 1.13.6
       formdata-polyfill: 4.0.10
@@ -3418,9 +3540,9 @@ snapshots:
 
   agora-rte-extension@1.2.4: {}
 
-  agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.23.0):
+  agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3):
     dependencies:
-      agora-rtc-sdk-ng: 4.23.0
+      agora-rtc-sdk-ng: 4.24.3
 
   agora-token@2.0.5:
     dependencies:
@@ -3428,11 +3550,11 @@ snapshots:
       cuint: 0.2.2
       md5: 2.3.0
 
-  ai@6.0.116(zod@3.25.76):
+  ai@6.0.136(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 3.0.66(zod@3.25.76)
+      '@ai-sdk/gateway': 3.0.78(zod@3.25.76)
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.19(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.21(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
       zod: 3.25.76
 
@@ -3460,7 +3582,7 @@ snapshots:
   autoprefixer@10.4.27(postcss@8.5.8):
     dependencies:
       browserslist: 4.28.1
-      caniuse-lite: 1.0.30001778
+      caniuse-lite: 1.0.30001781
       fraction.js: 5.3.4
       picocolors: 1.1.1
       postcss: 8.5.8
@@ -3476,7 +3598,7 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
-  baseline-browser-mapping@2.10.7: {}
+  baseline-browser-mapping@2.10.10: {}
 
   binary-extensions@2.3.0: {}
 
@@ -3492,9 +3614,9 @@ snapshots:
 
   browserslist@4.28.1:
     dependencies:
-      baseline-browser-mapping: 2.10.7
-      caniuse-lite: 1.0.30001778
-      electron-to-chromium: 1.5.313
+      baseline-browser-mapping: 2.10.10
+      caniuse-lite: 1.0.30001781
+      electron-to-chromium: 1.5.321
       node-releases: 2.0.36
       update-browserslist-db: 1.2.3(browserslist@4.28.1)
 
@@ -3505,7 +3627,7 @@ snapshots:
 
   camelcase-css@2.0.1: {}
 
-  caniuse-lite@1.0.30001778: {}
+  caniuse-lite@1.0.30001781: {}
 
   catharsis@0.9.0:
     dependencies:
@@ -3546,6 +3668,18 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       use-sync-external-store: 1.6.0(react@19.2.4)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+
+  cmdk@1.1.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.14)(react@19.2.4)
+      '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.2.14)(react@19.2.4)
+      '@radix-ui/react-primitive': 2.1.4(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
@@ -3634,8 +3768,12 @@ snapshots:
 
   dom-helpers@5.2.1:
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       csstype: 3.2.3
+
+  dompurify@3.3.3:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
 
   dunder-proto@1.0.1:
     dependencies:
@@ -3643,7 +3781,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  electron-to-chromium@1.5.313: {}
+  electron-to-chromium@1.5.321: {}
 
   embla-carousel-react@8.5.1(react@19.2.4):
     dependencies:
@@ -3859,7 +3997,7 @@ snapshots:
 
   jsdoc@4.0.5:
     dependencies:
-      '@babel/parser': 7.29.0
+      '@babel/parser': 7.29.2
       '@jsdoc/salty': 0.2.10
       '@types/markdown-it': 14.1.2
       bluebird: 3.7.2
@@ -3979,25 +4117,25 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  next@16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.2.1(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
-      '@next/env': 16.1.6
+      '@next/env': 16.2.1
       '@swc/helpers': 0.5.15
-      baseline-browser-mapping: 2.10.7
-      caniuse-lite: 1.0.30001778
+      baseline-browser-mapping: 2.10.10
+      caniuse-lite: 1.0.30001781
       postcss: 8.4.31
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       styled-jsx: 5.1.6(react@19.2.4)
     optionalDependencies:
-      '@next/swc-darwin-arm64': 16.1.6
-      '@next/swc-darwin-x64': 16.1.6
-      '@next/swc-linux-arm64-gnu': 16.1.6
-      '@next/swc-linux-arm64-musl': 16.1.6
-      '@next/swc-linux-x64-gnu': 16.1.6
-      '@next/swc-linux-x64-musl': 16.1.6
-      '@next/swc-win32-arm64-msvc': 16.1.6
-      '@next/swc-win32-x64-msvc': 16.1.6
+      '@next/swc-darwin-arm64': 16.2.1
+      '@next/swc-darwin-x64': 16.2.1
+      '@next/swc-linux-arm64-gnu': 16.2.1
+      '@next/swc-linux-arm64-musl': 16.2.1
+      '@next/swc-linux-x64-gnu': 16.2.1
+      '@next/swc-linux-x64-musl': 16.2.1
+      '@next/swc-win32-arm64-msvc': 16.2.1
+      '@next/swc-win32-x64-msvc': 16.2.1
       '@opentelemetry/api': 1.9.0
       sharp: 0.34.5
     transitivePeerDependencies:
@@ -4146,7 +4284,7 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
-  react-hook-form@7.71.2(react@19.2.4):
+  react-hook-form@7.72.0(react@19.2.4):
     dependencies:
       react: 19.2.4
 
@@ -4196,7 +4334,7 @@ snapshots:
 
   react-transition-group@4.4.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
@@ -4340,6 +4478,8 @@ snapshots:
   supports-preserve-symlinks-flag@1.0.0: {}
 
   tailwind-merge@2.6.1: {}
+
+  tailwind-merge@3.5.0: {}
 
   tailwindcss-animate@1.0.7(tailwindcss@3.4.19):
     dependencies:
