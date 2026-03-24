@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, useRef, Suspense, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import type { RTMClient } from 'agora-rtm';
 import type {
@@ -14,20 +14,21 @@ const ConversationComponent = dynamic(() => import('./ConversationComponent'), {
   ssr: false,
 });
 
-// Dynamically import AgoraRTC and AgoraRTCProvider
+// Dynamically import AgoraRTCProvider (browser-only).
+// ConversationalAIProvider is set up inside ConversationComponent, gated on
+// joinSuccess, so it inits only after the RTC channel is joined.
 const AgoraProvider = dynamic(
   async () => {
-    const { AgoraRTCProvider, default: AgoraRTC } = await import(
-      'agora-rtc-react'
-    );
-
+    const { AgoraRTCProvider, default: AgoraRTC } = await import('agora-rtc-react');
     return {
-      default: ({ children }: { children: React.ReactNode }) => {
-        const client = useMemo(
-          () => AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }),
-          []
-        );
-        return <AgoraRTCProvider client={client}>{children}</AgoraRTCProvider>;
+      default: function AgoraProviders({ children }: { children: React.ReactNode }) {
+        // useRef persists across StrictMode's simulated unmount/remount, so only
+        // one RTC client is ever created per session (useMemo creates two in StrictMode).
+        const clientRef = useRef<ReturnType<typeof AgoraRTC.createClient> | null>(null);
+        if (!clientRef.current) {
+          clientRef.current = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+        }
+        return <AgoraRTCProvider client={clientRef.current}>{children}</AgoraRTCProvider>;
       },
     };
   },
@@ -36,6 +37,13 @@ const AgoraProvider = dynamic(
 
 export default function LandingPage() {
   const [showConversation, setShowConversation] = useState(false);
+
+  // Preload heavy modules on mount so they're already cached when the user
+  // clicks "Try it now!" — eliminates the ~1.8s dynamic-import delay.
+  useEffect(() => {
+    import('agora-rtc-react').catch(() => {});
+    import('agora-rtm').catch(() => {});
+  }, []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agoraData, setAgoraData] = useState<AgoraTokenData | null>(null);
@@ -58,40 +66,41 @@ export default function LandingPage() {
         throw new Error(`Failed to generate Agora token: ${JSON.stringify(responseData)}`);
       }
 
-      // 2. Start the AI agent (non-fatal — show conversation even if this fails)
-      let agentData: AgentResponse | null = null;
-      try {
-        const startRequest: ClientStartRequest = {
-          requester_id: responseData.uid,
-          channel_name: responseData.channel,
-        };
-        const agentResponse = await fetch('/api/invite-agent', {
+      // 2. Run agent invite and RTM setup in parallel — both only need the token response.
+      //    RTM must be ready before ConversationComponent mounts (ConversationalAI provider
+      //    expects a fully-connected client). Agent invite is non-fatal.
+      const [agentData, rtm] = await Promise.all([
+        // 2a. Start the AI agent
+        fetch('/api/invite-agent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(startRequest),
-        });
-        if (!agentResponse.ok) {
-          setAgentJoinError(true);
-        } else {
-          agentData = await agentResponse.json();
-        }
-      } catch (err) {
-        console.error('Failed to start conversation with agent:', err);
-        setAgentJoinError(true);
-      }
+          body: JSON.stringify({
+            requester_id: responseData.uid,
+            channel_name: responseData.channel,
+          } as ClientStartRequest),
+        })
+          .then(async (res) => {
+            if (!res.ok) { setAgentJoinError(true); return null; }
+            return res.json() as Promise<AgentResponse>;
+          })
+          .catch((err) => {
+            console.error('Failed to start conversation with agent:', err);
+            setAgentJoinError(true);
+            return null;
+          }),
 
-      // 3. Set up RTM before rendering the conversation so ConversationalAIProvider
-      //    always receives a fully-connected client and can mount unconditionally.
-      //    A unique per-session userId avoids kicking other open tabs on the same token.
-      //    Dynamically import agora-rtm to keep it client-only (LandingPage renders on server).
-      const { default: AgoraRTM } = await import('agora-rtm');
-      const rtmUserId = String(Date.now());
-      const rtm = new AgoraRTM.RTM(process.env.NEXT_PUBLIC_AGORA_APP_ID!, rtmUserId);
-      await rtm.login({ token: responseData.token });
-      await rtm.subscribe(responseData.channel);
-      console.log('RTM ready, channel:', responseData.channel);
+        // 2b. Set up RTM (dynamically imported to keep it client-only)
+        (async () => {
+          const { default: AgoraRTM } = await import('agora-rtm');
+          const rtm = new AgoraRTM.RTM(process.env.NEXT_PUBLIC_AGORA_APP_ID!, String(Date.now()));
+          await rtm.login({ token: responseData.token });
+          await rtm.subscribe(responseData.channel);
+          console.log('RTM ready, channel:', responseData.channel);
+          return rtm as RTMClient;
+        })(),
+      ]);
 
-      // 4. All dependencies ready — store state and show conversation
+      // 3. All dependencies ready — store state and show conversation
       setRtmClient(rtm);
       setAgoraData({ ...responseData, agentId: agentData?.agent_id });
       setShowConversation(true);

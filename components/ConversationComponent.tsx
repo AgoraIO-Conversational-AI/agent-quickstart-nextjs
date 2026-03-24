@@ -13,10 +13,12 @@ import {
   RemoteUser,
   UID,
 } from 'agora-rtc-react';
-import { useConversationalAI } from 'agora-agent-client-toolkit-react';
 import {
-  TranscriptHelperMode,
+  AgoraVoiceAI,
+  AgoraVoiceAIEvents,
+  AgentState,
   TurnStatus,
+  TranscriptHelperMode,
   type TranscriptHelperItem,
   type UserTranscription,
   type AgentTranscription,
@@ -28,9 +30,7 @@ import {
 } from 'agora-agent-uikit';
 import { MicButtonWithVisualizer } from 'agora-agent-uikit/rtc';
 import { MicrophoneSelector } from './MicrophoneSelector';
-import type { ConversationComponentProps, ClientStartRequest } from '@/types/conversation';
-
-type ToolkitMessage = TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>>;
+import type { ConversationComponentProps } from '@/types/conversation';
 
 export default function ConversationComponent({
   agoraData,
@@ -44,8 +44,30 @@ export default function ConversationComponent({
   const [isEnabled, setIsEnabled] = useState(true);
   const [isAgentConnected, setIsAgentConnected] = useState(false);
   const agentUID = process.env.NEXT_PUBLIC_AGENT_UID;
-  const [activeAgentId, setActiveAgentId] = useState<string | undefined>(agoraData.agentId);
   const [joinedUID, setJoinedUID] = useState<UID>(0);
+
+  // Transcript + agent state — managed with raw AgoraVoiceAI (see effect below).
+  const [rawTranscript, setRawTranscript] = useState<
+    TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>>[]
+  >([]);
+  const [agentState, setAgentState] = useState<AgentState | null>(null);
+
+  // StrictMode guard: delay `useJoin`'s ready flag until after the fake-unmount
+  // cycle completes. React StrictMode fires cleanup synchronously before any
+  // setTimeout callback, so the first (fake) mount's timeout is always cancelled.
+  // Only the real second mount's timeout fires, meaning useJoin joins exactly once.
+  const [isReady, setIsReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const id = setTimeout(() => {
+      if (!cancelled) setIsReady(true);
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+      setIsReady(false);
+    };
+  }, []);
 
   const { isConnected: joinSuccess } = useJoin(
     {
@@ -54,13 +76,17 @@ export default function ConversationComponent({
       token: agoraData.token,
       uid: parseInt(agoraData.uid, 10) || 0,
     },
-    true
+    isReady
   );
 
-  // Create mic track immediately on mount so getUserMedia resolves before (or during) the join.
+  // Create mic track only after the StrictMode fake-unmount cycle completes (isReady).
+  // Passing `true` here creates two tracks in StrictMode — the first publishes, then
+  // StrictMode cleanup closes it and the second takes over, causing a ~3s audio gap.
+  // isReady uses the same setTimeout(fn,0) pattern as useJoin: StrictMode cleanup fires
+  // synchronously before the timeout, so only the real second mount's timer fires.
   // Do NOT pass `isEnabled` — that ties track lifetime to mute state and breaks the Web Audio
   // graph inside MicButtonWithVisualizer. Mute uses track.setEnabled() only.
-  const { localMicrophoneTrack } = useLocalMicrophoneTrack(true);
+  const { localMicrophoneTrack } = useLocalMicrophoneTrack(isReady);
 
   useEffect(() => {
     if (!agentUID) {
@@ -91,43 +117,89 @@ export default function ConversationComponent({
     }
   }, [joinSuccess, client]);
 
-  // useConversationalAI config. rtmClient is stable (LandingPage completes
-  // login+subscribe before rendering this component), so this memo is computed
-  // once and the hook initialises exactly once per component lifetime.
-  const conversationalAIConfig = useMemo(
-    () => ({
-      channel: agoraData.channel,
-      rtmConfig: { rtmEngine: rtmClient },
-      renderMode: TranscriptHelperMode.TEXT,
-      enableLog: true,
-    }),
-    // rtmClient is stable for component lifetime — intentionally omitted.
+  // Initialize AgoraVoiceAI once the channel is joined.
+  //
+  // Gating on `isReady && joinSuccess` is critical for StrictMode safety:
+  //   - `isReady` ensures we are past the initial fake-unmount cycle, so this
+  //     effect only runs on the real mount (not the discarded fake one).
+  //   - Once `isReady` is true, React does NOT double-invoke this effect for
+  //     subsequent state changes (`joinSuccess` becoming true). That means
+  //     AgoraVoiceAI.init() is called exactly once, avoiding the singleton
+  //     race condition that occurs when ConversationalAIProvider (React toolkit)
+  //     is double-mounted by StrictMode.
+  useEffect(() => {
+    if (!isReady || !joinSuccess) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const ai = await AgoraVoiceAI.init({
+          rtcEngine: client,
+          rtmConfig: { rtmEngine: rtmClient },
+          renderMode: TranscriptHelperMode.TEXT,
+          enableLog: true,
+        });
+
+        if (cancelled) {
+          try {
+            if (AgoraVoiceAI.getInstance() === ai) {
+              ai.unsubscribe();
+              ai.destroy();
+            }
+          } catch {}
+          return;
+        }
+
+        ai.on(AgoraVoiceAIEvents.TRANSCRIPT_UPDATED, (t) => {
+          setRawTranscript([...t]);
+        });
+        ai.on(AgoraVoiceAIEvents.AGENT_STATE_CHANGED, (_, event) =>
+          setAgentState(event.state)
+        );
+        ai.subscribeMessage(agoraData.channel);
+        console.log('AgoraVoiceAI initialized and subscribed to channel');
+      } catch (error) {
+        if (!cancelled) {
+          console.error('[AgoraVoiceAI] init failed:', error);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      try {
+        const ai = AgoraVoiceAI.getInstance();
+        if (ai) {
+          ai.unsubscribe();
+          ai.destroy();
+        }
+      } catch {}
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [agoraData.channel]
-  );
+  }, [isReady, joinSuccess]);
 
-  const { transcript, isConnected: aiConnected, error: aiError } =
-    useConversationalAI(conversationalAIConfig);
+  // useTranscript() returns uid="0" for local user speech — remap to actual RTC UID
+  // so ConvoTextStream renders user messages on the correct side.
+  const transcript = useMemo(() => {
+    const localUID = String(client.uid);
+    return rawTranscript.map((m) => (m.uid === '0' ? { ...m, uid: localUID } : m));
+  }, [rawTranscript, client.uid]);
 
-  useEffect(() => {
-    if (aiError) console.error('[ConversationalAI] init error:', aiError);
-  }, [aiError]);
-
-  useEffect(() => {
-    if (aiConnected) console.log('[ConversationalAI] toolkit connected, listening for transcripts');
-  }, [aiConnected]);
-
+  // Completed (END + INTERRUPTED) messages shown as history.
+  // INTERRUPTED must be included — if the agent's first turn is cut off,
+  // messageList stays empty and ConvoTextStream never auto-opens.
   const messageList = useMemo(
     () =>
       transcriptToMessageList(
-        (transcript as ToolkitMessage[]).filter((m) => m.status === TurnStatus.END)
+        transcript.filter((m) => m.status !== TurnStatus.IN_PROGRESS)
       ),
     [transcript]
   );
 
   const currentInProgressMessage = useMemo(() => {
-    const m = (transcript as ToolkitMessage[]).find((x) => x.status === TurnStatus.IN_PROGRESS);
-    return m ? transcriptToMessageList([m])[0] : null;
+    const m = transcript.find((x) => x.status === TurnStatus.IN_PROGRESS);
+    return m ? transcriptToMessageList([m])[0] ?? null : null;
   }, [transcript]);
 
   // Publish local mic once the track exists; usePublish waits for RTC connection.
@@ -156,41 +228,6 @@ export default function ConversationComponent({
     if (curState === 'DISCONNECTED') console.log('Attempting to reconnect...');
   });
 
-  // useJoin handles client.leave() on unmount — do NOT call it here too.
-  useEffect(() => {
-    return () => {
-      if (localMicrophoneTrack) localMicrophoneTrack.close();
-    };
-  }, [localMicrophoneTrack]);
-
-  const handleStartConversation = useCallback(async () => {
-    if (!activeAgentId) return;
-
-    try {
-      const startRequest: ClientStartRequest = {
-        requester_id: joinedUID?.toString(),
-        channel_name: agoraData.channel,
-      };
-
-      const response = await fetch('/api/invite-agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(startRequest),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to start conversation: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      if (data.agent_id) setActiveAgentId(data.agent_id);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.warn('Error starting conversation:', error.message);
-      }
-    }
-  }, [activeAgentId, joinedUID, agoraData.channel]);
-
   /**
    * Mute/unmute via track.setEnabled() only — usePublish owns publish state.
    * If we also unpublish in the toggle, usePublish and the button fight each other
@@ -206,13 +243,10 @@ export default function ConversationComponent({
     try {
       await track.setEnabled(next);
       setIsEnabled(next);
-      if (next && !isAgentConnected) {
-        await handleStartConversation();
-      }
     } catch (error) {
       console.error('Failed to toggle microphone:', error);
     }
-  }, [isEnabled, localMicrophoneTrack, isAgentConnected, handleStartConversation]);
+  }, [isEnabled, localMicrophoneTrack]);
 
   const handleTokenWillExpire = useCallback(async () => {
     if (!onTokenWillExpire || !joinedUID) return;
@@ -258,19 +292,26 @@ export default function ConversationComponent({
         />
       </div>
 
-      {/* Remote users (agent audio + RTC subscription) */}
-      <div className="flex-1">
+      {/* Remote users (agent audio + RTC subscription)
+          Fixed h-40 matches AudioVisualizer's height so the layout doesn't
+          shift when the agent joins or leaves. */}
+      <div className="relative h-40 w-full flex items-center justify-center">
         {remoteUsers.map((user) => (
-          <div key={user.uid}>
+          <div key={user.uid} className="w-full">
             <AudioVisualizer track={user.audioTrack} />
             <RemoteUser user={user} />
           </div>
         ))}
         {remoteUsers.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-gray-500">
             Waiting for AI agent to join...
           </div>
         )}
+      </div>
+
+      {/* Agent state — shown below the visualizer once the agent joins */}
+      <div className="text-center text-gray-400 text-sm capitalize h-4">
+        {isAgentConnected && agentState ? agentState : null}
       </div>
 
       {/* Local controls */}

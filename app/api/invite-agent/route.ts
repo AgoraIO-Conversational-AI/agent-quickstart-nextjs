@@ -38,7 +38,8 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 - **Guide, don't lecture**: Unlock the next step, not everything at once.`;
 
 // First thing the agent says when a user joins the channel.
-const GREETING = `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
+// Set NEXT_AGENT_GREETING in .env.local to override.
+const GREETING = process.env.NEXT_AGENT_GREETING ?? `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
 
 // ---------------------------------------------------------------------------
 // Validate env vars once at module load — misconfiguration surfaces on startup
@@ -64,7 +65,8 @@ const deepgramApiKey = requireEnv('NEXT_DEEPGRAM_API_KEY');
 const elevenLabsApiKey = requireEnv('NEXT_ELEVENLABS_API_KEY');
 
 // Voice ID for ElevenLabs — find yours at https://elevenlabs.io/app/voice-lab
-const ELEVENLABS_VOICE_ID = 'cgSgspJ2msm6clMCkdW9'; // ElevenLabs Default voice - Jessica (Playful, Joyful, Warm)
+// Set NEXT_ELEVENLABS_VOICE_ID in .env.local to override.
+const ELEVENLABS_VOICE_ID = process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'cgSgspJ2msm6clMCkdW9'; // Default: Jessica (Playful, Joyful, Warm)
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,9 +82,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- 3. Build and start the agent ---
+    // --- 2. Build and start the agent ---
 
-    // AgoraClient authenticates API calls to the Agora Conversational AI service
+    // AgoraClient authenticates API calls to the Agora Conversational AI service.
+    // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
     const client = new AgoraClient({
       area: Area.US,
       appId,
@@ -95,14 +98,24 @@ export async function POST(request: NextRequest) {
       greeting: GREETING,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
-      // VAD controls how long the agent waits after the user stops speaking
-      // before treating it as the end of a turn
+      // VAD controls how the agent detects the start and end of a user's turn.
       turnDetection: {
-        type: 'agora_vad',
-        silence_duration_ms: 480,
-        threshold: 0.5,
-        interrupt_duration_ms: 160,
-        prefix_padding_ms: 300,
+        config: {
+          speech_threshold: 0.5,
+          start_of_speech: {
+            mode: 'vad',
+            vad_config: {
+              interrupt_duration_ms: 160, // ms of speech before interruption triggers
+              prefix_padding_ms: 300,     // audio captured before speech is detected
+            },
+          },
+          end_of_speech: {
+            mode: 'vad',
+            vad_config: {
+              silence_duration_ms: 480,   // ms of silence before turn ends
+            },
+          },
+        },
       },
       // RTM is required for transcript events in the browser client.
       // enable_tools is required for MCP tool invocation.
@@ -119,7 +132,7 @@ export async function POST(request: NextRequest) {
         new OpenAI({
           url: llmUrl,
           apiKey: llmApiKey,
-          model: 'gpt-4o',
+          model: process.env.NEXT_LLM_MODEL ?? 'gpt-4o',
           greetingMessage: GREETING,
           failureMessage: 'Please wait a moment.',
           maxHistory: 15,
