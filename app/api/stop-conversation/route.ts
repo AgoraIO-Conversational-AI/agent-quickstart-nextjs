@@ -8,15 +8,22 @@ export async function POST(request: Request) {
     const { agent_id } = body;
 
     if (!agent_id) {
-      return NextResponse.json({ error: 'agent_id is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'agent_id is required' },
+        { status: 400 },
+      );
     }
 
-    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID || process.env.NEXT_AGORA_APP_ID;
+    const appId =
+      process.env.NEXT_PUBLIC_AGORA_APP_ID || process.env.NEXT_AGORA_APP_ID;
     const appCertificate = process.env.NEXT_AGORA_APP_CERTIFICATE;
     if (!appId || !appCertificate) {
-      throw new Error('Missing Agora configuration. Set NEXT_PUBLIC_AGORA_APP_ID and NEXT_AGORA_APP_CERTIFICATE.');
+      throw new Error(
+        'Missing Agora configuration. Set NEXT_PUBLIC_AGORA_APP_ID and NEXT_AGORA_APP_CERTIFICATE.',
+      );
     }
 
+    // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
     const client = new AgoraClient({
       area: Area.US,
       appId,
@@ -34,7 +41,7 @@ export async function POST(request: Request) {
             ? error.message
             : 'Failed to stop conversation',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
