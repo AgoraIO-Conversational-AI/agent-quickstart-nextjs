@@ -41,10 +41,8 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 // Set NEXT_AGENT_GREETING in .env.local to override.
 const GREETING = process.env.NEXT_AGENT_GREETING ?? `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
 
-// ---------------------------------------------------------------------------
-// Validate env vars once at module load — misconfiguration surfaces on startup
-// rather than on the first user request.
-// ---------------------------------------------------------------------------
+// agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
+const agentUid = process.env.NEXT_PUBLIC_AGENT_UID || 'Agent';
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -52,28 +50,22 @@ function requireEnv(name: string): string {
   return value;
 }
 
-// API keys — set these in .env.local (see env.local.example)
-const appId =
-  process.env.NEXT_PUBLIC_AGORA_APP_ID || requireEnv('NEXT_AGORA_APP_ID');
-const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
-// agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
-const agentUid = process.env.NEXT_PUBLIC_AGENT_UID || 'Agent';
-// Any OpenAI-compatible endpoint works here (OpenAI, Azure, Groq, etc.)
-const llmUrl = requireEnv('NEXT_LLM_URL');
-const llmApiKey = requireEnv('NEXT_LLM_API_KEY');
-const deepgramApiKey = requireEnv('NEXT_DEEPGRAM_API_KEY');
-const elevenLabsApiKey = requireEnv('NEXT_ELEVENLABS_API_KEY');
-
-// Voice ID for ElevenLabs — find yours at https://elevenlabs.io/app/voice-lab
-// Set NEXT_ELEVENLABS_VOICE_ID in .env.local to override.
-const ELEVENLABS_VOICE_ID = process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'cgSgspJ2msm6clMCkdW9'; // Default: Jessica (Playful, Joyful, Warm)
-
 export async function POST(request: NextRequest) {
   try {
     // --- 1. Parse request ---
 
     const body: ClientStartRequest = await request.json();
     const { requester_id, channel_name } = body;
+
+    // Validate required env vars on first request so misconfiguration surfaces
+    // with a clear error message rather than a silent failure.
+    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID || requireEnv('NEXT_AGORA_APP_ID');
+    const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
+    const llmUrl = requireEnv('NEXT_LLM_URL');
+    const llmApiKey = requireEnv('NEXT_LLM_API_KEY');
+    const deepgramApiKey = requireEnv('NEXT_DEEPGRAM_API_KEY');
+    const elevenLabsApiKey = requireEnv('NEXT_ELEVENLABS_API_KEY');
+    const ELEVENLABS_VOICE_ID = process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'cgSgspJ2msm6clMCkdW9';
 
     if (!channel_name || !requester_id) {
       return NextResponse.json(
