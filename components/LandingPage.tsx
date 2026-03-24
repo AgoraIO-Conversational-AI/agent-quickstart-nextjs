@@ -8,6 +8,8 @@ import type {
   ClientStartRequest,
   AgentResponse,
 } from '../types/conversation';
+import { ErrorBoundary } from './ErrorBoundary';
+import { LoadingSkeleton } from './LoadingSkeleton';
 
 // Dynamically import the ConversationComponent with ssr disabled
 const ConversationComponent = dynamic(() => import('./ConversationComponent'), {
@@ -172,6 +174,7 @@ export default function LandingPage() {
                 className="px-8 py-3 bg-black text-white font-bold rounded-full border-2 border-[#00c2ff] backdrop-blur-sm
                 hover:bg-[#00c2ff] hover:text-black transition-all duration-300 shadow-lg hover:shadow-[#00c2ff]/20
                 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                aria-label={isLoading ? 'Starting conversation with AI agent' : 'Start conversation with AI agent'}
               >
                 {isLoading ? 'Starting...' : 'Try it now!'}
               </button>
@@ -185,15 +188,17 @@ export default function LandingPage() {
                   as expected.
                 </div>
               )}
-              <Suspense fallback={<div>Loading conversation...</div>}>
-                <AgoraProvider>
-                  <ConversationComponent
-                    agoraData={agoraData}
-                    rtmClient={rtmClient}
-                    onTokenWillExpire={handleTokenWillExpire}
-                    onEndConversation={handleEndConversation}
-                  />
-                </AgoraProvider>
+              <Suspense fallback={<LoadingSkeleton />}>
+                <ErrorBoundary>
+                  <AgoraProvider>
+                    <ConversationComponent
+                      agoraData={agoraData}
+                      rtmClient={rtmClient}
+                      onTokenWillExpire={handleTokenWillExpire}
+                      onEndConversation={handleEndConversation}
+                    />
+                  </AgoraProvider>
+                </ErrorBoundary>
               </Suspense>
             </>
           ) : (

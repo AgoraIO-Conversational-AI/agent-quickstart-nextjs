@@ -285,18 +285,21 @@ export default function ConversationComponent({
           onClick={onEndConversation}
           className="px-4 py-2 bg-transparent text-red-500 rounded-full border border-red-500 backdrop-blur-sm
           hover:bg-red-500 hover:text-black transition-all duration-300 shadow-lg hover:shadow-red-500/20 text-sm font-medium"
+          aria-label="End conversation with AI agent"
         >
           End Conversation
         </button>
         <div
           className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+          role="status"
+          aria-label={isConnected ? 'Connected to Agora' : 'Disconnected from Agora'}
         />
       </div>
 
       {/* Remote users (agent audio + RTC subscription)
           Fixed h-40 matches AudioVisualizer's height so the layout doesn't
           shift when the agent joins or leaves. */}
-      <div className="relative h-40 w-full flex items-center justify-center">
+      <div className="relative h-40 w-full flex items-center justify-center" role="region" aria-label="AI agent audio visualization">
         {remoteUsers.map((user) => (
           <div key={user.uid} className="w-full">
             <AudioVisualizer track={user.audioTrack} />
@@ -304,19 +307,19 @@ export default function ConversationComponent({
           </div>
         ))}
         {remoteUsers.length === 0 && (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500" role="status" aria-live="polite">
             Waiting for AI agent to join...
           </div>
         )}
       </div>
 
       {/* Agent state — shown below the visualizer once the agent joins */}
-      <div className="text-center text-gray-400 text-sm capitalize h-4">
+      <div className="text-center text-gray-400 text-sm capitalize h-4" role="status" aria-live="polite" aria-label="Agent status">
         {isAgentConnected && agentState ? agentState : null}
       </div>
 
       {/* Local controls */}
-      <div className="fixed bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3">
+      <div className="fixed bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3" role="group" aria-label="Audio controls">
         <div className="conversation-mic-host flex items-center justify-center">
           <MicButtonWithVisualizer
             isEnabled={isEnabled}
@@ -324,6 +327,7 @@ export default function ConversationComponent({
             track={localMicrophoneTrack}
             onToggle={handleMicToggle}
             className="overflow-visible"
+            aria-label={isEnabled ? 'Mute microphone' : 'Unmute microphone'}
           />
         </div>
         <MicrophoneSelector localMicrophoneTrack={localMicrophoneTrack} />

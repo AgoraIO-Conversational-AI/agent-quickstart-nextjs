@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@ai-sdk/openai':
         specifier: ^3.0.39
-        version: 3.0.47(zod@3.25.76)
+        version: 3.0.48(zod@3.25.76)
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.72.0(react@19.2.4))
@@ -97,31 +97,31 @@ importers:
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       agora-agent-client-toolkit:
         specifier: ^1.1.0
-        version: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3))
+        version: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
       agora-agent-client-toolkit-react:
         specifier: ^1.1.0
-        version: 1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
+        version: 1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
       agora-agent-server-sdk:
         specifier: ^1.0.0
         version: 1.0.0
       agora-agent-uikit:
         specifier: ^1.0.0
-        version: 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       agora-rtc-react:
-        specifier: latest
+        specifier: ^2.5.1
         version: 2.5.1(react@19.2.4)
       agora-rtc-sdk-ng:
-        specifier: ^4.23.4
+        specifier: ^4.24.3
         version: 4.24.3
       agora-rtm:
-        specifier: latest
-        version: 2.2.3-2(agora-rtc-sdk-ng@4.24.3)
+        specifier: ^2.2.3
+        version: 2.2.3(agora-rtc-sdk-ng@4.24.3)
       agora-token:
-        specifier: latest
+        specifier: ^2.0.5
         version: 2.0.5
       ai:
         specifier: ^6.0.107
-        version: 6.0.136(zod@3.25.76)
+        version: 6.0.137(zod@3.25.76)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.27(postcss@8.5.8)
@@ -147,7 +147,7 @@ importers:
         specifier: ^0.454.0
         version: 0.454.0(react@19.2.4)
       next:
-        specifier: ^16.1.6
+        specifier: ^16.2.1
         version: 16.2.1(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-themes:
         specifier: ^0.4.4
@@ -225,14 +225,14 @@ packages:
   '@agora-js/shared@4.24.3':
     resolution: {integrity: sha512-PyKelGEuV/g4fTjDjANpBqPZMaY0NFdd0W4UcGtJ2rayVU+YAeztLvu4tpDbm14U4BG5dmz/N+VHckxFPgoIjQ==}
 
-  '@ai-sdk/gateway@3.0.78':
-    resolution: {integrity: sha512-wqfkgOyqWKKxGL47k8biYcm5i5ZHXjs58ZiQUroDoIcu158EpCZa2qDxdcmeLHDMzx7Pu5Ei/JUmA7OrZ5d8xA==}
+  '@ai-sdk/gateway@3.0.79':
+    resolution: {integrity: sha512-Wk2QJpqd0em5YcR49uoMCy9msyANAYgjXdlRcqqRt2fz4rNLnMMrKOlLwAXoFzR1ElR3bj4e/k6hscRfjpzSGA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@3.0.47':
-    resolution: {integrity: sha512-bRsb2sDN5u+pKO3Kdr0flpxtL+cPwQ2uCo/pVyzIbj2I4AkKAokJHhw5JWLVOeEwdlYzWfmv+hzaiGarzUcTFQ==}
+  '@ai-sdk/openai@3.0.48':
+    resolution: {integrity: sha512-ALmj/53EXpcRqMbGpPJPP4UOSWw0q4VGpnDo7YctvsynjkrKDmoneDG/1a7VQnSPYHnJp6tTRMf5ZdxZ5whulg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1346,16 +1346,16 @@ packages:
   agora-rte-extension@1.2.4:
     resolution: {integrity: sha512-0ovZz1lbe30QraG1cU+ji7EnQ8aUu+Hf3F+a8xPml3wPOyUQEK6CTdxV9kMecr9t+fIDrGeW7wgJTsM1DQE7Nw==}
 
-  agora-rtm@2.2.3-2:
-    resolution: {integrity: sha512-dcCHcw2MhY6sX6blUiswjV5HykWLpGvMZF+6kfe4VjfxFoeVay6kRNqh/6PwkvmzEanDK10/DhftF4XfHdKYmA==}
+  agora-rtm@2.2.3:
+    resolution: {integrity: sha512-5O6uINrtnNDXijZEAmTwLzC1J6GizQoRb4moRx+DsVeYjcEbMjZAFcSnZVYHsjq3LrWetdknMhGt2o0zZJEBtQ==}
     peerDependencies:
       agora-rtc-sdk-ng: 4.23.0
 
   agora-token@2.0.5:
     resolution: {integrity: sha512-0NcbzC3iuutlksv3b4bCMKHrW3pko6gdiGEMRo6APDice24kfXAuWyAlG9hRBrrPBVDShwm9/GUz2Scd3zuZQw==}
 
-  ai@6.0.136:
-    resolution: {integrity: sha512-cStC2i6FzQxHj9yVShcxq14yxP6Mbhp2kAheQTFvbIFd6hsn+izW7WrWW+AUH0Ek8Er8WImNkoYVDQ5Vy+rBjQ==}
+  ai@6.0.137:
+    resolution: {integrity: sha512-9e/mNMTmXmMkmldEJPIumy9FFBuUWHUyj2yF8EglC3VVOhVVBwlnpeHYSFKdNc13Jj6Hso3EJcZioMaofgCs4A==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1589,8 +1589,8 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  electron-to-chromium@1.5.321:
-    resolution: {integrity: sha512-L2C7Q279W2D/J4PLZLk7sebOILDSWos7bMsMNN06rK482umHUrh/3lM8G7IlHFOYip2oAg5nha1rCMxr/rs6ZQ==}
+  electron-to-chromium@1.5.322:
+    resolution: {integrity: sha512-vFU34OcrvMcH66T+dYC3G4nURmgfDVewMIu6Q2urXpumAPSMmzvcn04KVVV8Opikq8Vs5nUbO/8laNhNRqSzYw==}
 
   embla-carousel-react@8.5.1:
     resolution: {integrity: sha512-z9Y0K84BJvhChXgqn2CFYbfEi6AwEr+FFVVKm/MqbTQ2zIzO1VQri6w67LcfpVF0AjbhwVMywDZqY4alYkjW5w==}
@@ -2009,12 +2009,12 @@ packages:
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
-  picomatch@2.3.1:
-    resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
+  picomatch@2.3.2:
+    resolution: {integrity: sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA==}
     engines: {node: '>=8.6'}
 
-  picomatch@4.0.3:
-    resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
+  picomatch@4.0.4:
+    resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
 
   pify@2.3.0:
@@ -2457,14 +2457,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@ai-sdk/gateway@3.0.78(zod@3.25.76)':
+  '@ai-sdk/gateway@3.0.79(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.21(zod@3.25.76)
       '@vercel/oidc': 3.1.0
       zod: 3.25.76
 
-  '@ai-sdk/openai@3.0.47(zod@3.25.76)':
+  '@ai-sdk/openai@3.0.48(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.21(zod@3.25.76)
@@ -3474,18 +3474,18 @@ snapshots:
 
   acorn@8.16.0: {}
 
-  agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4):
+  agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4):
     dependencies:
-      agora-agent-client-toolkit: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3))
+      agora-agent-client-toolkit: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
       agora-rtc-react: 2.5.1(react@19.2.4)
       react: 19.2.4
 
-  agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)):
+  agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)):
     dependencies:
       agora-rtc-sdk-ng: 4.24.3
     optionalDependencies:
       '@agora-js/report': 4.24.3
-      agora-rtm: 2.2.3-2(agora-rtc-sdk-ng@4.24.3)
+      agora-rtm: 2.2.3(agora-rtc-sdk-ng@4.24.3)
       jszip: 3.10.1
     transitivePeerDependencies:
       - debug
@@ -3494,7 +3494,7 @@ snapshots:
     dependencies:
       agora-token: 2.0.5
 
-  agora-agent-uikit@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  agora-agent-uikit@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@lottiefiles/dotlottie-react': 0.17.15(react@19.2.4)
       '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3512,8 +3512,8 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
       tailwind-merge: 3.5.0
     optionalDependencies:
-      agora-agent-client-toolkit: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3))
-      agora-agent-client-toolkit-react: 1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
+      agora-agent-client-toolkit: 1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
+      agora-agent-client-toolkit-react: 1.1.0(agora-agent-client-toolkit@1.1.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
       agora-rtc-react: 2.5.1(react@19.2.4)
     transitivePeerDependencies:
       - '@types/react'
@@ -3540,7 +3540,7 @@ snapshots:
 
   agora-rte-extension@1.2.4: {}
 
-  agora-rtm@2.2.3-2(agora-rtc-sdk-ng@4.24.3):
+  agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3):
     dependencies:
       agora-rtc-sdk-ng: 4.24.3
 
@@ -3550,9 +3550,9 @@ snapshots:
       cuint: 0.2.2
       md5: 2.3.0
 
-  ai@6.0.136(zod@3.25.76):
+  ai@6.0.137(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 3.0.78(zod@3.25.76)
+      '@ai-sdk/gateway': 3.0.79(zod@3.25.76)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.21(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
@@ -3567,7 +3567,7 @@ snapshots:
   anymatch@3.1.3:
     dependencies:
       normalize-path: 3.0.0
-      picomatch: 2.3.1
+      picomatch: 2.3.2
 
   arg@5.0.2: {}
 
@@ -3616,7 +3616,7 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.10.10
       caniuse-lite: 1.0.30001781
-      electron-to-chromium: 1.5.321
+      electron-to-chromium: 1.5.322
       node-releases: 2.0.36
       update-browserslist-db: 1.2.3(browserslist@4.28.1)
 
@@ -3781,7 +3781,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  electron-to-chromium@1.5.321: {}
+  electron-to-chromium@1.5.322: {}
 
   embla-carousel-react@8.5.1(react@19.2.4):
     dependencies:
@@ -3861,9 +3861,9 @@ snapshots:
     dependencies:
       reusify: 1.1.0
 
-  fdir@6.5.0(picomatch@4.0.3):
+  fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
-      picomatch: 4.0.3
+      picomatch: 4.0.4
 
   fetch-blob@3.2.0:
     dependencies:
@@ -4088,7 +4088,7 @@ snapshots:
   micromatch@4.0.8:
     dependencies:
       braces: 3.0.3
-      picomatch: 2.3.1
+      picomatch: 2.3.2
 
   mime-db@1.52.0: {}
 
@@ -4174,9 +4174,9 @@ snapshots:
 
   picocolors@1.1.1: {}
 
-  picomatch@2.3.1: {}
+  picomatch@2.3.2: {}
 
-  picomatch@4.0.3: {}
+  picomatch@4.0.4: {}
 
   pify@2.3.0: {}
 
@@ -4360,7 +4360,7 @@ snapshots:
 
   readdirp@3.6.0:
     dependencies:
-      picomatch: 2.3.1
+      picomatch: 2.3.2
 
   recharts-scale@0.4.5:
     dependencies:
@@ -4525,8 +4525,8 @@ snapshots:
 
   tinyglobby@0.2.15:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
 
   tmp@0.2.5: {}
 

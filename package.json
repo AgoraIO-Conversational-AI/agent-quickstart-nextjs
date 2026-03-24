@@ -1,15 +1,16 @@
 {
   "name": "convoai-quickstart-web-nextjs",
   "version": "0.1.0",
+  "description": "Next.js quickstart for building conversational AI applications with Agora's Conversational AI Engine",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.39",
@@ -45,10 +46,10 @@
     "agora-agent-client-toolkit": "^1.1.0",
     "agora-agent-client-toolkit-react": "^1.1.0",
     "agora-agent-uikit": "^1.0.0",
-    "agora-rtc-react": "latest",
-    "agora-rtc-sdk-ng": "^4.23.4",
-    "agora-rtm": "latest",
-    "agora-token": "latest",
+    "agora-rtc-react": "^2.5.1",
+    "agora-rtc-sdk-ng": "^4.24.3",
+    "agora-rtm": "^2.2.3",
+    "agora-token": "^2.0.5",
     "ai": "^6.0.107",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
