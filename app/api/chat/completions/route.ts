@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   const result = streamText({
     // modelId is always sourced from the environment — body.model is ignored
     model: openai(modelId),
-    messages: (body.messages ?? []) as Parameters<typeof streamText>[0]['messages'],
+    messages: (body.messages ?? []) as NonNullable<Parameters<typeof streamText>[0]['messages']>,
   });
 
   const encoder = new TextEncoder();

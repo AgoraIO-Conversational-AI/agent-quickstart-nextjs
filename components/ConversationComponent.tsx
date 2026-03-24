@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { setParameter } from 'agora-rtc-sdk-ng/esm';
+import type { IAgoraRTCClient } from 'agora-rtc-sdk-ng';
 import {
   useRTCClient,
   useLocalMicrophoneTrack,
@@ -135,7 +136,7 @@ export default function ConversationComponent({
     (async () => {
       try {
         const ai = await AgoraVoiceAI.init({
-          rtcEngine: client,
+          rtcEngine: client as unknown as IAgoraRTCClient,
           rtmConfig: { rtmEngine: rtmClient },
           renderMode: TranscriptHelperMode.TEXT,
           enableLog: true,
