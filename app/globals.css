@@ -115,11 +115,17 @@ body {
 
 /* --- ConvoTextStream overrides ---
    Force a fixed width and clear the mic dock (bottom-14 mobile / bottom-8 desktop).
+   Background, border, and radius are set here because the uikit wrapper has no background
+   of its own — without this the panel floats transparently over the page.
    These use !important because the uikit renders with inline or high-specificity styles. */
 #chatbox {
   width: 24rem !important;  /* 384px — matches md min/max-w-96 the uikit uses */
   left: auto !important;
   bottom: 8rem !important;  /* clears the dock pill at bottom-14 with comfortable margin */
+  background-color: hsl(var(--card) / 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.75rem !important;  /* 12px — matches agora-live-transcript-stack panel radius */
 }
 
 /* Remove the border-2 border-white ring the uikit adds to the chat toggle button */
