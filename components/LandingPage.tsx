@@ -2,12 +2,14 @@
 
 import { useState, useMemo, useRef, Suspense, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { Loader2 } from 'lucide-react';
 import type { RTMClient } from 'agora-rtm';
 import type {
   AgoraTokenData,
   ClientStartRequest,
   AgentResponse,
 } from '../types/conversation';
+import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LoadingSkeleton } from './LoadingSkeleton';
 
@@ -155,35 +157,54 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background text-foreground relative overflow-hidden">
+      {/* Faint ambient gradient — provides depth signal on the pre-call screen */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 40% at 50% 60%, hsl(194 100% 50% / 0.04) 0%, transparent 70%)',
+        }}
+      />
+
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="z-10 text-center">
-          <h1 className="text-4xl font-bold mb-6">
-            Speak with Agent
+        <div className="z-10 text-center flex flex-col items-center gap-4">
+          <h1 className="text-xl font-semibold animate-fade-up">
+            Voice AI Demo
           </h1>
+
           {!showConversation && (
-            <p className="text-lg mb-14">
+            <p className="text-sm text-muted-foreground animate-fade-up animate-fade-up-d1">
               Experience the power of <br className="sm:hidden" />Agora's Conversational AI Engine.
             </p>
           )}
+
           {!showConversation ? (
             <>
-              <button
+              <Button
                 onClick={handleStartConversation}
                 disabled={isLoading}
-                className="px-8 py-3 bg-black text-white font-bold rounded-full border-2 border-[#00c2ff] backdrop-blur-sm
-                hover:bg-[#00c2ff] hover:text-black transition-all duration-300 shadow-lg hover:shadow-[#00c2ff]/20
-                disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                className="w-56 animate-fade-up animate-fade-up-d2"
                 aria-label={isLoading ? 'Starting conversation with AI agent' : 'Start conversation with AI agent'}
               >
-                {isLoading ? 'Starting...' : 'Try it now!'}
-              </button>
-              {error && <p className="mt-4 text-destructive">{error}</p>}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  'Try it now!'
+                )}
+              </Button>
+              {error && (
+                <p className="text-xs text-destructive">{error}</p>
+              )}
             </>
           ) : agoraData && rtmClient ? (
             <>
               {agentJoinError && (
-                <div className="mb-4 p-3 bg-destructive/20 rounded-lg text-destructive">
+                <div className="p-3 bg-destructive/10 rounded-md text-destructive text-sm max-w-sm">
                   Failed to connect with AI agent. The conversation may not work
                   as expected.
                 </div>
@@ -202,18 +223,19 @@ export default function LandingPage() {
               </Suspense>
             </>
           ) : (
-            <p>Failed to load conversation data.</p>
+            <p className="text-sm text-muted-foreground">Failed to load conversation data.</p>
           )}
         </div>
       </div>
+
       <footer className="fixed bottom-0 left-0 py-4 pl-4 md:py-6 md:pl-6 z-40">
-        <div className="flex items-center justify-start space-x-2 text-gray-400">
-          <span className="text-sm font-light uppercase">Powered by</span>
+        <div className="flex items-center justify-start gap-2 text-muted-foreground">
+          <span className="text-xs font-medium tracking-wide uppercase">Powered by</span>
           <a
             href="https://agora.io/en/"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-cyan-300 transition-colors"
+            className="hover:text-primary transition-colors"
             aria-label="Visit Agora's website"
           >
             <img

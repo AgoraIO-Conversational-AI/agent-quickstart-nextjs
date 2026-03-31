@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from 'next';
+import { Instrument_Sans } from 'next/font/google';
 import './globals.css';
+
+const instrumentSans = Instrument_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -39,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={instrumentSans.variable}>
       <body suppressHydrationWarning={true}>{children}</body>
     </html>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -36,20 +37,17 @@ export class ErrorBoundary extends React.Component<
       }
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
+        <div className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center">
           <div className="max-w-md">
-            <h2 className="text-2xl font-bold text-red-500 mb-4">
+            <h2 className="text-lg font-semibold text-destructive mb-4">
               Something went wrong
             </h2>
-            <p className="text-gray-400 mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
               An error occurred while loading the conversation. Please try refreshing the page.
             </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-cyan-500 text-black rounded-lg hover:bg-cyan-400 transition-colors"
-            >
+            <Button onClick={() => window.location.reload()}>
               Refresh Page
-            </button>
+            </Button>
           </div>
         </div>
       );

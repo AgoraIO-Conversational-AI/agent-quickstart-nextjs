@@ -30,6 +30,7 @@ import {
   transcriptToMessageList,
 } from 'agora-agent-uikit';
 import { MicButtonWithVisualizer } from 'agora-agent-uikit/rtc';
+import { Button } from '@/components/ui/button';
 import { MicrophoneSelector } from './MicrophoneSelector';
 import type { ConversationComponentProps } from '@/types/conversation';
 
@@ -44,6 +45,10 @@ export default function ConversationComponent({
   const remoteUsers = useRemoteUsers();
   const [isEnabled, setIsEnabled] = useState(true);
   const [isAgentConnected, setIsAgentConnected] = useState(false);
+
+  // Tracks granular RTC connection state for the status dot.
+  // Agora states: DISCONNECTED | CONNECTING | CONNECTED | DISCONNECTING | RECONNECTING
+  const [connectionState, setConnectionState] = useState<string>('CONNECTING');
   const agentUID = process.env.NEXT_PUBLIC_AGENT_UID;
   const [joinedUID, setJoinedUID] = useState<UID>(0);
 
@@ -227,6 +232,7 @@ export default function ConversationComponent({
   useClientEvent(client, 'connection-state-change', (curState, prevState) => {
     console.log(`Connection state changed from ${prevState} to ${curState}`);
     if (curState === 'DISCONNECTED') console.log('Attempting to reconnect...');
+    setConnectionState(curState);
   });
 
   /**
@@ -279,27 +285,55 @@ export default function ConversationComponent({
 
   return (
     <div className="flex flex-col gap-6 p-4 h-full">
-      {/* Connection status + end call */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <button
+      {/* Top-right: connection status dot + end call */}
+      <div className="absolute top-4 right-4 flex items-center gap-3">
+        {/* Connection status dot — color reflects RTC state, tooltip on hover */}
+        <div
+          className="relative flex-shrink-0 group"
+          role="status"
+          aria-label={connectionState}
+        >
+          <span className="relative flex h-2 w-2">
+            {/* Ping ring — shown while connecting or connected (signals activity) */}
+            {connectionState !== 'DISCONNECTED' && connectionState !== 'DISCONNECTING' && (
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                connectionState === 'CONNECTED' ? 'bg-green-500' : 'bg-amber-500'
+              }`} />
+            )}
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${
+              connectionState === 'CONNECTED'                                         ? 'bg-green-500' :
+              connectionState === 'CONNECTING' || connectionState === 'RECONNECTING'  ? 'bg-amber-500' :
+              'bg-red-500'
+            }`} />
+          </span>
+          {/* Tooltip label — visible on hover */}
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium bg-popover border border-border rounded text-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            {connectionState === 'CONNECTED'     ? 'Connected' :
+             connectionState === 'CONNECTING'    ? 'Connecting...' :
+             connectionState === 'RECONNECTING'  ? 'Reconnecting...' :
+             connectionState === 'DISCONNECTING' ? 'Disconnecting...' :
+             'Disconnected'}
+          </span>
+        </div>
+        <Button
+          variant="destructive"
+          size="sm"
           onClick={onEndConversation}
-          className="px-4 py-2 bg-transparent text-red-500 rounded-full border border-red-500 backdrop-blur-sm
-          hover:bg-red-500 hover:text-black transition-all duration-300 shadow-lg hover:shadow-red-500/20 text-sm font-medium"
           aria-label="End conversation with AI agent"
         >
           End Conversation
-        </button>
-        <div
-          className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
-          role="status"
-          aria-label={isConnected ? 'Connected to Agora' : 'Disconnected from Agora'}
-        />
+        </Button>
       </div>
 
-      {/* Remote users (agent audio + RTC subscription)
+      {/* Remote users (agent audio + RTC subscription).
+          Framed in a surface card so the visualizer has spatial context.
           Fixed h-40 matches AudioVisualizer's height so the layout doesn't
           shift when the agent joins or leaves. */}
-      <div className="relative h-40 w-full flex items-center justify-center" role="region" aria-label="AI agent audio visualization">
+      <div
+        className="relative h-56 w-full flex items-center justify-center"
+        role="region"
+        aria-label="AI agent audio visualization"
+      >
         {remoteUsers.map((user) => (
           <div key={user.uid} className="w-full">
             <AudioVisualizer track={user.audioTrack} />
@@ -307,19 +341,28 @@ export default function ConversationComponent({
           </div>
         ))}
         {remoteUsers.length === 0 && (
-          <div className="text-center text-gray-500" role="status" aria-live="polite">
+          <div className="text-center text-muted-foreground text-sm" role="status" aria-live="polite">
             Waiting for AI agent to join...
           </div>
         )}
       </div>
 
       {/* Agent state — shown below the visualizer once the agent joins */}
-      <div className="text-center text-gray-400 text-sm capitalize h-4" role="status" aria-live="polite" aria-label="Agent status">
+      <div
+        className="text-center text-muted-foreground text-xs font-medium capitalize h-4"
+        role="status"
+        aria-live="polite"
+        aria-label="Agent status"
+      >
         {isAgentConnected && agentState ? agentState : null}
       </div>
 
-      {/* Local controls */}
-      <div className="fixed bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3" role="group" aria-label="Audio controls">
+      {/* Local controls — pill-framed dock at bottom center */}
+      <div
+        className="fixed bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-card/80 backdrop-blur-md border border-border rounded-full px-4 py-2"
+        role="group"
+        aria-label="Audio controls"
+      >
         <div className="conversation-mic-host flex items-center justify-center">
           <MicButtonWithVisualizer
             isEnabled={isEnabled}

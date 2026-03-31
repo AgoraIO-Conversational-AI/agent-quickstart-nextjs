@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { IMicrophoneAudioTrack } from 'agora-rtc-react';
-import { Settings } from 'lucide-react';
+import { Settings, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -33,12 +33,12 @@ export function MicrophoneSelector({
       // Import AgoraRTC dynamically to access getMicrophones
       const AgoraRTC = (await import('agora-rtc-react')).default;
       const microphones = await AgoraRTC.getMicrophones();
-      
+
       const formattedDevices = microphones.map((device) => ({
         deviceId: device.deviceId,
         label: device.label || `Microphone ${device.deviceId.slice(0, 5)}...`,
       }));
-      
+
       setDevices(formattedDevices);
 
       // Set current device from track
@@ -81,13 +81,13 @@ export function MicrophoneSelector({
     const setupDeviceChangeListener = async () => {
       try {
         const AgoraRTC = (await import('agora-rtc-react')).default;
-        
+
         AgoraRTC.onMicrophoneChanged = async (changedDevice) => {
           console.log('Microphone changed:', changedDevice);
-          
+
           // Refresh device list
           await fetchMicrophones();
-          
+
           // Auto-switch to new device if it's active
           if (changedDevice.state === 'ACTIVE' && localMicrophoneTrack) {
             await localMicrophoneTrack.setDevice(changedDevice.device.deviceId);
@@ -133,17 +133,17 @@ export function MicrophoneSelector({
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full w-10 h-10 bg-gray-800/50 hover:bg-gray-700/50 backdrop-blur-sm border border-gray-600"
+          className="rounded-full w-10 h-10 bg-secondary hover:bg-accent/10 border border-border"
           title="Select microphone"
         >
-          <Settings className="h-4 w-4 text-white" />
+          <Settings className="h-4 w-4 text-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="center"
-        className="w-64 bg-gray-900 border-gray-700"
+        className="w-56 bg-popover border-border"
       >
-        <div className="px-2 py-1.5 text-xs font-semibold text-gray-400">
+        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
           Microphone
         </div>
         {devices.map((device) => (
@@ -152,13 +152,13 @@ export function MicrophoneSelector({
             onClick={() => handleDeviceChange(device.deviceId)}
             className={`cursor-pointer ${
               device.deviceId === currentDeviceId
-                ? 'bg-cyan-500/20 text-cyan-400'
-                : 'text-white hover:bg-gray-800'
+                ? 'bg-accent/15 text-primary'
+                : 'text-foreground hover:bg-accent/10'
             }`}
           >
             <span className="truncate">{device.label}</span>
             {device.deviceId === currentDeviceId && (
-              <span className="ml-auto text-cyan-400">✓</span>
+              <Check className="ml-auto h-3.5 w-3.5 text-primary" />
             )}
           </DropdownMenuItem>
         ))}
@@ -166,4 +166,3 @@ export function MicrophoneSelector({
     </DropdownMenu>
   );
 }
-

@@ -3,20 +3,131 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 0, 0, 0;
-  --background-end-rgb: 0, 0, 0;
+  /* --- Agora dark token set --- */
+
+  /* Backgrounds */
+  --background:       220 14% 5%;
+  --surface:          220 12% 9%;
+  --surface-elevated: 220 10% 13%;
+
+  /* Semantic surface aliases */
+  --card:             220 12% 9%;
+  --card-foreground:  220 15% 95%;
+  --popover:          220 10% 13%;
+  --popover-foreground: 220 15% 95%;
+  --muted:            220 12% 9%;
+
+  /* Borders / inputs */
+  --border:           220 10% 18%;
+  --input:            220 10% 18%;
+
+  /* Foreground */
+  --foreground:       220 15% 95%;
+  --muted-foreground: 220 10% 50%;
+
+  /* Brand — Agora cyan, used sparingly for active/selected/primary emphasis */
+  --primary:            194 100% 50%;
+  --primary-foreground: 220 14% 5%;
+
+  /* Secondary — quiet surface-level button/control */
+  --secondary:            220 10% 13%;
+  --secondary-foreground: 220 15% 95%;
+
+  /* Accent — same hue as primary; used in hover/selection fills */
+  --accent:            194 100% 50%;
+  --accent-foreground: 220 14% 5%;
+
+  /* Destructive — end call, error states only */
+  --destructive:            0 72% 58%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Focus ring */
+  --ring: 194 100% 50%;
+
+  /* Radius base (8px) */
+  --radius: 0.5rem;
+
+  /* Charts (defined so Tailwind references don't break) */
+  --chart-1: 194 100% 50%;
+  --chart-2: 220 10% 60%;
+  --chart-3: 220 10% 40%;
+  --chart-4: 0 72% 58%;
+  --chart-5: 150 60% 45%;
+
+  /* Sidebar (defined so Tailwind references don't break) */
+  --sidebar-background:         220 12% 9%;
+  --sidebar-foreground:         220 15% 95%;
+  --sidebar-primary:            194 100% 50%;
+  --sidebar-primary-foreground: 220 14% 5%;
+  --sidebar-accent:             220 10% 13%;
+  --sidebar-accent-foreground:  220 15% 95%;
+  --sidebar-border:             220 10% 18%;
+  --sidebar-ring:               194 100% 50%;
+
+  /* Font */
+  --font-sans: 'Instrument Sans', system-ui, sans-serif;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: var(--font-sans);
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
 }
+
+/* --- Entry animations --- */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-up-d1 { animation-delay: 60ms; }
+.animate-fade-up-d2 { animation-delay: 120ms; }
+.animate-fade-up-d3 { animation-delay: 180ms; }
+
+/* --- Chat icon pulse animation (one-shot, applied conditionally per new turn) --- */
+
+@keyframes chat-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  75% {
+    transform: scale(0.9);
+  }
+}
+
+.animate-chat-pulse {
+  animation: chat-pulse 2s ease-in-out infinite;
+}
+
+/* --- ConvoTextStream overrides ---
+   Force a fixed width and clear the mic dock (bottom-14 mobile / bottom-8 desktop).
+   These use !important because the uikit renders with inline or high-specificity styles. */
+#chatbox {
+  width: 24rem !important;  /* 384px — matches md min/max-w-96 the uikit uses */
+  left: auto !important;
+  bottom: 8rem !important;  /* clears the dock pill at bottom-14 with comfortable margin */
+}
+
+/* Remove the border-2 border-white ring the uikit adds to the chat toggle button */
+#chatbox button[aria-label="Open transcription"] {
+  border: none !important;
+}
+
+/* --- Chatbox height transitions --- */
 
 .chatbox {
   height: 300px;
@@ -55,7 +166,7 @@ body {
   }
 }
 
-/* Markdown formatting for chat messages */
+/* --- Markdown formatting for chat messages --- */
 
 /* Bullet list items */
 .list-item {
@@ -110,36 +221,8 @@ strong {
   font-weight: 600;
 }
 
-/* Chat icon pulse animation */
-@keyframes chat-pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-  75% {
-    transform: scale(0.9);
-  }
-}
-
-.animate-chat-pulse {
-  animation: chat-pulse 2s ease-in-out infinite;
-}
-
-/* ConvoTextStream: force fixed width and push it higher above the mic controls */
-#chatbox {
-  width: 24rem !important;  /* 384px — same as the md min/max-w-96 the uikit already uses */
-  left: auto !important;
-  bottom: 7rem !important;  /* ~112px — clears the mic button (3.5rem) with comfortable margin */
-}
-
-/* Chat bubble toggle button: remove the border-2 border-white ring from the uikit default */
-#chatbox button[aria-label="Open transcription"] {
-  border: none !important;
-}
-
-/* MicButtonWithVisualizer: parent flex can stretch the <button> unevenly — force a true circle */
+/* --- MicButtonWithVisualizer: force a true circle ---
+   The parent flex can stretch the <button> unevenly. */
 .conversation-mic-host {
   flex-shrink: 0;
 }
