@@ -38,6 +38,10 @@ hooks/
   use-mobile.tsx                     — useIsMobile() — returns true when viewport < 768 px
 
 lib/
+  agora.ts                           — DEFAULT_AGENT_UID constant (123456)
+  conversation.ts                    — pure helpers: normalizeTranscript, getMessageList,
+                                       getCurrentInProgressMessage, mapAgentVisualizerState,
+                                       normalizeTimestampMs, toMessageListItem
   utils.ts                           — cn() (clsx + tailwind-merge)
 
 DOCS/
@@ -51,20 +55,19 @@ DOCS/
 
 ### Client-side
 
-| Package | Role |
-|---|---|
-| `agora-rtc-react` | RTC hooks: `useJoin`, `useLocalMicrophoneTrack`, `usePublish`, `useRemoteUsers`, `useClientEvent` |
-| `agora-rtm` | RTM transport — carries transcript messages from agent to browser |
-| `agora-agent-client-toolkit-react` | Installed for compatibility with the UIKit package graph, but not used by the quickstart runtime |
-| `agora-agent-client-toolkit` | Core types: `TurnStatus`, `TranscriptHelperItem`, `TranscriptHelperMode` |
-| `agora-agent-uikit` | Pre-built components: `AgentVisualizer`, `ConvoTextStream`, `MicButtonWithVisualizer` (from `/rtc`) |
+| Package                      | Role                                                                                                 |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `agora-rtc-react`            | RTC hooks: `useJoin`, `useLocalMicrophoneTrack`, `usePublish`, `useRemoteUsers`, `useClientEvent`    |
+| `agora-rtm`                  | RTM transport — carries transcript messages from agent to browser                                    |
+| `agora-agent-client-toolkit` | `AgoraVoiceAI` runtime plus core types: `TurnStatus`, `TranscriptHelperItem`, `TranscriptHelperMode` |
+| `agora-agent-uikit`          | Pre-built components: `AgentVisualizer`, `ConvoTextStream`, `MicButtonWithVisualizer` (from `/rtc`)  |
 
 ### Server-side
 
-| Package | Role |
-|---|---|
+| Package                  | Role                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | `agora-agent-server-sdk` | `AgoraClient`, `Agent`, `DeepgramSTT`, `OpenAI`, `MiniMaxTTS` — builder pattern for starting/stopping agents |
-| `agora-token` | `RtcTokenBuilder.buildTokenWithRtm` — generates RTC+RTM combined token |
+| `agora-token`            | `RtcTokenBuilder.buildTokenWithRtm` — generates RTC+RTM combined token                                       |
 
 ---
 
@@ -72,15 +75,15 @@ DOCS/
 
 All vars live in `.env.local` (gitignored). `env.local.example` is the source of truth.
 
-| Variable | Side | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_AGORA_APP_ID` | client+server | Agora project App ID |
-| `NEXT_AGORA_APP_CERTIFICATE` | server only | Signs tokens — never expose client-side |
-| `NEXT_PUBLIC_AGENT_UID` | client+server, optional | Agent UID override. Defaults to `12345` from `lib/agora.ts`, so the quickstart runs without setting it. |
-| `NEXT_LLM_URL` | server only, optional | Any OpenAI-compatible chat completions endpoint for the optional BYOK LLM block |
-| `NEXT_LLM_API_KEY` | server only, optional | LLM API key for the optional BYOK LLM block |
-| `NEXT_DEEPGRAM_API_KEY` | server only, optional | Deepgram STT API key for the optional BYOK STT block |
-| `NEXT_ELEVENLABS_API_KEY` | server only, optional | ElevenLabs TTS API key for the optional BYOK TTS block |
+| Variable                     | Side                    | Purpose                                                                                                  |
+| ---------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_AGORA_APP_ID`   | client+server           | Agora project App ID                                                                                     |
+| `NEXT_AGORA_APP_CERTIFICATE` | server only             | Signs tokens — never expose client-side                                                                  |
+| `NEXT_PUBLIC_AGENT_UID`      | client+server, optional | Agent UID override. Defaults to `123456` from `lib/agora.ts`, so the quickstart runs without setting it. |
+| `NEXT_LLM_URL`               | server only, optional   | Any OpenAI-compatible chat completions endpoint for the optional BYOK LLM block                          |
+| `NEXT_LLM_API_KEY`           | server only, optional   | LLM API key for the optional BYOK LLM block                                                              |
+| `NEXT_DEEPGRAM_API_KEY`      | server only, optional   | Deepgram STT API key for the optional BYOK STT block                                                     |
+| `NEXT_ELEVENLABS_API_KEY`    | server only, optional   | ElevenLabs TTS API key for the optional BYOK TTS block                                                   |
 
 ---
 
@@ -105,6 +108,7 @@ Starts an Agora ConvoAI agent using `agora-agent-server-sdk`.
 **Input** (`ClientStartRequest`): `{ requester_id, channel_name, input_modalities?, output_modalities? }`
 
 **What it does:**
+
 1. Validates required env vars (throws on startup if missing).
 2. Builds the agent: `new AgoraClient(...)` → `new Agent({ instructions, greeting, turnDetection, advancedFeatures })` → `.withStt(DeepgramSTT)` → `.withLlm(OpenAI)` → `.withTts(MiniMaxTTS)`.
 3. `agent.createSession(client, { channel, agentUid, remoteUids, idleTimeout, expiresIn })`.
@@ -112,6 +116,7 @@ Starts an Agora ConvoAI agent using `agora-agent-server-sdk`.
 5. Returns `AgentResponse: { agent_id, create_ts, state }`.
 
 **Key configuration (edit in this file):**
+
 - `ADA_PROMPT` / `GREETING` — agent persona and opening line
 - `turnDetection.config` — VAD sensitivity (`speech_threshold`, `silence_duration_ms`, `interrupt_duration_ms`, `prefix_padding_ms`)
 - `advancedFeatures: { enable_rtm: true }` — required for RTM transcript delivery
@@ -119,6 +124,7 @@ Starts an Agora ConvoAI agent using `agora-agent-server-sdk`.
 - `voiceId: 'English_captivating_female1'` in `MiniMaxTTS(...)` — default TTS voice
 
 **Turn detection** uses the current (non-deprecated) API:
+
 ```ts
 turnDetection: {
   config: {
@@ -128,6 +134,7 @@ turnDetection: {
   },
 }
 ```
+
 Do not use the deprecated `type: 'agora_vad'` flat structure.
 
 ---
@@ -161,17 +168,20 @@ Core real-time component. Must be inside `AgoraRTCProvider`.
 **StrictMode guard:** `isReady` state, set via `setTimeout(..., 0)` in a `useEffect`. Both `useJoin(config, isReady)` and `useLocalMicrophoneTrack(isReady)` are gated on it to prevent double-initialization.
 
 **Hook ownership:**
+
 - `useJoin` owns `client.leave()` — do not call manually
 - `useLocalMicrophoneTrack` owns track lifecycle — do not call `.close()` manually
 - `usePublish` owns publish state — mute via `track.setEnabled()` only
 
-**Transcript + agent state:** Managed with raw `AgoraVoiceAI` from `agora-agent-client-toolkit`. `AgoraVoiceAI.init()` runs in a `useEffect` gated on `isReady && joinSuccess` — this fires exactly once, past the StrictMode double-mount cycle. Transcript and agent state are tracked via `useState` + `ai.on(TRANSCRIPT_UPDATED, ...)` / `ai.on(AGENT_STATE_CHANGED, ...)`. `uid="0"` remapping (local user sentinel → `client.uid`) happens in a `useMemo` over the raw transcript. The React toolkit (`agora-agent-client-toolkit-react`) is NOT used for lifecycle — it has a StrictMode race condition with the `AgoraVoiceAI` singleton.
+**Transcript + agent state:** Managed with raw `AgoraVoiceAI` from `agora-agent-client-toolkit`. `AgoraVoiceAI.init()` runs in a `useEffect` gated on `isReady && joinSuccess` — this fires exactly once, past the StrictMode double-mount cycle. Transcript and agent state are tracked via `useState` + `ai.on(TRANSCRIPT_UPDATED, ...)` / `ai.on(AGENT_STATE_CHANGED, ...)`. `uid="0"` remapping (local user sentinel → `client.uid`) happens in a `useMemo` over the raw transcript.
 
 **Transcript state:**
+
 - `messageList` — completed + interrupted turns (`status !== IN_PROGRESS`) mapped locally into `IMessageListItem`
 - `currentInProgressMessage` — the single in-progress turn, if any
 
 **UI kit components used:**
+
 - `AgentVisualizer` — agent-state-driven visualizer for lifecycle, listening, thinking, and speaking states
 - `ConvoTextStream` — floating chat panel with `messageList` + `currentInProgressMessage` + `agentUID`
 - `MicButtonWithVisualizer` (from `agora-agent-uikit/rtc`) — mic button with Web Audio visualization
@@ -223,7 +233,7 @@ User clicks "Try it now!"
 
 1. **`useJoin` owns `client.leave()`** — never call it manually. Causes `AgoraRTCError WS_ABORT: LEAVE`.
 
-2. **StrictMode double-init** — `isReady` + `setTimeout` guard prevents dual mic track creation and double `AgoraVoiceAI` init. Do not remove. The `AgoraVoiceAI.init()` effect is also gated on `isReady && joinSuccess` — by the time `joinSuccess` becomes `true`, the StrictMode cycle is done and the effect runs exactly once. `ConversationalAIProvider` from `agora-agent-client-toolkit-react` is intentionally avoided: it has a singleton race condition in StrictMode where the cancelled first init destroys the singleton after the real second init has reconfigured it.
+2. **StrictMode double-init** — `isReady` + `setTimeout` guard prevents dual mic track creation and double `AgoraVoiceAI` init. Do not remove. The `AgoraVoiceAI.init()` effect is also gated on `isReady && joinSuccess` — by the time `joinSuccess` becomes `true`, the StrictMode cycle is done and the effect runs exactly once.
 
 3. **`NEXT_PUBLIC_AGENT_UID` must match exactly** — the component compares `user.uid.toString() === agentUID`. A mismatch means `isAgentConnected` never fires.
 

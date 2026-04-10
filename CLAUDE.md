@@ -50,9 +50,6 @@ useEffect(() => {
 }, [isReady, joinSuccess]);
 ```
 
-**Why not `ConversationalAIProvider` from `agora-agent-client-toolkit-react`?**
-The React toolkit has a StrictMode race condition: when any component mounting `ConversationalAIProvider` is double-mounted by StrictMode, two concurrent `AgoraVoiceAI.init()` calls share the same singleton object. The first call's cancellation destroys the instance after the second call has reconfigured it (same object reference), so `subscribeMessage` on the second call fails silently.
-
 **Why `isReady && joinSuccess` works:**
 - `isReady` is `true` only after the StrictMode fake-unmount cycle completes (via `setTimeout(fn, 0)` pattern).
 - Once `isReady` is `true`, React does NOT double-invoke the effect for subsequent dependency changes (`joinSuccess` becoming `true`). This means `AgoraVoiceAI.init()` is called exactly once.
@@ -72,8 +69,7 @@ Include `INTERRUPTED` turns in `messageList` (filter only `IN_PROGRESS`). If the
 | Layer | Package | Role |
 |---|---|---|
 | Client UI | `agora-rtc-react` | RTC hooks (`useJoin`, `useLocalMicrophoneTrack`, `usePublish`, etc.) |
-| Transcripts | `agora-agent-client-toolkit-react` | `ConversationalAIProvider` + `useTranscript()`, `useAgentState()` |
-| Toolkit core | `agora-agent-client-toolkit` | `TurnStatus` enum, `TranscriptHelperItem` types |
+| Toolkit core | `agora-agent-client-toolkit` | `AgoraVoiceAI`, `TurnStatus` enum, `TranscriptHelperItem` types |
 | UI components | `agora-agent-uikit` | `AudioVisualizer`, `ConvoTextStream`, `MicButtonWithVisualizer` |
 | Server SDK | `agora-agent-server-sdk` | Builder pattern — `AgoraClient` → `Agent` → `session.start()` |
 | Messaging | `agora-rtm` | RTM transport for transcripts |
@@ -97,13 +93,12 @@ Tailwind must scan uikit classes: `./node_modules/agora-agent-uikit/dist/**/*.{j
 
 ## After Changing Implementation Files
 
-After editing anything in `components/` or `app/api/`, run the `docs-sync` agent to check that GUIDE.md, TEXT_STREAMING_GUIDE.md, and README.md are still accurate.
+After editing anything in `components/` or `app/api/`, manually verify that `DOCS/GUIDE.md`, `DOCS/TEXT_STREAMING_GUIDE.md`, `README.md`, and `agents.md` still match the implementation, then run `pnpm lint` and `pnpm build`.
 
 ## What NOT To Do
 
 - Do not call `client.leave()` manually (breaks `useJoin` cleanup)
 - Do not call `localMicrophoneTrack.close()` manually (breaks hook ownership)
-- Do not use `ConversationalAIProvider` or `useConversationalAI` from `agora-agent-client-toolkit-react` — they have a StrictMode singleton race condition. Use raw `AgoraVoiceAI` gated on `isReady && joinSuccess` instead.
 - Do not remove the `isReady` guard
 - Do not set `reactStrictMode: false`
 - Do not use the deprecated `turnDetection.type: 'agora_vad'` flat API — use `turnDetection.config.start_of_speech` / `end_of_speech`

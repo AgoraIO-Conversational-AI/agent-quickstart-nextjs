@@ -85,15 +85,15 @@ Your project directory should now have a structure like this:
 The `agora-agent-uikit` package ships pre-built components with Tailwind class names. To ensure those classes are included in your production build, add the uikit's `dist/` folder to Tailwind's `content` array in `tailwind.config.ts`:
 
 ```typescript
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
     // Scan the uikit's compiled output so its Tailwind classes are included
-    "./node_modules/agora-agent-uikit/dist/**/*.{js,mjs}",
+    './node_modules/agora-agent-uikit/dist/**/*.{js,mjs}',
   ],
   // ... rest of your config
 };
@@ -484,11 +484,16 @@ export interface AgoraTokenData {
   agentId?: string;
 }
 
+export interface AgoraRenewalTokens {
+  rtcToken: string;
+  rtmToken: string;
+}
+
 // Props for our conversation component
 export interface ConversationComponentProps {
   agoraData: AgoraTokenData;
-  rtmClient: RTMClient;  // RTM client for transcript delivery
-  onTokenWillExpire: (uid: string) => Promise<string>;
+  rtmClient: RTMClient; // RTM client for transcript delivery
+  onTokenWillExpire: (uid: string) => Promise<AgoraRenewalTokens>;
   onEndConversation: () => void;
 }
 
@@ -759,7 +764,7 @@ export default function ConversationComponent({
       token: agoraData.token,
       uid: parseInt(agoraData.uid, 10) || 0,
     },
-    isReady
+    isReady,
   );
 
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(isReady);
@@ -772,13 +777,15 @@ export default function ConversationComponent({
     }
   }, [joinSuccess, client]);
 
-  // Token renewal — also renews the RTM token since they share the same token
+  // Token renewal — RTC and RTM now renew with separate tokens
   const handleTokenWillExpire = useCallback(async () => {
     if (!onTokenWillExpire || !joinedUID) return;
     try {
-      const newToken = await onTokenWillExpire(joinedUID.toString());
-      await client?.renewToken(newToken);
-      await rtmClient.renewToken(newToken);
+      const { rtcToken, rtmToken } = await onTokenWillExpire(
+        joinedUID.toString(),
+      );
+      await client?.renewToken(rtcToken);
+      await rtmClient.renewToken(rtmToken);
       console.log('Successfully renewed Agora RTC and RTM tokens');
     } catch (error) {
       console.error('Failed to renew Agora token:', error);
@@ -865,7 +872,9 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 
 // First thing the agent says when a user joins the channel.
 // Set NEXT_AGENT_GREETING in .env.local to override.
-const GREETING = process.env.NEXT_AGENT_GREETING ?? `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
+const GREETING =
+  process.env.NEXT_AGENT_GREETING ??
+  `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
 
 // agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
 const agentUid = process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
@@ -881,7 +890,8 @@ export async function POST(request: NextRequest) {
     const body: ClientStartRequest = await request.json();
     const { requester_id, channel_name } = body;
 
-    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID || requireEnv('NEXT_AGORA_APP_ID');
+    const appId =
+      process.env.NEXT_PUBLIC_AGORA_APP_ID || requireEnv('NEXT_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
 
     if (!channel_name || !requester_id) {
@@ -983,7 +993,7 @@ export async function POST(request: NextRequest) {
 
 This quickstart uses **`agora-agent-server-sdk` ^1.3.1** with **DeepgramSTT**, **OpenAI** (`gpt-4o-mini`), and **MiniMaxTTS** through Agora-managed defaults, so the base quickstart only needs Agora credentials. The SDK still supports other STT/LLM/TTS providers if you want to enable the optional BYOK examples.
 
-> **Note:** Only Agora App ID and App Certificate are required for this default agent configuration. `NEXT_PUBLIC_AGENT_UID` is an optional override that defaults to `12345`. See the environment variables reference at the end of this guide. Optional `NEXT_LLM_URL` / `NEXT_LLM_API_KEY` apply only if you enable the optional BYOK block or use the optional `app/api/chat/completions` proxy.
+> **Note:** Only Agora App ID and App Certificate are required for this default agent configuration. `NEXT_PUBLIC_AGENT_UID` is an optional override that defaults to `123456`. See the environment variables reference at the end of this guide. Optional `NEXT_LLM_URL` / `NEXT_LLM_API_KEY` apply only if you enable the optional BYOK block or use the optional `app/api/chat/completions` proxy.
 
 ### Stop Conversation Route
 
@@ -1451,21 +1461,21 @@ export default function ConversationComponent({
 
 ### Key uikit Components
 
-| Component | Import | Description |
-|-----------|--------|-------------|
-| `AgentVisualizer` | `agora-agent-uikit` | Agent-state-driven visualizer for not-joined, listening, analyzing, talking, and disconnected states |
-| `ConvoTextStream` | `agora-agent-uikit` | Floating chat panel showing live and completed transcript turns |
-| `MicButtonWithVisualizer` | `agora-agent-uikit/rtc` | Mic button with built-in Web Audio visualization |
-| `ConnectionStatusPanel` | local component | Compact status dot plus expandable RTM/agent issue panel |
+| Component                 | Import                  | Description                                                                                          |
+| ------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `AgentVisualizer`         | `agora-agent-uikit`     | Agent-state-driven visualizer for not-joined, listening, analyzing, talking, and disconnected states |
+| `ConvoTextStream`         | `agora-agent-uikit`     | Floating chat panel showing live and completed transcript turns                                      |
+| `MicButtonWithVisualizer` | `agora-agent-uikit/rtc` | Mic button with built-in Web Audio visualization                                                     |
+| `ConnectionStatusPanel`   | local component         | Compact status dot plus expandable RTM/agent issue panel                                             |
 
 ### Key toolkit Classes
 
-| Export | Description |
-|--------|-------------|
-| `AgoraVoiceAI` | Subscribes to RTM transcript events from the AI agent |
-| `AgoraVoiceAIEvents.TRANSCRIPT_UPDATED` | Fires whenever a transcript turn is created or updated |
-| `TurnStatus` | `IN_PROGRESS`, `END`, `INTERRUPTED` — filters which turns to show as history vs. live |
-| `TranscriptHelperMode.TEXT` | Text-only rendering mode |
+| Export                                  | Description                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------- |
+| `AgoraVoiceAI`                          | Subscribes to RTM transcript events from the AI agent                                 |
+| `AgoraVoiceAIEvents.TRANSCRIPT_UPDATED` | Fires whenever a transcript turn is created or updated                                |
+| `TurnStatus`                            | `IN_PROGRESS`, `END`, `INTERRUPTED` — filters which turns to show as history vs. live |
+| `TranscriptHelperMode.TEXT`             | Text-only rendering mode                                                              |
 
 ## Testing
 
@@ -1525,7 +1535,8 @@ const ADA_PROMPT = `You are a friendly and helpful assistant named Alex. Your pe
 Update the `greeting` to control the initial message the agent speaks when joining the channel (or set `NEXT_AGENT_GREETING` in `.env.local`):
 
 ```typescript
-const GREETING = process.env.NEXT_AGENT_GREETING ?? `Hello! How can I assist you today?`;
+const GREETING =
+  process.env.NEXT_AGENT_GREETING ?? `Hello! How can I assist you today?`;
 ```
 
 ### Customizing the Voice
@@ -1566,7 +1577,7 @@ Here's a complete list of environment variables for your `.env.local` file:
 # Agora Configuration
 NEXT_PUBLIC_AGORA_APP_ID=
 NEXT_AGORA_APP_CERTIFICATE=
-NEXT_PUBLIC_AGENT_UID=12345
+NEXT_PUBLIC_AGENT_UID=123456
 
 # Optional BYOK examples
 # NEXT_LLM_URL=https://api.openai.com/v1/chat/completions
