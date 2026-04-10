@@ -25,7 +25,7 @@ Required environment variables:
 - `NEXT_PUBLIC_AGORA_APP_ID` from your Agora Console project
 - `NEXT_AGORA_APP_CERTIFICATE` from your Agora Console project
 
-The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed vendor presets for STT, LLM, and TTS, so no additional vendor API keys are required to run the base quickstart.
+The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed defaults for STT, LLM, and TTS, so no additional vendor API keys are required to run the base quickstart.
 
 ## What This Repository Includes
 
@@ -86,7 +86,7 @@ cp env.local.example .env.local
 
 You can find `App ID` and `App Certificate` in your project settings in [Agora Console](https://console.agora.io/).
 
-The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed vendor presets for STT, LLM, and TTS, so no additional vendor API keys are required for the base quickstart.
+The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed defaults for STT, LLM, and TTS, so no additional vendor API keys are required for the base quickstart.
 
 6. Start the development server.
 

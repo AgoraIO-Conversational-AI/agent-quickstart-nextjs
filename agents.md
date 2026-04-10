@@ -6,9 +6,9 @@
 
 ## 1. What This Project Is
 
-A Next.js 16 (App Router) quickstart that lets a browser user speak with an Agora Conversational AI agent. The browser joins an Agora RTC channel for audio; RTM carries real-time transcripts. A server-side call invites an Agora cloud agent into the same channel. The agent runs a full ASR → LLM → TTS pipeline and publishes audio back.
+A Next.js 16 (App Router) quickstart that lets a browser user speak with an Agora Conversational AI agent. The browser joins an Agora RTC channel for audio; RTM carries real-time transcripts. A server-side call invites an Agora cloud agent into the same channel. The agent runs a full ASR → LLM → TTS voice experience and publishes audio back.
 
-**Stack:** Next.js 15, React 19, TypeScript, Tailwind, pnpm, `agora-rtc-react`, `agora-rtm`, `agora-token`, `agora-agent-client-toolkit`, `agora-agent-uikit`, `agora-agent-server-sdk`.
+**Stack:** Next.js 16, React 19, TypeScript, Tailwind, pnpm, `agora-rtc-react`, `agora-rtm`, `agora-token`, `agora-agent-client-toolkit`, `agora-agent-uikit`, `agora-agent-server-sdk`.
 
 ---
 
@@ -76,11 +76,11 @@ All vars live in `.env.local` (gitignored). `env.local.example` is the source of
 |---|---|---|
 | `NEXT_PUBLIC_AGORA_APP_ID` | client+server | Agora project App ID |
 | `NEXT_AGORA_APP_CERTIFICATE` | server only | Signs tokens — never expose client-side |
-| `NEXT_PUBLIC_AGENT_UID` | client+server | UID the AI agent joins with (e.g. `"Agent"`). `NEXT_PUBLIC_` prefix required — read in client component. Must match `agentUid` in `invite-agent/route.ts`. |
-| `NEXT_LLM_URL` | server only | Any OpenAI-compatible chat completions endpoint |
-| `NEXT_LLM_API_KEY` | server only | LLM API key |
-| `NEXT_DEEPGRAM_API_KEY` | server only | Deepgram STT API key |
-| `NEXT_ELEVENLABS_API_KEY` | server only | ElevenLabs TTS API key |
+| `NEXT_PUBLIC_AGENT_UID` | client+server | UID the AI agent joins with (default `12345`). `NEXT_PUBLIC_` prefix required — read in client component. Must match `agentUid` in `invite-agent/route.ts`. |
+| `NEXT_LLM_URL` | server only, optional | Any OpenAI-compatible chat completions endpoint for the optional BYOK LLM block |
+| `NEXT_LLM_API_KEY` | server only, optional | LLM API key for the optional BYOK LLM block |
+| `NEXT_DEEPGRAM_API_KEY` | server only, optional | Deepgram STT API key for the optional BYOK STT block |
+| `NEXT_ELEVENLABS_API_KEY` | server only, optional | ElevenLabs TTS API key for the optional BYOK TTS block |
 
 ---
 
@@ -106,7 +106,7 @@ Starts an Agora ConvoAI agent using `agora-agent-server-sdk`.
 
 **What it does:**
 1. Validates required env vars (throws on startup if missing).
-2. Builds the agent: `new AgoraClient(...)` → `new Agent({ instructions, greeting, turnDetection, advancedFeatures })` → `.withStt(DeepgramSTT)` → `.withLlm(OpenAI)` → `.withTts(ElevenLabsTTS)`.
+2. Builds the agent: `new AgoraClient(...)` → `new Agent({ instructions, greeting, turnDetection, advancedFeatures })` → `.withStt(DeepgramSTT)` → `.withLlm(OpenAI)` → `.withTts(MiniMaxTTS)`.
 3. `agent.createSession(client, { channel, agentUid, remoteUids, idleTimeout, expiresIn })`.
 4. `await session.start()` → returns agent ID.
 5. Returns `AgentResponse: { agent_id, create_ts, state }`.
@@ -115,8 +115,8 @@ Starts an Agora ConvoAI agent using `agora-agent-server-sdk`.
 - `ADA_PROMPT` / `GREETING` — agent persona and opening line
 - `turnDetection.config` — VAD sensitivity (`speech_threshold`, `silence_duration_ms`, `interrupt_duration_ms`, `prefix_padding_ms`)
 - `advancedFeatures: { enable_rtm: true }` — required for RTM transcript delivery
-- `model: 'gpt-4o'` in `OpenAI(...)` — LLM model
-- `ELEVENLABS_VOICE_ID` constant — TTS voice
+- `model: 'gpt-4o-mini'` in `OpenAI(...)` — LLM model
+- `voiceId: 'English_captivating_female1'` in `MiniMaxTTS(...)` — default TTS voice
 
 **Turn detection** uses the current (non-deprecated) API:
 ```ts
