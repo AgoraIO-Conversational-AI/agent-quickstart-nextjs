@@ -341,12 +341,12 @@ const token = RtcTokenBuilder.buildTokenWithRtm(
 );
 ```
 
-When the token nears expiry, renew both the RTC and RTM tokens — they share the same token value:
+When the token nears expiry, renew both transports with their respective tokens:
 
 ```typescript
-const newToken = await onTokenWillExpire(joinedUID.toString());
-await client?.renewToken(newToken);
-await rtmClient.renewToken(newToken);
+const { rtcToken, rtmToken } = await onTokenWillExpire(joinedUID.toString());
+await client?.renewToken(rtcToken);
+await rtmClient.renewToken(rtmToken);
 ```
 
 ## Agent-Side Configuration

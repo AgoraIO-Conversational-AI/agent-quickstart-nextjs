@@ -20,8 +20,8 @@ const ConversationComponent = dynamic(() => import('./ConversationComponent'), {
 });
 
 // Dynamically import AgoraRTCProvider (browser-only).
-// ConversationalAIProvider is set up inside ConversationComponent, gated on
-// joinSuccess, so it inits only after the RTC channel is joined.
+// The AgoraVoiceAI toolkit is initialized inside ConversationComponent after
+// the RTC join succeeds, so this wrapper only needs to provide the RTC client.
 const AgoraProvider = dynamic(
   async () => {
     const { AgoraRTCProvider, default: AgoraRTC } = await import('agora-rtc-react');
@@ -72,8 +72,8 @@ export default function LandingPage() {
       }
 
       // 2. Run agent invite and RTM setup in parallel — both only need the token response.
-      //    RTM must be ready before ConversationComponent mounts (ConversationalAI provider
-      //    expects a fully-connected client). Agent invite is non-fatal.
+      //    RTM must be ready before ConversationComponent mounts so AgoraVoiceAI
+      //    can subscribe immediately. Agent invite is non-fatal.
       const [agentData, rtm] = await Promise.all([
         // 2a. Start the AI agent
         fetch('/api/invite-agent', {

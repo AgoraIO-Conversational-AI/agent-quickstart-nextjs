@@ -983,7 +983,7 @@ export async function POST(request: NextRequest) {
 
 This quickstart uses **`agora-agent-server-sdk` ^1.3.1** with **DeepgramSTT**, **OpenAI** (`gpt-4o-mini`), and **MiniMaxTTS** through Agora-managed defaults, so the base quickstart only needs Agora credentials. The SDK still supports other STT/LLM/TTS providers if you want to enable the optional BYOK examples.
 
-> **Note:** Only Agora App ID, App Certificate, and `NEXT_PUBLIC_AGENT_UID` are required for this default agent configuration. See the environment variables reference at the end of this guide. Optional `NEXT_LLM_URL` / `NEXT_LLM_API_KEY` apply only if you enable the optional BYOK block or use the optional `app/api/chat/completions` proxy.
+> **Note:** Only Agora App ID and App Certificate are required for this default agent configuration. `NEXT_PUBLIC_AGENT_UID` is an optional override that defaults to `12345`. See the environment variables reference at the end of this guide. Optional `NEXT_LLM_URL` / `NEXT_LLM_API_KEY` apply only if you enable the optional BYOK block or use the optional `app/api/chat/completions` proxy.
 
 ### Stop Conversation Route
 

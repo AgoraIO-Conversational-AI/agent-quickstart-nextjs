@@ -55,15 +55,15 @@ DOCS/
 |---|---|
 | `agora-rtc-react` | RTC hooks: `useJoin`, `useLocalMicrophoneTrack`, `usePublish`, `useRemoteUsers`, `useClientEvent` |
 | `agora-rtm` | RTM transport — carries transcript messages from agent to browser |
-| `agora-agent-client-toolkit-react` | `ConversationalAIProvider` + `useTranscript()`, `useAgentState()`, `useAgentError()`, `useAgentMetrics()` |
+| `agora-agent-client-toolkit-react` | Installed for compatibility with the UIKit package graph, but not used by the quickstart runtime |
 | `agora-agent-client-toolkit` | Core types: `TurnStatus`, `TranscriptHelperItem`, `TranscriptHelperMode` |
-| `agora-agent-uikit` | Pre-built components: `AudioVisualizer`, `ConvoTextStream`, `MicButtonWithVisualizer` (from `/rtc`), `transcriptToMessageList` |
+| `agora-agent-uikit` | Pre-built components: `AgentVisualizer`, `ConvoTextStream`, `MicButtonWithVisualizer` (from `/rtc`) |
 
 ### Server-side
 
 | Package | Role |
 |---|---|
-| `agora-agent-server-sdk` | `AgoraClient`, `Agent`, `DeepgramSTT`, `OpenAI`, `ElevenLabsTTS` — builder pattern for starting/stopping agents |
+| `agora-agent-server-sdk` | `AgoraClient`, `Agent`, `DeepgramSTT`, `OpenAI`, `MiniMaxTTS` — builder pattern for starting/stopping agents |
 | `agora-token` | `RtcTokenBuilder.buildTokenWithRtm` — generates RTC+RTM combined token |
 
 ---
@@ -76,7 +76,7 @@ All vars live in `.env.local` (gitignored). `env.local.example` is the source of
 |---|---|---|
 | `NEXT_PUBLIC_AGORA_APP_ID` | client+server | Agora project App ID |
 | `NEXT_AGORA_APP_CERTIFICATE` | server only | Signs tokens — never expose client-side |
-| `NEXT_PUBLIC_AGENT_UID` | client+server | UID the AI agent joins with (default `12345`). `NEXT_PUBLIC_` prefix required — read in client component. Must match `agentUid` in `invite-agent/route.ts`. |
+| `NEXT_PUBLIC_AGENT_UID` | client+server, optional | Agent UID override. Defaults to `12345` from `lib/agora.ts`, so the quickstart runs without setting it. |
 | `NEXT_LLM_URL` | server only, optional | Any OpenAI-compatible chat completions endpoint for the optional BYOK LLM block |
 | `NEXT_LLM_API_KEY` | server only, optional | LLM API key for the optional BYOK LLM block |
 | `NEXT_DEEPGRAM_API_KEY` | server only, optional | Deepgram STT API key for the optional BYOK STT block |
@@ -150,7 +150,7 @@ Custom LLM proxy. Point the agent at your deployed URL to intercept LLM calls an
 
 - On "Try it now!": preloads `agora-rtc-react` + `agora-rtm` modules → runs `Promise.all([inviteAgent, rtmLogin])` in parallel → renders `ConversationComponent`.
 - Owns the `rtmClient` lifecycle: creates, logs in, subscribes before mounting `ConversationComponent`; calls `rtmClient.logout()` on end.
-- Token renewal: `handleTokenWillExpire(uid)` → GET token → calls `client.renewToken` + `rtmClient.renewToken`.
+- Token renewal: `handleTokenWillExpire(uid)` fetches separate RTC and RTM renewal tokens, then `ConversationComponent` renews each transport separately.
 
 ---
 
@@ -168,11 +168,11 @@ Core real-time component. Must be inside `AgoraRTCProvider`.
 **Transcript + agent state:** Managed with raw `AgoraVoiceAI` from `agora-agent-client-toolkit`. `AgoraVoiceAI.init()` runs in a `useEffect` gated on `isReady && joinSuccess` — this fires exactly once, past the StrictMode double-mount cycle. Transcript and agent state are tracked via `useState` + `ai.on(TRANSCRIPT_UPDATED, ...)` / `ai.on(AGENT_STATE_CHANGED, ...)`. `uid="0"` remapping (local user sentinel → `client.uid`) happens in a `useMemo` over the raw transcript. The React toolkit (`agora-agent-client-toolkit-react`) is NOT used for lifecycle — it has a StrictMode race condition with the `AgoraVoiceAI` singleton.
 
 **Transcript state:**
-- `messageList` — completed + interrupted turns (`status !== IN_PROGRESS`) via `transcriptToMessageList`
+- `messageList` — completed + interrupted turns (`status !== IN_PROGRESS`) mapped locally into `IMessageListItem`
 - `currentInProgressMessage` — the single in-progress turn, if any
 
 **UI kit components used:**
-- `AudioVisualizer` — waveform for agent audio track
+- `AgentVisualizer` — agent-state-driven visualizer for lifecycle, listening, thinking, and speaking states
 - `ConvoTextStream` — floating chat panel with `messageList` + `currentInProgressMessage` + `agentUID`
 - `MicButtonWithVisualizer` (from `agora-agent-uikit/rtc`) — mic button with Web Audio visualization
 
@@ -203,13 +203,13 @@ User clicks "Try it now!"
         ├─ joinSuccess=true → AgoraVoiceAI.init() effect fires (gated on isReady && joinSuccess)
         │   └─ ai.subscribeMessage(channel) — binds RTC stream-message + RTM message events
         │
-        ├─ Agent joins channel → RemoteUser auto-subscribes → AudioVisualizer draws waveform
+        ├─ Agent joins channel → RemoteUser auto-subscribes → agent audio plays through hidden RemoteUser
         │
         ├─ Agent speaks:
         │   RTM → AgoraVoiceAI → TRANSCRIPT_UPDATED → UID remap → setState
-        │   → transcriptToMessageList → ConvoTextStream renders chat bubbles
+        │   → local transcript adapter → ConvoTextStream renders chat bubbles
         │
-        └─ User clicks "End Conversation"
+        └─ User clicks the `X` exit button
             → POST /api/stop-conversation
             → LandingPage: rtmClient.logout()
             → ConversationComponent unmounts

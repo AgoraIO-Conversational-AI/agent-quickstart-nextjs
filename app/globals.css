@@ -130,7 +130,7 @@
     --sidebar-border:             220 10% 18%;
     --sidebar-ring:               194 100% 50%;
 
-    /* AudioVisualizer — 3-stop only (see ConversationComponent) */
+    /* Agent visualizer accent ramp used by the current conversation UI. */
     --viz-stop-1: 194 100% 58%;
     --viz-stop-2: 215 42% 72%;
     --viz-stop-3: 272 62% 72%;

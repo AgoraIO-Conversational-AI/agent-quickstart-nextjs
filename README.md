@@ -24,6 +24,10 @@ Required environment variables:
 - `NEXT_PUBLIC_AGORA_APP_ID`
 - `NEXT_AGORA_APP_CERTIFICATE`
 
+Optional convenience override:
+
+- `NEXT_PUBLIC_AGENT_UID` defaults to `12345`
+
 The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed defaults for STT, LLM, and TTS, so no additional vendor API keys are required for the base quickstart.
 
 ## Architecture
