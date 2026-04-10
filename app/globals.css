@@ -416,3 +416,23 @@ strong {
     max-height: 3.5rem;
   }
 }
+
+/* Transcript panel sizing: give mobile more breathing room around the top controls. */
+.conversation-transcript .chatbox.expanded {
+  width: min(24rem, calc(100vw - 2rem));
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .conversation-transcript {
+    left: 1rem !important;
+    right: 1rem !important;
+    bottom: 5.75rem !important;
+  }
+
+  .conversation-transcript .chatbox.expanded {
+    width: min(18rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: min(20rem, calc(100vh - 14rem));
+  }
+}

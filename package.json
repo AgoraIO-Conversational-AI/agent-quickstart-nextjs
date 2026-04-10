@@ -4,10 +4,10 @@
   "description": "Next.js quickstart for building conversational AI applications with Agora's Conversational AI Engine",
   "private": true,
   "engines": {
-    "node": ">=24"
+    "node": ">=22"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

@@ -69,7 +69,7 @@ export function ConnectionStatusPanel({
 
       <div
         id="connection-details-panel"
-        className={`fixed top-16 left-1/2 -translate-x-1/2 w-[min(92vw,22rem)] rounded-md border border-border bg-card/95 backdrop-blur-sm p-3 space-y-2 z-20 transition-opacity md:absolute md:top-0 md:left-auto md:right-full md:mr-2 md:w-[min(22rem,calc(100vw-2rem))] md:translate-x-0 md:-translate-y-[15px] ${
+        className={`fixed top-16 left-1/2 z-20 w-[min(92vw,22rem)] -translate-x-1/2 rounded-md border border-border bg-card/95 p-3 space-y-2 backdrop-blur-sm transition-opacity md:absolute md:left-0 md:top-full md:mt-3 md:w-[24rem] md:translate-x-0 md:translate-y-0 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         role="status"
