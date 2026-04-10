@@ -4,16 +4,16 @@ import {
   Agent,
   Area,
   DeepgramSTT,
-  ElevenLabsTTS,
   ExpiresIn,
   MiniMaxTTS,
   OpenAI,
 } from 'agora-agent-server-sdk';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
+import { DEFAULT_AGENT_UID } from '@/lib/agora';
 
 // System prompt that defines the agent's personality and behavior.
 // Swap this out to change what the agent talks about.
-const ADA_PROMPT = `You are **Ada**, a developer advocate AI from **Agora**. You help developers understand and build with Agora's Conversational AI platform.
+const ADA_PROMPT = `You are **Ada**, an agentic developer advocate from **Agora**. You help developers understand and build with Agora's Conversational AI platform.
 
 # What Agora Actually Is
 Agora is a real-time communications company. The product you represent is the **Agora Conversational AI Engine** — it lets developers add voice AI agents to any app by connecting ASR, LLM, and TTS into a real-time pipeline over Agora's SD-RTN (Software Defined Real-Time Network). Key facts:
@@ -40,14 +40,12 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 
 // First thing the agent says when a user joins the channel.
 // Set NEXT_AGENT_GREETING in .env.local to override.
-const GREETING = process.env.NEXT_AGENT_GREETING ?? `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
+const GREETING =
+  process.env.NEXT_AGENT_GREETING ??
+  `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
 
 // agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
-const agentUid = process.env.NEXT_PUBLIC_AGENT_UID || '123456';
-
-// ElevenLabs BYOK (`.withTts` commented block). Override with NEXT_ELEVENLABS_VOICE_ID.
-const ELEVENLABS_VOICE_ID =
-  process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB';
+const agentUid = process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -64,7 +62,8 @@ export async function POST(request: NextRequest) {
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
-    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID || requireEnv('NEXT_AGORA_APP_ID');
+    const appId =
+      process.env.NEXT_PUBLIC_AGORA_APP_ID || requireEnv('NEXT_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
 
     if (!channel_name || !requester_id) {
@@ -114,6 +113,10 @@ export async function POST(request: NextRequest) {
       // RTM is required for transcript events in the browser client.
       // enable_tools is required for MCP tool invocation.
       advancedFeatures: { enable_rtm: true, enable_tools: true },
+      // Required for browser RTM events:
+      // - data_channel: 'rtm' enables RTM delivery path for state/metrics/errors
+      // - enable_error_message emits AGENT_ERROR payloads
+      parameters: { data_channel: 'rtm', enable_error_message: true },
     })
       .withStt(
         new DeepgramSTT({
@@ -133,14 +136,16 @@ export async function POST(request: NextRequest) {
           greetingMessage: GREETING,
           failureMessage: 'Please wait a moment.',
           maxHistory: 15,
-          maxTokens: 1024,
-          temperature: 0.7,
-          topP: 0.95,
+          params: {
+            max_tokens: 1024,
+            temperature: 0.7,
+            top_p: 0.95,
+          },
         }),
-        // BYOK: uncomment the following block and set NEXT_OPENAI_API_KEY and NEXT_OPENAI_
+        // BYOK: uncomment the following block and set NEXT_LLM_API_KEY and NEXT_LLM_URL
         // new OpenAI({
-        //   apiKey: requireEnv('NEXT_OPENAI_API_KEY'),
-        //   url: requireEnv('NEXT_OPENAI_URL'),
+        //   apiKey: requireEnv('NEXT_LLM_API_KEY'),
+        //   url: requireEnv('NEXT_LLM_URL'),
         //   model: 'gpt-4o-mini',
         //   greetingMessage: GREETING,
         //   failureMessage: 'Please wait a moment.',
@@ -156,10 +161,10 @@ export async function POST(request: NextRequest) {
           voiceId: 'English_captivating_female1',
         }),
         // BYOK — ElevenLabs (set NEXT_ELEVENLABS_API_KEY; optional NEXT_ELEVENLABS_VOICE_ID)
-        // new ElevenLabsTTS({
+        // new (await import('agora-agent-server-sdk')).ElevenLabsTTS({
         //   key: requireEnv('NEXT_ELEVENLABS_API_KEY'),
         //   modelId: 'eleven_flash_v2_5',
-        //   voiceId: ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB',
+        //   voiceId: process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB',
         //   sampleRate: 24000,
         // }),
       );

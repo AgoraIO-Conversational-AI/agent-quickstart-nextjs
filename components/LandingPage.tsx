@@ -8,6 +8,7 @@ import type {
   AgoraTokenData,
   ClientStartRequest,
   AgentResponse,
+  AgoraRenewalTokens,
 } from '../types/conversation';
 import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -96,11 +97,14 @@ export default function LandingPage() {
         // 2b. Set up RTM (dynamically imported to keep it client-only)
         (async () => {
           const { default: AgoraRTM } = await import('agora-rtm');
-          const rtm = new AgoraRTM.RTM(process.env.NEXT_PUBLIC_AGORA_APP_ID!, String(Date.now()));
+          const rtm: RTMClient = new AgoraRTM.RTM(
+            process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+            String(Date.now()),
+          );
           await rtm.login({ token: responseData.token });
           await rtm.subscribe(responseData.channel);
           console.log('RTM ready, channel:', responseData.channel);
-          return rtm as RTMClient;
+          return rtm;
         })(),
       ]);
 
@@ -116,14 +120,30 @@ export default function LandingPage() {
     }
   };
 
-  const handleTokenWillExpire = async (uid: string) => {
+  const handleTokenWillExpire = async (uid: string): Promise<AgoraRenewalTokens> => {
     try {
-      const response = await fetch(
-        `/api/generate-agora-token?channel=${agoraData?.channel}&uid=${uid}`
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error('Failed to generate new token');
-      return data.token;
+      const channel = agoraData?.channel;
+      if (!channel) {
+        throw new Error('Missing channel for token renewal');
+      }
+
+      const [rtcResponse, rtmResponse] = await Promise.all([
+        fetch(`/api/generate-agora-token?channel=${channel}&uid=${uid}`),
+        fetch(`/api/generate-agora-token?channel=${channel}&uid=0`),
+      ]);
+      const [rtcData, rtmData] = await Promise.all([
+        rtcResponse.json(),
+        rtmResponse.json(),
+      ]);
+
+      if (!rtcResponse.ok || !rtmResponse.ok) {
+        throw new Error('Failed to generate renewal tokens');
+      }
+
+      return {
+        rtcToken: rtcData.token,
+        rtmToken: rtmData.token,
+      };
     } catch (error) {
       console.error('Error renewing token:', error);
       throw error;
@@ -171,7 +191,7 @@ export default function LandingPage() {
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="z-10 text-center flex flex-col items-center gap-4">
           <h1 className="text-xl font-semibold animate-fade-up">
-            Voice AI Demo
+            Voice AI Quickstart
           </h1>
 
           {!showConversation && (

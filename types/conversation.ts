@@ -21,11 +21,16 @@ export interface AgentResponse {
   state: string;
 }
 
+export interface AgoraRenewalTokens {
+  rtcToken: string;
+  rtmToken: string;
+}
+
 import type { RTMClient } from 'agora-rtm';
 
 export interface ConversationComponentProps {
   agoraData: AgoraTokenData;
   rtmClient: RTMClient;
-  onTokenWillExpire: (uid: string) => Promise<string>;
+  onTokenWillExpire: (uid: string) => Promise<AgoraRenewalTokens>;
   onEndConversation: () => void;
 }

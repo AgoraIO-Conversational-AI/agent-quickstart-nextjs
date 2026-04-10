@@ -1,169 +1,145 @@
-# Conversational AI: Dev Advocate Agent Demo
+# Agora Conversational AI Next.js Quickstart
 
-A Next.js web application demonstrating real-time conversational AI capabilities using Agora's Real-Time Engagement SDKs. This demo showcases voice-first interactions with live transcriptions, multi-device audio input support, and an Agent ready to help you with your Agora build.
+This is the official Agora Next.js quickstart for building a browser-based voice AI experience with Agora Conversational AI Engine.
 
-## Overview
+## Run It
 
-This application demonstrates how to build a production-ready conversational AI interface with:
-- **Real-time voice conversations** with AI agents powered by Agora's Conversational AI Engine
-- **RTM-based messaging** for reliable real-time transcriptions and agent state updates
-- **Live text transcriptions** with streaming message updates and visual status indicators
-- **Advanced audio controls** including device selection and visual feedback
-- **Modern UX patterns** like smart auto-scrolling, mobile responsiveness, and accessibility features
-- **Flexible backend integration** supporting multiple LLM providers (OpenAI, Anthropic, etc.) and TTS via ElevenLabs
-- **Official Agora toolkit** integration for robust conversation management
+1. Create or sign in to your Agora account in [Agora Console](https://console.agora.io/).
+2. In Agora Console, create a project and copy your `App ID` and `App Certificate`.
+3. Clone this repository and install dependencies.
+4. Copy `env.local.example` to `.env.local`.
+5. Set `NEXT_PUBLIC_AGORA_APP_ID` and `NEXT_AGORA_APP_CERTIFICATE`.
+6. Run `pnpm dev`.
+7. Open `http://localhost:3000`.
+
+```bash
+git clone https://github.com/AgoraIO-Conversational-AI/agent-quickstart-nextjs.git
+cd agent-quickstart-nextjs
+pnpm install
+cp env.local.example .env.local
+pnpm dev
+```
+
+Required environment variables:
+
+- `NEXT_PUBLIC_AGORA_APP_ID` from your Agora Console project
+- `NEXT_AGORA_APP_CERTIFICATE` from your Agora Console project
+
+The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed defaults for STT, LLM, and TTS, so no additional vendor API keys are required to run the base quickstart.
+
+## What This Repository Includes
+
+- a Next.js App Router frontend for joining an Agora RTC channel from the browser
+- RTM-based live transcripts and agent state updates
+- a Next.js backend for token generation and agent lifecycle management
+- an Agora cloud agent that joins the same channel and runs the voice experience
+- Agora-managed default STT, LLM, and TTS configuration, with optional BYOK examples
+
+## How It Works
+
+When a user starts a session, the app:
+
+1. generates an RTC + RTM token from the Next.js backend
+2. invites an Agora Conversational AI agent from the backend
+3. joins the browser client to the Agora channel for audio
+4. receives live transcript and state events over RTM
+5. stops the agent and cleans up the session when the conversation ends
 
 ## Guides and Documentation
 
-- [Guide.md](./DOCS/GUIDE.md) - Complete step-by-step guide on how to build this application from scratch.
-- [Text Streaming Guide](./DOCS/TEXT_STREAMING_GUIDE.md) - Deep dive into real-time conversation transcriptions using the toolkit and UI kit.
+- [Guide.md](./DOCS/GUIDE.md) - step-by-step build guide
+- [Text Streaming Guide](./DOCS/TEXT_STREAMING_GUIDE.md) - transcript and RTM flow details
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-
 - [Node.js](https://nodejs.org/) (version 22.x or higher)
 - [pnpm](https://pnpm.io/) (version 8.x or higher)
+- [Agora Console account](https://console.agora.io/)
 
-You must have an Agora account and a project to use this application.
+## Quickstart
 
-- [Agora Account](https://console.agora.io/)
+1. Create a project in [Agora Console](https://console.agora.io/) and copy the `App ID` and `App Certificate`.
 
-## Installation
-
-1. Clone the repository:
+2. Clone the repository.
 
 ```bash
 git clone https://github.com/AgoraIO-Conversational-AI/agent-quickstart-nextjs.git
 cd agent-quickstart-nextjs
 ```
 
-2. Install dependencies:
+3. Install dependencies.
 
 ```bash
 pnpm install
 ```
 
-3. Create a `.env.local` file in the root directory and add your environment variables:
+4. Create `.env.local`.
 
 ```bash
 cp env.local.example .env.local
 ```
 
-The following environment variables are required:
-
-### Agora
+5. Set the required Agora credentials.
 
 - `NEXT_PUBLIC_AGORA_APP_ID` - Your Agora App ID
 - `NEXT_AGORA_APP_CERTIFICATE` - Your Agora App Certificate
-- `NEXT_PUBLIC_AGENT_UID` - UID assigned to the AI agent in the RTC channel
 
-### LLM
+You can find `App ID` and `App Certificate` in your project settings in [Agora Console](https://console.agora.io/).
 
-- `NEXT_LLM_URL` - Any OpenAI-compatible endpoint (OpenAI, Azure, Groq, etc.)
-- `NEXT_LLM_API_KEY` - LLM API key
+The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed defaults for STT, LLM, and TTS, so no additional vendor API keys are required for the base quickstart.
 
-### ASR
-
-- `NEXT_DEEPGRAM_API_KEY` - Deepgram API key
-
-### TTS
-
-- `NEXT_ELEVENLABS_API_KEY` - ElevenLabs API key
-
-Non-sensitive settings (model names, voice ID, language, etc.) are set directly in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) — edit them there.
-
-4. Run the development server:
+6. Start the development server.
 
 ```bash
 pnpm dev
 ```
 
-5. Open your browser and navigate to `http://localhost:3000` to see the application in action.
+7. Open `http://localhost:3000`.
+
+## Optional BYOK Configuration
+
+Optional BYOK examples remain commented in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts). Uncomment those only if you want to provide your own vendor credentials such as:
+
+- `NEXT_LLM_URL` and `NEXT_LLM_API_KEY`
+- `NEXT_DEEPGRAM_API_KEY`
+- `NEXT_ELEVENLABS_API_KEY` and `NEXT_ELEVENLABS_VOICE_ID`
 
 ## Deployment to Vercel
 
-This project is configured for quick deployments to Vercel.
+This repository is configured for one-click Vercel deployment.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs&project-name=agent-quickstart-nextjs&repository-name=agent-quickstart-nextjs&env=NEXT_PUBLIC_AGORA_APP_ID,NEXT_AGORA_APP_CERTIFICATE,NEXT_PUBLIC_AGENT_UID,NEXT_LLM_URL,NEXT_LLM_API_KEY,NEXT_DEEPGRAM_API_KEY,NEXT_ELEVENLABS_API_KEY&envDescription=API%20keys%20and%20credentials%20needed%20to%20run%20the%20app&envLink=https%3A%2F%2Fgithub.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs%23prerequisites&demo-title=Conversational%20AI%20Demo&demo-description=A%20Next.js-based%20web-app%20for%20conversational%20AI%20agents&demo-image=https%3A%2F%2Fraw.githubusercontent.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs%2Fmain%2F.github%2Fassets%2FConversation-Ai-Client.gif&defaultValues=NEXT_LLM_URL=https://api.openai.com/v1/chat/completions)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs&project-name=agent-quickstart-nextjs&repository-name=agent-quickstart-nextjs&env=NEXT_PUBLIC_AGORA_APP_ID,NEXT_AGORA_APP_CERTIFICATE&envDescription=Agora%20credentials%20needed%20to%20run%20the%20app&envLink=https%3A%2F%2Fgithub.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs%23prerequisites&demo-title=Agora%20Conversational%20AI%20Next.js%20Quickstart&demo-description=Official%20Next.js%20quickstart%20for%20building%20browser-based%20voice%20AI%20with%20Agora&demo-image=https%3A%2F%2Fraw.githubusercontent.com%2FAgoraIO-Conversational-AI%2Fagent-quickstart-nextjs%2Fmain%2F.github%2Fassets%2FConversation-Ai-Client.gif)
 
 This will:
 
 1. Clone the repository to your GitHub account
 2. Create a new project on Vercel
 3. Prompt you to fill in the required environment variables:
-   - **Required**: Agora credentials (`NEXT_PUBLIC_AGORA_APP_ID`, `NEXT_AGORA_APP_CERTIFICATE`, `NEXT_PUBLIC_AGENT_UID`)
-   - **Required**: LLM endpoint and API key (`NEXT_LLM_URL`, `NEXT_LLM_API_KEY`)
-   - **Required**: Deepgram API key (`NEXT_DEEPGRAM_API_KEY`) and ElevenLabs API key (`NEXT_ELEVENLABS_API_KEY`)
+   - **Required**: Agora credentials (`NEXT_PUBLIC_AGORA_APP_ID`, `NEXT_AGORA_APP_CERTIFICATE`)
 4. Deploy the application automatically
 
-## Features
+## Included in This Repo
 
-### Audio Input Control
-- **Microphone Toggle**: Easy-to-use button to enable/disable your microphone
-- **Device Selection**: Choose from multiple microphone inputs with the microphone selector dropdown
-- **Hot-Swap Support**: Automatically detects when devices are plugged in/unplugged
-- **Audio Visualization**: Real-time visual feedback showing microphone input levels
+### Frontend
 
-### Real-Time Text Streaming
-- **Live Transcriptions**: See what you say and the AI's responses in real-time as text
-- **Message Status Indicators**: Visual feedback for in-progress, completed, and interrupted messages
-- **Smart Auto-Scroll**: Automatically scrolls to new messages while preserving scroll position when reviewing history
-- **Mobile-Responsive Chat UI**: Collapsible chat window that adapts to different screen sizes
-- **Desktop Auto-Open**: Chat window automatically opens on first message (desktop only)
-- **Message Persistence**: Full conversation history maintained throughout the session
+- `app/page.tsx` renders the landing experience
+- `components/LandingPage.tsx` starts the session, requests tokens, and logs RTM in
+- `components/ConversationComponent.tsx` manages RTC join, mic publishing, agent state, and transcript rendering
+- `components/MicrophoneSelector.tsx` handles input device selection
 
-### AI Conversation Engine
-- **Custom LLM Integration**: Connect your preferred LLM (OpenAI, Anthropic, etc.)
-- **ElevenLabs TTS**: High-quality voice synthesis with ElevenLabs
-- **Modern Turn Detection**: Advanced turn-taking with configurable interrupt behavior
-- **RTM Data Channel**: Reliable message delivery with metrics and error reporting
-- **Token Management**: Automatic token renewal for both RTC and RTM to prevent disconnections
-- **Agent Lifecycle**: Agent is invited when you click "Try it now!"; End Conversation button stops the agent and closes the session
-- **Official Toolkit**: Uses Agora's ConversationalAIAPI for robust conversation management
+### Backend
 
-### User Experience
-- **Audio Visualizations**: Animated frequency bars for both user and AI audio
-- **Connection Status**: Real-time connection indicators
-- **Error Handling**: Graceful error messages and recovery options
-- **Accessibility**: ARIA labels and keyboard-friendly controls
-
-## Voice Options
-
-### ElevenLabs
-
-Browse and select voices at: https://elevenlabs.io/app/voice-lab
-
-Set your chosen voice ID in the `ELEVENLABS_VOICE_ID` constant in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts).
-
-## Key Components
-
-The application is built with a modular component architecture:
-
-### Core Components
-
-- **`LandingPage.tsx`**: Entry point that invites the agent when you click "Try it now!" and manages the conversation lifecycle with proper agent cleanup on end
-- **`ConversationComponent.tsx`**: Main conversation container handling RTC and RTM connections, audio/text streaming, and the End Conversation flow
-- **`MicrophoneSelector.tsx`**: Dropdown component for selecting audio input devices with hot-swap support
+- `app/api/generate-agora-token/route.ts` issues RTC + RTM tokens
+- `app/api/invite-agent/route.ts` starts the agent session
+- `app/api/stop-conversation/route.ts` stops the active agent session
+- `app/api/chat/completions/route.ts` is an optional OpenAI-compatible custom LLM proxy
 
 ### Agora Packages
 
-- **`agora-agent-uikit`**: Pre-built conversation UI components used directly in `ConversationComponent`:
-  - `AudioVisualizer` — animated frequency bars that respond to the agent's audio track
-  - `ConvoTextStream` — floating chat panel showing live and completed transcript turns
-  - `MicButtonWithVisualizer` (from `agora-agent-uikit/rtc`) — mic button with built-in Web Audio visualization
-  - `transcriptToMessageList` — converts toolkit transcript items into UI-ready message objects
-- **`agora-agent-client-toolkit`**: `AgoraVoiceAI` class that subscribes to RTM transcript events and normalizes them into a simple message list
-- **`agora-agent-server-sdk`**: Server-side SDK used in API routes to start and stop the AI agent
-
-### Utilities
-
-- **`lib/utils.ts`**: Helper functions including the shadcn `cn` class merge utility
-- **`types/conversation.ts`**: TypeScript type definitions for conversation data structures
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- `agora-agent-server-sdk` manages agent lifecycle from the server
+- `agora-agent-client-toolkit` handles transcript and agent events in the browser
+- `agora-agent-uikit` provides the conversation UI components
+- `agora-rtc-react` and `agora-rtm` handle media and messaging transport
 
 ## API Endpoints
 
@@ -205,9 +181,9 @@ The application provides the following API endpoints:
 }
 ```
 
-## Technical Implementation Details
+## Runtime Details
 
-### Text Streaming Architecture
+### Transcript Flow
 
 The text streaming feature uses `agora-agent-client-toolkit` with RTM for reliable real-time transcriptions:
 
@@ -216,13 +192,14 @@ The text streaming feature uses `agora-agent-client-toolkit` with RTM for reliab
 3. **`ConversationComponent`** handles the event, remaps local user UIDs, and updates React state with separated in-progress and completed turns
 4. **`ConvoTextStream`** (from `agora-agent-uikit`) renders the chat panel with smart scrolling and streaming indicators
 
-Key features:
-- **Dual RTC + RTM tokens** for secure access to both audio and messaging channels
-- **Audio PTS metadata** enabled for accurate transcription timing synchronization
-- **Modern turn detection** with configurable interrupt behavior
-- **Proper resource cleanup** when conversations end
+Key points:
 
-### Microphone Device Management
+- dual RTC + RTM tokens are used for secure access to both transports
+- audio PTS metadata is enabled for transcript timing accuracy
+- turn detection is configured in the invite route
+- the app cleans up RTC, RTM, and agent state when the conversation ends
+
+### Audio Input
 
 The MicrophoneSelector component provides:
 
@@ -231,7 +208,7 @@ The MicrophoneSelector component provides:
 - **Seamless switching** using `localMicrophoneTrack.setDevice(deviceId)`
 - **Automatic fallback** when the current device is disconnected
 
-### Audio Visualization
+### Visualization
 
 `AudioVisualizer` and `MicButtonWithVisualizer` (from `agora-agent-uikit`) use the Web Audio API:
 
@@ -241,23 +218,37 @@ The MicrophoneSelector component provides:
 
 ## Architecture
 
-This application uses a dual-channel architecture for optimal performance:
+This quickstart uses a split media-plane and control-plane architecture:
 
-### RTC + RTM Integration
+```mermaid
+flowchart LR
+    C["Voice AI Client<br/>Next.js browser app"] -->|"RTC audio + RTM transcripts/state"| S["Agora SD-RTN"]
+    A["Conversational AI Agent<br/>Agora cloud agent session"] -->|"RTC audio + RTM events"| S
+    C -->|"Token request"| B["Next.js Backend<br/>API routes + server-side agent management"]
+    B -->|"Generate RTC/RTM token"| C
+    B -->|"invite / update / list / stop<br/>agent management APIs"| G["Agora Conversational AI service"]
+    G -->|"Starts and manages agent session"| A
+```
+
+The browser client and the cloud agent both connect to Agora's SD-RTN for the real-time audio and RTM data path. The Next.js backend stays on the control plane: it generates tokens and manages the agent lifecycle against Agora's service APIs. In this quickstart, the exposed routes cover invite and stop today, and the same backend layer is where update and list operations belong.
+
+### RTC + RTM
+
 - **RTC (Real-Time Communication)**: Handles high-quality audio streaming between users and AI agents
 - **RTM (Real-Time Messaging)**: Delivers transcriptions, agent state updates, metrics, and error messages
 - **Dual Token Authentication**: Single token provides secure access to both RTC and RTM services
 - **Audio PTS Metadata**: Enables precise synchronization between audio playback and transcription display
 
-### Conversation Management
-- **`agora-agent-client-toolkit`**: `AgoraVoiceAI` class managing the complete transcript lifecycle
-- **Event-Driven Architecture**: Real-time updates for transcripts, agent state changes, and system events
-- **Turn Detection**: Modern voice activity detection with configurable interrupt behavior
-- **Resource Cleanup**: Automatic cleanup of RTC, RTM, and agent resources when conversations end
+### Agent Lifecycle
 
-### Benefits
-- Reliable message delivery through dedicated RTM channel
-- Access to real-time agent metrics and error reporting
-- Better timing synchronization for natural conversation flow
-- Proper resource management preventing memory leaks
-- Modern API patterns following Agora best practices
+- **`agora-agent-server-sdk`**: starts and stops the cloud agent session from the Next.js backend
+- **Invite Route**: configures the default STT, LLM, TTS, turn detection, and RTM-enabled agent behavior
+- **Client Toolkit**: receives transcript, metrics, and state events after the agent joins the channel
+- **Resource Cleanup**: the app stops the agent session and tears down RTC and RTM resources when the conversation ends
+
+### Why It Is Structured This Way
+
+- audio stays on Agora's real-time network instead of passing through your Next.js server
+- the backend only handles token generation and agent control operations
+- RTM carries transcripts, metrics, and agent state separately from the audio stream
+- the client remains a standard browser app built with Next.js and React

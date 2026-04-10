@@ -14,7 +14,7 @@ By the end of this guide, you will have a real-time audio conversation applicati
 
 Before starting, for the guide you're going to need to have:
 
-- Node.js (v24 or higher; see `engines` in `package.json`)
+- Node.js (v22 or higher; see `engines` in `package.json`)
 - A basic understanding of React with TypeScript and Next.js.
 - [An Agora account](https://console.agora.io/signup) - _first 10k minutes each month are free_
 - Conversational AI service [activated on your AppID](https://console.agora.io/)
@@ -828,16 +828,13 @@ import {
   AgoraClient,
   Agent,
   Area,
-  AresSTT,
+  DeepgramSTT,
   ExpiresIn,
+  MiniMaxTTS,
   OpenAI,
-  OpenAITTS,
 } from 'agora-agent-server-sdk';
-
-// Mirrors `AgentPresets` from the SDK (not re-exported on package entry); used for Agora reseller LLM/TTS.
-const BUILTIN_LLM_PRESET = 'openai_gpt_4o_mini' as const;
-const BUILTIN_TTS_PRESET = 'openai_tts_1' as const;
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
+import { DEFAULT_AGENT_UID } from '@/lib/agora';
 
 // System prompt that defines the agent's personality and behavior.
 // Swap this out to change what the agent talks about.
@@ -871,7 +868,7 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 const GREETING = process.env.NEXT_AGENT_GREETING ?? `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
 
 // agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
-const agentUid = process.env.NEXT_PUBLIC_AGENT_UID || 'Agent';
+const agentUid = process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -900,8 +897,8 @@ export async function POST(request: NextRequest) {
       appCertificate,
     });
 
-    // ASR: Agora ARES (no third-party STT API key).
-    // LLM + TTS: Agora reseller presets (no BYOK); preset IDs must match createSession below.
+    // Default agent configuration: Agora-managed STT, LLM, and TTS.
+    // Optional BYOK examples can be added if you want to swap providers.
     const agent = new Agent({
       name: `conversation-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
       instructions: ADA_PROMPT,
@@ -928,21 +925,29 @@ export async function POST(request: NextRequest) {
       },
       advancedFeatures: { enable_rtm: true, enable_tools: true },
     })
-      .withStt(new AresSTT({ language: 'en' }))
+      .withStt(
+        new DeepgramSTT({
+          model: 'nova-3',
+          language: 'en',
+        }),
+      )
       .withLlm(
         new OpenAI({
           model: 'gpt-4o-mini',
           greetingMessage: GREETING,
           failureMessage: 'Please wait a moment.',
           maxHistory: 15,
-          maxTokens: 1024,
-          temperature: 0.7,
-          topP: 0.95,
+          params: {
+            max_tokens: 1024,
+            temperature: 0.7,
+            top_p: 0.95,
+          },
         }),
       )
       .withTts(
-        new OpenAITTS({
-          voice: 'alloy',
+        new MiniMaxTTS({
+          model: 'speech_2_6_turbo',
+          voiceId: 'English_captivating_female1',
         }),
       );
 
@@ -952,7 +957,6 @@ export async function POST(request: NextRequest) {
       remoteUids: [requester_id],
       idleTimeout: 30,
       expiresIn: ExpiresIn.hours(1),
-      preset: [BUILTIN_LLM_PRESET, BUILTIN_TTS_PRESET],
     });
 
     const agentId = await session.start();
@@ -977,9 +981,9 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-This quickstart uses **`agora-agent-server-sdk` ^1.3.1** with **AresSTT** (Agora ASR), **OpenAI** (`gpt-4o-mini`, no `apiKey` in code — billing via Agora), **OpenAITTS** (`alloy`, no key), and **`createSession` `preset: ['openai_gpt_4o_mini', 'openai_tts_1']`** so LLM/TTS run on Agora’s reseller integration. The SDK still supports other STT/LLM/TTS providers if you bring your own keys and configuration.
+This quickstart uses **`agora-agent-server-sdk` ^1.3.1** with **DeepgramSTT**, **OpenAI** (`gpt-4o-mini`), and **MiniMaxTTS** through Agora-managed defaults, so the base quickstart only needs Agora credentials. The SDK still supports other STT/LLM/TTS providers if you want to enable the optional BYOK examples.
 
-> **Note:** Only Agora App ID, App Certificate, and (on the client) `NEXT_PUBLIC_AGENT_UID` are required for this default pipeline. See the environment variables reference at the end of this guide. Optional `NEXT_LLM_URL` / `NEXT_LLM_API_KEY` apply only if you use the optional `app/api/chat/completions` proxy.
+> **Note:** Only Agora App ID, App Certificate, and `NEXT_PUBLIC_AGENT_UID` are required for this default agent configuration. See the environment variables reference at the end of this guide. Optional `NEXT_LLM_URL` / `NEXT_LLM_API_KEY` apply only if you enable the optional BYOK block or use the optional `app/api/chat/completions` proxy.
 
 ### Stop Conversation Route
 
@@ -1479,7 +1483,7 @@ const GREETING = process.env.NEXT_AGENT_GREETING ?? `Hello! How can I assist you
 
 ### Customizing the Voice
 
-The default pipeline uses **OpenAITTS** with `voice: 'alloy'` and the `openai_tts_1` session preset. To use another vendor, replace `.withTts(...)` and the TTS entry in `createSession`’s `preset` array with the matching SDK types and preset IDs from the Agora Conversational AI documentation.
+The default agent configuration uses **MiniMaxTTS** with `model: 'speech_2_6_turbo'` and `voiceId: 'English_captivating_female1'`. To use another vendor, replace `.withTts(...)` with the matching SDK type and, if needed, enable the optional BYOK environment variables for that provider.
 
 ### Fine-tuning Voice Activity Detection
 
@@ -1515,17 +1519,14 @@ Here's a complete list of environment variables for your `.env.local` file:
 # Agora Configuration
 NEXT_PUBLIC_AGORA_APP_ID=
 NEXT_AGORA_APP_CERTIFICATE=
-NEXT_PUBLIC_AGENT_UID=Agent
+NEXT_PUBLIC_AGENT_UID=12345
 
-# LLM Configuration (OpenAI or compatible)
-NEXT_LLM_URL=https://api.openai.com/v1/chat/completions
-NEXT_LLM_API_KEY=
-
-# STT - Deepgram
-NEXT_DEEPGRAM_API_KEY=
-
-# TTS - ElevenLabs
-NEXT_ELEVENLABS_API_KEY=
+# Optional BYOK examples
+# NEXT_LLM_URL=https://api.openai.com/v1/chat/completions
+# NEXT_LLM_API_KEY=
+# NEXT_DEEPGRAM_API_KEY=
+# NEXT_ELEVENLABS_API_KEY=
+# NEXT_ELEVENLABS_VOICE_ID=
 ```
 
 ## Next Steps

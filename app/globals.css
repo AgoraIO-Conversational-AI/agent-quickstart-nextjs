@@ -76,7 +76,7 @@
   --viz-stop-3: 285 58% 48%;
 
   /* Font */
-  --font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -414,5 +414,25 @@ strong {
     min-height: 3.5rem;
     max-width: 3.5rem;
     max-height: 3.5rem;
+  }
+}
+
+/* Transcript panel sizing: give mobile more breathing room around the top controls. */
+.conversation-transcript .chatbox.expanded {
+  width: min(24rem, calc(100vw - 2rem));
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .conversation-transcript {
+    left: 1rem !important;
+    right: 1rem !important;
+    bottom: 5.75rem !important;
+  }
+
+  .conversation-transcript .chatbox.expanded {
+    width: min(18rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: min(20rem, calc(100vh - 14rem));
   }
 }
