@@ -39,7 +39,7 @@ import {
   getConversationIssueSeverity,
   type ConnectionIssue,
 } from './ConversationErrorCard';
-import { ConnectionStatusPanel } from './ConnectionStatusPanel';
+// import { ConnectionStatusPanel } from './ConnectionStatusPanel';
 import type { ConversationComponentProps } from '@/types/conversation';
 
 // Cap the displayed issues list to avoid overwhelming the UI during a cascade of errors.
@@ -454,7 +454,7 @@ export default function ConversationComponent({
   return (
     <div className="flex flex-col gap-6 p-4 h-full">
       {/* Top-left status affordance: opens transport and agent error details without covering the main controls. */}
-      <div className="absolute top-4 left-4">
+      {/* <div className="absolute top-4 left-4">
         <ConnectionStatusPanel
           connectionState={connectionState}
           connectionSeverity={connectionSeverity}
@@ -462,7 +462,7 @@ export default function ConversationComponent({
           isOpen={isConnectionDetailsOpen}
           onToggle={() => setIsConnectionDetailsOpen((open) => !open)}
         />
-      </div>
+      </div> */}
 
       {/* Top-right destructive action: stops the cloud agent and ends the current session. */}
       <div className="absolute top-4 right-4">
