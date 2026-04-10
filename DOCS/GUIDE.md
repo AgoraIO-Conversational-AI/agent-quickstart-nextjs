@@ -798,7 +798,7 @@ export default function ConversationComponent({
 
 Now that we have our basic RTC functionality and token generation working, let's test the application.
 
-1. Run the application using `pnpm run dev`
+1. Run the application using `pnpm dev`
 2. Open the application in your browser, using the url `http://localhost:3000`
 3. Click on the "Try it now!" button
 4. You should see the connection status change to "Connected"
@@ -1051,8 +1051,8 @@ export async function POST(request: Request) {
 
 Rather than building custom microphone buttons and audio visualizers from scratch, Agora provides two packages that handle the UI and transcript logic for you:
 
-- **`agora-agent-uikit`** — pre-built components: `AudioVisualizer`, `MicButtonWithVisualizer`, `ConvoTextStream`
-- **`agora-agent-client-toolkit`** — `AgoraVoiceAI` class that subscribes to RTM transcript events and normalizes them into a simple message list
+- **`agora-agent-uikit`** — pre-built components: `AgentVisualizer`, `MicButtonWithVisualizer`, `ConvoTextStream`
+- **`agora-agent-client-toolkit`** — `AgoraVoiceAI` class that subscribes to RTM transcript events and emits transcript, state, and error events
 
 Both packages are already installed. Now we'll wire them into the `ConversationComponent`.
 
@@ -1063,7 +1063,7 @@ When the AI agent speaks (or the user speaks), the Agora Conversational AI Engin
 1. The agent is configured with `enable_rtm: true` (done in the invite-agent route above)
 2. On the client, `AgoraVoiceAI.init()` connects to the RTM channel and listens for these events
 3. It fires a `TRANSCRIPT_UPDATED` event with a normalized list of transcript items
-4. We convert those items into a message list and pass them to `ConvoTextStream` for display
+4. We remap the local user UID, adapt the transcript items into `IMessageListItem`, and pass them to `ConvoTextStream` for display
 
 ### Microphone Selector (Optional)
 
@@ -1082,14 +1082,14 @@ Here is the full updated `ConversationComponent` using the toolkit and uikit:
 ```typescript
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { X } from 'lucide-react';
 import { setParameter } from 'agora-rtc-sdk-ng/esm';
 import {
   useRTCClient,
   useLocalMicrophoneTrack,
   useRemoteUsers,
   useClientEvent,
-  useIsConnected,
   useJoin,
   usePublish,
   RemoteUser,
@@ -1098,6 +1098,8 @@ import {
 import {
   AgoraVoiceAI,
   AgoraVoiceAIEvents,
+  AgentState,
+  MessageSalStatus,
   TranscriptHelperMode,
   TurnStatus,
   type TranscriptHelperItem,
@@ -1105,15 +1107,59 @@ import {
   type AgentTranscription,
 } from 'agora-agent-client-toolkit';
 import {
-  AudioVisualizer,
+  AgentVisualizer,
   ConvoTextStream,
-  transcriptToMessageList,
+  type AgentVisualizerState,
+  type IMessageListItem,
 } from 'agora-agent-uikit';
 import { MicButtonWithVisualizer } from 'agora-agent-uikit/rtc';
+import { Button } from '@/components/ui/button';
+import { DEFAULT_AGENT_UID } from '@/lib/agora';
 import { MicrophoneSelector } from './MicrophoneSelector';
-import type { ConversationComponentProps, ClientStartRequest } from '@/types/conversation';
+import { ConnectionStatusPanel } from './ConnectionStatusPanel';
+import {
+  getConversationIssueSeverity,
+  type ConnectionIssue,
+} from './ConversationErrorCard';
+import type { ConversationComponentProps } from '@/types/conversation';
 
 type ToolkitMessage = TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>>;
+
+function mapAgentVisualizerState(
+  agentState: AgentState | null,
+  isAgentConnected: boolean,
+  connectionState: string,
+): AgentVisualizerState {
+  if (connectionState === 'DISCONNECTED' || connectionState === 'DISCONNECTING') {
+    return 'disconnected';
+  }
+  if (connectionState === 'CONNECTING' || connectionState === 'RECONNECTING') {
+    return 'joining';
+  }
+  if (!isAgentConnected) {
+    return 'not-joined';
+  }
+  switch (agentState) {
+    case 'listening':
+      return 'listening';
+    case 'thinking':
+      return 'analyzing';
+    case 'speaking':
+      return 'talking';
+    default:
+      return 'ambient';
+  }
+}
+
+function toMessageListItem(item: ToolkitMessage): IMessageListItem {
+  return {
+    turn_id: item.turn_id,
+    uid: Number(item.uid) || 0,
+    text: typeof item.text === 'string' ? item.text : '',
+    status: item.status as unknown as IMessageListItem['status'],
+    createdAt: typeof item._time === 'number' ? item._time * 1000 : undefined,
+  };
+}
 
 export default function ConversationComponent({
   agoraData,
@@ -1122,13 +1168,15 @@ export default function ConversationComponent({
   onEndConversation,
 }: ConversationComponentProps) {
   const client = useRTCClient();
-  const isConnected = useIsConnected();
   const remoteUsers = useRemoteUsers();
   const [isEnabled, setIsEnabled] = useState(true);
   const [isAgentConnected, setIsAgentConnected] = useState(false);
-  const agentUID = process.env.NEXT_PUBLIC_AGENT_UID;
-  const [activeAgentId, setActiveAgentId] = useState<string | undefined>(agoraData.agentId);
+  const [isConnectionDetailsOpen, setIsConnectionDetailsOpen] = useState(false);
+  const [connectionState, setConnectionState] = useState<string>('CONNECTING');
+  const agentUID = process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
   const [joinedUID, setJoinedUID] = useState<UID>(0);
+  const [agentState, setAgentState] = useState<AgentState | null>(null);
+  const [connectionIssues, setConnectionIssues] = useState<ConnectionIssue[]>([]);
 
   // StrictMode guard: delay useJoin's ready flag until after the fake-unmount
   // cycle completes. React StrictMode fires cleanup synchronously before any
@@ -1175,25 +1223,18 @@ export default function ConversationComponent({
     }
   }, [client]);
 
-  // Capture the RTC-assigned UID for token renewal and agent invite
+  // Capture the RTC-assigned UID for token renewal
   useEffect(() => {
     if (joinSuccess && client) {
       setJoinedUID(client.uid as UID);
-      console.log('Join successful, using UID:', client.uid);
     }
   }, [joinSuccess, client]);
 
   // --- Transcript via AgoraVoiceAI ---
-  //
-  // Initialized imperatively after joinSuccess rather than in a mount effect.
-  // StrictMode double-mounts on the initial render when joinSuccess is still
-  // false, so the guard fires before any init happens. By the time joinSuccess
-  // flips to true StrictMode's fake-unmount cycle is done and init runs once.
-  const voiceAIRef = useRef<AgoraVoiceAI | null>(null);
-  const [transcript, setTranscript] = useState<ToolkitMessage[]>([]);
+  const [rawTranscript, setRawTranscript] = useState<ToolkitMessage[]>([]);
 
   useEffect(() => {
-    if (!joinSuccess || !client) return;
+    if (!isReady || !joinSuccess) return;
 
     let cancelled = false;
 
@@ -1206,25 +1247,46 @@ export default function ConversationComponent({
           enableLog: true,
         });
 
-        if (cancelled) {
-          try { ai.destroy(); } catch { /* ignore */ }
-          return;
-        }
+        if (cancelled) return;
 
-        voiceAIRef.current = ai;
         ai.on(AgoraVoiceAIEvents.TRANSCRIPT_UPDATED, (messages) => {
-          if (cancelled) return;
-          // The toolkit uses uid="0" as a sentinel for the local user's speech.
-          // The uikit treats uid===0 as an AI message, so we replace it with
-          // the actual RTC UID so user transcripts render on the correct side.
-          const localUID = String(client.uid);
-          const remapped = messages.map((m) =>
-            m.uid === '0' ? { ...m, uid: localUID } : m
-          );
-          setTranscript(remapped as ToolkitMessage[]);
+          setRawTranscript([...messages] as ToolkitMessage[]);
+        });
+        ai.on(AgoraVoiceAIEvents.AGENT_STATE_CHANGED, (_, event) => {
+          setAgentState(event.state);
+        });
+        ai.on(AgoraVoiceAIEvents.MESSAGE_ERROR, (agentUserId, error) => {
+          setConnectionIssues((prev) => [
+            {
+              id: `${Date.now()}-${agentUserId}-${error.code}`,
+              source: 'rtm',
+              agentUserId,
+              code: error.code,
+              message: error.message,
+              timestamp: error.timestamp * 1000,
+            },
+            ...prev,
+          ].slice(0, 6));
+        });
+        ai.on(AgoraVoiceAIEvents.MESSAGE_SAL_STATUS, (agentUserId, salStatus) => {
+          if (
+            salStatus.status === MessageSalStatus.VP_REGISTER_FAIL ||
+            salStatus.status === MessageSalStatus.VP_REGISTER_DUPLICATE
+          ) {
+            setConnectionIssues((prev) => [
+              {
+                id: `${Date.now()}-${agentUserId}-${salStatus.status}`,
+                source: 'rtm',
+                agentUserId,
+                code: salStatus.status,
+                message: `SAL status: ${salStatus.status}`,
+                timestamp: salStatus.timestamp * 1000,
+              },
+              ...prev,
+            ].slice(0, 6));
+          }
         });
         ai.subscribeMessage(agoraData.channel);
-        console.log('[ConversationalAI] toolkit connected, listening for transcripts');
       } catch (error) {
         if (!cancelled) console.error('[ConversationalAI] init error:', error);
       }
@@ -1232,44 +1294,45 @@ export default function ConversationComponent({
 
     return () => {
       cancelled = true;
-      const ai = voiceAIRef.current;
-      if (ai) {
-        try { ai.unsubscribe(); ai.destroy(); } catch { /* ignore */ }
-        voiceAIRef.current = null;
-      }
-      setTranscript([]);
+      try {
+        const ai = AgoraVoiceAI.getInstance();
+        if (ai) {
+          ai.unsubscribe();
+          ai.destroy();
+        }
+      } catch {}
+      setRawTranscript([]);
     };
-    // client and rtmClient are stable for the component lifetime.
-    // agoraData.channel is fixed per session.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [joinSuccess]);
+  }, [isReady, joinSuccess]);
+
+  const transcript = useMemo(() => {
+    const localUID = String(client.uid);
+    return rawTranscript.map((m) =>
+      m.uid === '0' ? { ...m, uid: localUID } : m
+    );
+  }, [rawTranscript, client.uid]);
 
   // Completed (END + INTERRUPTED) messages shown as history.
   // INTERRUPTED must be included — if the agent's first turn is cut off,
   // messageList stays empty and ConvoTextStream never auto-opens.
   const messageList = useMemo(
-    () =>
-      transcriptToMessageList(
-        transcript.filter((m) => m.status !== TurnStatus.IN_PROGRESS)
-      ),
+    () => transcript.filter((m) => m.status !== TurnStatus.IN_PROGRESS).map(toMessageListItem),
     [transcript]
   );
 
   const currentInProgressMessage = useMemo(() => {
     const m = transcript.find((x) => x.status === TurnStatus.IN_PROGRESS);
-    return m ? transcriptToMessageList([m])[0] ?? null : null;
+    return m ? toMessageListItem(m) : null;
   }, [transcript]);
 
   // Publish local mic once the track exists; usePublish waits for RTC connection.
   usePublish([localMicrophoneTrack]);
 
   useClientEvent(client, 'user-joined', (user) => {
-    console.log('Remote user joined:', user.uid);
     if (user.uid.toString() === agentUID) setIsAgentConnected(true);
   });
 
   useClientEvent(client, 'user-left', (user) => {
-    console.log('Remote user left:', user.uid);
     if (user.uid.toString() === agentUID) setIsAgentConnected(false);
   });
 
@@ -1280,15 +1343,10 @@ export default function ConversationComponent({
     );
   }, [remoteUsers, agentUID]);
 
-  useClientEvent(client, 'connection-state-change', (curState, prevState) => {
-    console.log(`Connection state changed from ${prevState} to ${curState}`);
+  useClientEvent(client, 'connection-state-change', (curState) => {
+    setConnectionState(curState);
   });
 
-  /**
-   * Mute/unmute via track.setEnabled() only — usePublish owns publish state.
-   * If we also unpublish in the toggle, usePublish and the button fight each other
-   * and break the MicButtonWithVisualizer Web Audio graph.
-   */
   const handleMicToggle = useCallback(async () => {
     const next = !isEnabled;
     const track = localMicrophoneTrack;
@@ -1299,47 +1357,17 @@ export default function ConversationComponent({
     try {
       await track.setEnabled(next);
       setIsEnabled(next);
-      if (next && !isAgentConnected) {
-        // If mic is re-enabled and agent isn't connected yet, invite them
-        await handleStartConversation();
-      }
     } catch (error) {
       console.error('Failed to toggle microphone:', error);
     }
-  }, [isEnabled, localMicrophoneTrack, isAgentConnected]);
+  }, [isEnabled, localMicrophoneTrack]);
 
-  const handleStartConversation = useCallback(async () => {
-    if (!activeAgentId) return;
-    try {
-      const startRequest: ClientStartRequest = {
-        requester_id: joinedUID?.toString(),
-        channel_name: agoraData.channel,
-      };
-      const response = await fetch('/api/invite-agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(startRequest),
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to start conversation: ${response.statusText}`);
-      }
-      const data = await response.json();
-      if (data.agent_id) setActiveAgentId(data.agent_id);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.warn('Error starting conversation:', error.message);
-      }
-    }
-  }, [activeAgentId, joinedUID, agoraData.channel]);
-
-  // Token renewal — also renews the RTM token (both share the same token)
   const handleTokenWillExpire = useCallback(async () => {
     if (!onTokenWillExpire || !joinedUID) return;
     try {
-      const newToken = await onTokenWillExpire(joinedUID.toString());
-      await client?.renewToken(newToken);
-      await rtmClient.renewToken(newToken);
-      console.log('Successfully renewed Agora RTC and RTM tokens');
+      const { rtcToken, rtmToken } = await onTokenWillExpire(joinedUID.toString());
+      await client?.renewToken(rtcToken);
+      await rtmClient.renewToken(rtmToken);
     } catch (error) {
       console.error('Failed to renew Agora token:', error);
     }
@@ -1347,41 +1375,59 @@ export default function ConversationComponent({
 
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
+  const connectionSeverity = useMemo<'normal' | 'warning' | 'error'>(() => {
+    if (connectionState === 'DISCONNECTED' || connectionState === 'DISCONNECTING') {
+      return 'error';
+    }
+    if (connectionState === 'CONNECTING' || connectionState === 'RECONNECTING') {
+      return 'warning';
+    }
+    if (connectionIssues.length === 0) return 'normal';
+    return connectionIssues.some((issue) => getConversationIssueSeverity(issue) === 'error')
+      ? 'error'
+      : 'warning';
+  }, [connectionState, connectionIssues]);
+
+  const visualizerState = useMemo(
+    () => mapAgentVisualizerState(agentState, isAgentConnected, connectionState),
+    [agentState, isAgentConnected, connectionState]
+  );
+
   return (
     <div className="flex flex-col gap-6 p-4 h-full">
-      {/* Connection status + end call */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <button
-          onClick={onEndConversation}
-          className="px-4 py-2 bg-transparent text-red-500 rounded-full border border-red-500 backdrop-blur-sm
-          hover:bg-red-500 hover:text-black transition-all duration-300 shadow-lg hover:shadow-red-500/20 text-sm font-medium"
-        >
-          End Conversation
-        </button>
-        <div
-          className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+      <div className="absolute top-4 left-4">
+        <ConnectionStatusPanel
+          connectionState={connectionState}
+          connectionSeverity={connectionSeverity}
+          connectionIssues={connectionIssues}
+          isOpen={isConnectionDetailsOpen}
+          onToggle={() => setIsConnectionDetailsOpen((open) => !open)}
         />
       </div>
 
-      {/* Remote users (agent audio + RTC subscription).
-          Fixed h-40 matches AudioVisualizer's height so the layout doesn't
-          shift when the agent joins or leaves. */}
-      <div className="relative h-40 w-full flex items-center justify-center">
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="destructive"
+          size="icon"
+          onClick={onEndConversation}
+          aria-label="End conversation with AI agent"
+          title="End conversation"
+        >
+          <X />
+        </Button>
+      </div>
+
+      {/* Remote users keep RTC audio subscribed. The visualizer itself is driven by RTM state. */}
+      <div className="relative h-56 w-full flex items-center justify-center">
+        <AgentVisualizer state={visualizerState} size="lg" />
         {remoteUsers.map((user) => (
-          <div key={user.uid} className="w-full">
-            <AudioVisualizer track={user.audioTrack} />
+          <div key={user.uid} className="hidden">
             <RemoteUser user={user} />
           </div>
         ))}
-        {remoteUsers.length === 0 && (
-          <div className="text-center text-gray-500">
-            Waiting for AI agent to join...
-          </div>
-        )}
       </div>
 
-      {/* Local controls */}
-      <div className="fixed bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3">
+      <div className="fixed bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-card/80 backdrop-blur-md border border-border rounded-full px-4 py-2">
         <MicButtonWithVisualizer
           isEnabled={isEnabled}
           setIsEnabled={setIsEnabled}
@@ -1396,6 +1442,7 @@ export default function ConversationComponent({
         messageList={messageList}
         currentInProgressMessage={currentInProgressMessage}
         agentUID={agentUID}
+        className="conversation-transcript"
       />
     </div>
   );
@@ -1406,10 +1453,10 @@ export default function ConversationComponent({
 
 | Component | Import | Description |
 |-----------|--------|-------------|
-| `AudioVisualizer` | `agora-agent-uikit` | Animated bars that respond to the agent's audio track |
+| `AgentVisualizer` | `agora-agent-uikit` | Agent-state-driven visualizer for not-joined, listening, analyzing, talking, and disconnected states |
 | `ConvoTextStream` | `agora-agent-uikit` | Floating chat panel showing live and completed transcript turns |
 | `MicButtonWithVisualizer` | `agora-agent-uikit/rtc` | Mic button with built-in Web Audio visualization |
-| `transcriptToMessageList` | `agora-agent-uikit` | Converts toolkit `TranscriptHelperItem[]` to uikit `IMessageListItem[]` |
+| `ConnectionStatusPanel` | local component | Compact status dot plus expandable RTM/agent issue panel |
 
 ### Key toolkit Classes
 
@@ -1429,7 +1476,7 @@ Now that we have all the components in place, let's finish by testing the applic
 To start the development server:
 
 ```bash
-pnpm run dev
+pnpm dev
 ```
 
 > **Note:** Make sure your `.env.local` file is properly configured with all the necessary credentials. There is a complete list of environment variables at the end of this guide.

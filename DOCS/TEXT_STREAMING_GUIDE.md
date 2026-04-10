@@ -15,7 +15,7 @@ pnpm add agora-agent-client-toolkit agora-agent-uikit agora-rtm
 ```
 
 - **`agora-agent-client-toolkit`** provides the `AgoraVoiceAI` class for receiving transcription data over RTM, managing message state, and emitting updates via events.
-- **`agora-agent-uikit`** provides the `ConvoTextStream` component and helpers that turn toolkit events into a chat UI with no custom implementation required.
+- **`agora-agent-uikit`** provides `ConvoTextStream` for transcript UI and `AgentVisualizer` for agent state UI.
 - **`agora-rtm`** is the Agora Real-Time Messaging SDK — the transport layer that carries transcript data from the agent to the client.
 
 Why bother adding text when the primary interaction is voice? Good question! Here's why it's a game-changer:
@@ -33,8 +33,8 @@ Ready to add this superpower to your app? Let's dive in.
 Adding text streaming involves three main players in your codebase:
 
 1. **The Brains (`agora-agent-client-toolkit`)**: The `AgoraVoiceAI` class. It uses RTM to receive transcription data, manages message states (e.g., "is the AI still talking?"), and emits updates via events.
-2. **The Face (`ConvoTextStream` from `agora-agent-uikit`)**: The pre-built chat UI component. It takes the processed messages from `ConversationComponent` and displays them — chat bubbles, smart scrolling, streaming indicators — all included.
-3. **The Conductor (`ConversationComponent.tsx`)**: Handles the Agora RTC/RTM connection, initializes `AgoraVoiceAI`, subscribes to transcript events, remaps UIDs, and passes data down to `ConvoTextStream`.
+2. **The Face (`ConvoTextStream` and `AgentVisualizer` from `agora-agent-uikit`)**: Pre-built UI components for transcript history and agent state.
+3. **The Conductor (`ConversationComponent.tsx`)**: Handles the Agora RTC/RTM connection, initializes `AgoraVoiceAI`, subscribes to transcript and state events, remaps UIDs, adapts the transcript shape, and passes data down to the UI kit.
 
 Here's how they communicate:
 
@@ -152,6 +152,7 @@ Initialize `AgoraVoiceAI` inside a `useEffect` that fires only after `joinSucces
 import {
   AgoraVoiceAI,
   AgoraVoiceAIEvents,
+  AgentState,
   TranscriptHelperMode,
   TurnStatus,
   type TranscriptHelperItem,
@@ -159,15 +160,17 @@ import {
   type AgentTranscription,
 } from 'agora-agent-client-toolkit';
 import {
+  AgentVisualizer,
   ConvoTextStream,
-  transcriptToMessageList,
+  type AgentVisualizerState,
+  type IMessageListItem,
 } from 'agora-agent-uikit';
 
 type ToolkitMessage = TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>>;
 
 // Inside ConversationComponent:
-const voiceAIRef = useRef<AgoraVoiceAI | null>(null);
-const [transcript, setTranscript] = useState<ToolkitMessage[]>([]);
+const [rawTranscript, setRawTranscript] = useState<ToolkitMessage[]>([]);
+const [agentState, setAgentState] = useState<AgentState | null>(null);
 
 useEffect(() => {
   if (!joinSuccess || !client) return;
@@ -183,22 +186,11 @@ useEffect(() => {
         enableLog: true,
       });
 
-      if (cancelled) {
-        try { ai.destroy(); } catch { /* ignore */ }
-        return;
-      }
-
-      voiceAIRef.current = ai;
       ai.on(AgoraVoiceAIEvents.TRANSCRIPT_UPDATED, (messages) => {
-        if (cancelled) return;
-        // The toolkit uses uid="0" as a sentinel for the local user's speech.
-        // The uikit treats uid===0 as an AI message, so we replace it with
-        // the actual RTC UID so user transcripts render on the correct side.
-        const localUID = String(client.uid);
-        const remapped = messages.map((m) =>
-          m.uid === '0' ? { ...m, uid: localUID } : m
-        );
-        setTranscript(remapped as ToolkitMessage[]);
+        if (!cancelled) setRawTranscript(messages as ToolkitMessage[]);
+      });
+      ai.on(AgoraVoiceAIEvents.AGENT_STATE_CHANGED, (_, event) => {
+        if (!cancelled) setAgentState(event.state);
       });
 
       ai.subscribeMessage(agoraData.channel);
@@ -210,12 +202,14 @@ useEffect(() => {
 
   return () => {
     cancelled = true;
-    const ai = voiceAIRef.current;
-    if (ai) {
-      try { ai.unsubscribe(); ai.destroy(); } catch { /* ignore */ }
-      voiceAIRef.current = null;
-    }
-    setTranscript([]);
+    try {
+      const ai = AgoraVoiceAI.getInstance();
+      if (ai) {
+        ai.unsubscribe();
+        ai.destroy();
+      }
+    } catch {}
+    setRawTranscript([]);
   };
   // client and rtmClient are stable for the component lifetime
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -232,46 +226,70 @@ The toolkit assigns `uid = "0"` to the local user's speech (since the user's act
 
 ## Separating In-Progress from Completed Messages
 
-`ConvoTextStream` takes two props: a list of completed turns and the currently streaming turn. Split them using `transcriptToMessageList` and the `TurnStatus` filter:
+This project no longer uses `transcriptToMessageList()` from the uikit at runtime. Instead, it adapts the transcript items locally into the `IMessageListItem` shape expected by `ConvoTextStream`:
 
 ```typescript
 import { TurnStatus } from 'agora-agent-client-toolkit';
-import { transcriptToMessageList } from 'agora-agent-uikit';
+import type { IMessageListItem } from 'agora-agent-uikit';
+
+function toMessageListItem(item: ToolkitMessage): IMessageListItem {
+  return {
+    turn_id: item.turn_id,
+    uid: Number(item.uid) || 0,
+    text: typeof item.text === 'string' ? item.text : '',
+    status: item.status as unknown as IMessageListItem['status'],
+    createdAt: typeof item._time === 'number' ? item._time * 1000 : undefined,
+  };
+}
+
+const transcript = useMemo(() => {
+  const localUID = String(client.uid);
+  return rawTranscript.map((m) =>
+    m.uid === '0' ? { ...m, uid: localUID } : m
+  );
+}, [rawTranscript, client.uid]);
 
 // Completed turns (END + INTERRUPTED) become the scrollable message history.
 // INTERRUPTED must be included — if the agent's first turn is cut off,
 // messageList stays empty and ConvoTextStream never auto-opens.
 const messageList = useMemo(
-  () =>
-    transcriptToMessageList(
-      transcript.filter((m) => m.status !== TurnStatus.IN_PROGRESS)
-    ),
+  () => transcript.filter((m) => m.status !== TurnStatus.IN_PROGRESS).map(toMessageListItem),
   [transcript]
 );
 
 // The single in-progress turn, if any, is shown as a live streaming bubble.
 const currentInProgressMessage = useMemo(() => {
   const m = transcript.find((x) => x.status === TurnStatus.IN_PROGRESS);
-  return m ? transcriptToMessageList([m])[0] ?? null : null;
+  return m ? toMessageListItem(m) : null;
 }, [transcript]);
 ```
 
+The local adapter is intentional. The current repo hit a browser runtime issue with the uikit converter export, so the quickstart now converts transcript items itself.
+
 ## Rendering with `ConvoTextStream`
 
-Drop `ConvoTextStream` into your JSX. It handles smart scrolling, auto-open on first message, mobile responsiveness, and streaming indicators — no additional code needed.
+Drop `ConvoTextStream` into your JSX. It handles smart scrolling, auto-open on first message, mobile responsiveness, and streaming indicators. This quickstart also renders `AgentVisualizer` from RTM agent state:
 
 ```typescript
-import { ConvoTextStream } from 'agora-agent-uikit';
+import { AgentVisualizer, ConvoTextStream } from 'agora-agent-uikit';
 
-// In your ConversationComponent return:
+<AgentVisualizer state={visualizerState} size="lg" />
 <ConvoTextStream
   messageList={messageList}
   currentInProgressMessage={currentInProgressMessage}
-  agentUID={agentUID}  // e.g. process.env.NEXT_PUBLIC_AGENT_UID
+  agentUID={agentUID}
+  className="conversation-transcript"
 />
 ```
 
 `agentUID` tells the component which messages came from the AI vs. the user, so it can render them on the correct side of the chat.
+
+`visualizerState` is mapped from `AgentState` values:
+
+- `listening` → `listening`
+- `thinking` → `analyzing`
+- `speaking` → `talking`
+- `idle` / `silent` → `ambient`
 
 ### What `ConvoTextStream` does for you
 
@@ -279,7 +297,7 @@ import { ConvoTextStream } from 'agora-agent-uikit';
 - **Auto-open**: Panel opens automatically when the first message arrives (desktop only)
 - **Streaming indicator**: Shows a live animation while the agent's current turn is in progress
 - **Interrupted turns**: Displays completed text even for turns the user cut off
-- **Mobile layout**: Fixed-width panel that positions above the mic controls
+- **Mobile layout**: compact floating panel sized above the mic controls
 
 ## Setting Up the RTM Client
 
@@ -298,6 +316,11 @@ await rtm.subscribe(responseData.channel);
 ```
 
 Then pass it as a prop to `ConversationComponent`. On end conversation, call `rtmClient.logout()` in `LandingPage` — RTM is owned by the same scope that created it.
+
+For token renewal, this project now uses separate renewal requests:
+
+- RTC renews with the post-join RTC UID
+- RTM renews with the universal `uid=0` token
 
 ## Token Requirements
 
