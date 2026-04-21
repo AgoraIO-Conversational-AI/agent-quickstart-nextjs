@@ -1,3 +1,4 @@
+import '@/lib/load-env';
 import { NextResponse } from 'next/server';
 import { AgoraClient, Area } from 'agora-agent-server-sdk';
 import { StopConversationRequest } from '@/types/conversation';

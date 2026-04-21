@@ -1,3 +1,4 @@
+import '@/lib/load-env';
 import { NextRequest, NextResponse } from 'next/server';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 
