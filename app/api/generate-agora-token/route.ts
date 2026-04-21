@@ -45,6 +45,10 @@ export async function GET(request: NextRequest) {
     // console.log('Token generated successfully (RTC + RTM)');
 
     return NextResponse.json({
+      // Surface the App ID to the client so the browser uses whatever value
+      // the server actually resolved (via lib/load-env.ts) — this avoids a
+      // stale `NEXT_PUBLIC_AGORA_APP_ID` being inlined into the dev bundle.
+      appId: APP_ID,
       token,
       uid: uid.toString(),
       channel: channelName,

@@ -1,6 +1,7 @@
 import type { RTMClient } from 'agora-rtm';
 
 export interface AgoraTokenData {
+  appId: string;
   token: string;
   uid: string;
   channel: string;

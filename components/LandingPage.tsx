@@ -117,7 +117,7 @@ export default function LandingPage() {
         (async () => {
           const { default: AgoraRTM } = await import('agora-rtm');
           const rtm: RTMClient = new AgoraRTM.RTM(
-            process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+            responseData.appId,
             String(Date.now()),
           );
           await rtm.login({ token: responseData.token });

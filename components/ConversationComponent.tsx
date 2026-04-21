@@ -150,7 +150,7 @@ export default function ConversationComponent({
 
   const { isConnected: joinSuccess } = useJoin(
     {
-      appid: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+      appid: agoraData.appId,
       channel: agoraData.channel,
       token: agoraData.token,
       uid: parseInt(agoraData.uid, 10) || 0,
