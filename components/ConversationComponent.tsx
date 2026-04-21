@@ -26,7 +26,6 @@ import {
 import { AgentVisualizer, ConvoTextStream } from 'agora-agent-uikit';
 import { MicButtonWithVisualizer } from 'agora-agent-uikit/rtc';
 import { Button } from '@/components/ui/button';
-import { DEFAULT_AGENT_UID } from '@/lib/agora';
 import {
   getCurrentInProgressMessage,
   getMessageList,
@@ -98,8 +97,12 @@ export default function ConversationComponent({
   // Tracks granular RTC connection state for the status dot.
   // Agora states: DISCONNECTED | CONNECTING | CONNECTED | DISCONNECTING | RECONNECTING
   const [connectionState, setConnectionState] = useState<string>('CONNECTING');
-  const agentUID =
-    process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
+  // Source of truth is `agoraData.agentUid` (returned by /api/generate-agora-token
+  // using the same runtime env loader the invite route uses). This avoids the
+  // stale-bundle trap where `process.env.NEXT_PUBLIC_AGENT_UID` is baked in at
+  // dev-server startup and can disagree with whatever the server actually sent
+  // to Agora — a mismatch here silently breaks the isAgentConnected comparison.
+  const agentUID = agoraData.agentUid;
   const [joinedUID, setJoinedUID] = useState<UID>(0);
 
   // Transcript + agent state — managed with AgoraVoiceAI (see effect below).

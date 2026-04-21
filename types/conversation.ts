@@ -2,6 +2,8 @@ import type { RTMClient } from 'agora-rtm';
 
 export interface AgoraTokenData {
   appId: string;
+  /** RTC UID the cloud agent will join with — must match what the server told Agora. */
+  agentUid: string;
   token: string;
   uid: string;
   channel: string;
