@@ -10,6 +10,9 @@ import {
 } from 'agora-agent-server-sdk';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
+// Custom XAI MLLM vendor lives in `lib/vendors/xai-mllm.ts`. It's loaded
+// via dynamic `await import(...)` inside the BYOK example below to mirror
+// the ElevenLabs pattern and avoid an unused static import.
 
 // System prompt that defines the agent's personality and behavior.
 // Swap this out to change what the agent talks about.
@@ -167,6 +170,34 @@ export async function POST(request: NextRequest) {
         //   sampleRate: 24000,
         // }),
       );
+
+    // BYOK — XAI Realtime MLLM (set NEXT_XAI_API_KEY).
+    //
+    // MLLM mode replaces the ASR → LLM → TTS pipeline above; `.withMllm()`
+    // automatically disables the individual vendors, so you can leave the
+    // `.withStt(...).withLlm(...).withTts(...)` chain in place and just
+    // uncomment this block to switch the agent over to xAI.
+    //
+    // agent.withMllm(
+    //   new (await import('@/lib/vendors/xai-mllm')).XAI({
+    //     apiKey: requireEnv('NEXT_XAI_API_KEY'),
+    //     voice: 'eve',
+    //     language: 'en',
+    //     sampleRate: 24000,
+    //     outputModalities: ['text', 'audio'],
+    //     greetingMessage: GREETING,
+    //     failureMessage: 'Please wait a moment.',
+    //     maxHistory: 50,
+    //     turnDetection: {
+    //       mode: 'server_vad',
+    //       serverVadConfig: {
+    //         threshold: 0.5,
+    //         prefixPaddingMs: 640,
+    //         silenceDurationMs: 900,
+    //       },
+    //     },
+    //   }),
+    // );
 
     // remoteUids restricts the agent to only process audio from this user
     const session = agent.createSession(client, {
