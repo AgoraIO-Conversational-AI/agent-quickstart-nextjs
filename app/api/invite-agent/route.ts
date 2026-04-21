@@ -129,6 +129,10 @@ export async function POST(request: NextRequest) {
         apiKey: xaiApiKey,
         // url defaults to wss://api.x.ai/v1/realtime — override via NEXT_XAI_URL if needed.
         ...(getEnv('NEXT_XAI_URL') && { url: getEnv('NEXT_XAI_URL')! }),
+        // MLLM vendors don't inherit `instructions` from the top-level Agent
+        // (Agora only forwards it to LLM-mode pipelines), so we MUST pass it
+        // here or xAI will start every session with no system prompt.
+        instructions,
         voice,
         language: 'en',
         sampleRate: 24000,

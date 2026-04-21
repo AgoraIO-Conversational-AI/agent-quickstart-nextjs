@@ -84,6 +84,17 @@ export interface XAIOptions {
    */
   url?: string;
   /**
+   * System prompt for the xAI session. Forwarded into `params.instructions`,
+   * which the Agora backend passes through to xAI's `session.update` call.
+   *
+   * CRITICAL: Unlike the classic ASR→LLM→TTS pipeline, MLLM vendors do NOT
+   * inherit `instructions` from the top-level `Agent({ instructions })`.
+   * You must set it here or the xAI session starts with no system prompt,
+   * which makes the model fall back to raw Grok behavior and intermittently
+   * break character.
+   */
+  instructions?: string;
+  /**
    * Voice id used by the model (e.g. `"eve"`).
    * Forwarded into `params.voice`.
    */
@@ -146,6 +157,7 @@ export class XAI extends BaseMLLM {
     const {
       apiKey,
       url = 'wss://api.x.ai/v1/realtime',
+      instructions,
       voice,
       language,
       sampleRate = 24000,
@@ -161,8 +173,11 @@ export class XAI extends BaseMLLM {
     } = this.options;
 
     // Build the `params` object only from defined values so we don't leak
-    // `undefined` into the JSON payload.
+    // `undefined` into the JSON payload. `instructions` lives INSIDE params
+    // (matching how GeminiLive / VertexAI forward their system prompts) so
+    // the Agora backend relays it verbatim into xAI's session.update call.
     const mergedParams: Record<string, unknown> = {
+      ...(instructions !== undefined && { instructions }),
       ...(voice !== undefined && { voice }),
       ...(language !== undefined && { language }),
       ...(sampleRate !== undefined && { sample_rate: sampleRate }),
