@@ -245,45 +245,38 @@ export default function LandingPage() {
 
           {!showConversation ? (
             <>
-              {/* Voice picker: lets the user pick which xAI voice the agent
-                  speaks with before the session starts. Disabled during
-                  loading so the selection can't change mid-invite. */}
-              <div className="flex flex-col items-center gap-1.5 animate-fade-up animate-fade-up-d2">
-                <span className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
-                  Agent Voice
-                </span>
+              {/* Primary action row: voice picker on the left, CTA on the right.
+                  Stacks on narrow viewports so neither control wraps or shrinks. */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-up animate-fade-up-d2">
+                {/* Voice picker: lets the user pick which xAI voice the agent
+                    speaks with before the session starts. Disabled during
+                    loading so the selection can't change mid-invite. */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="sm"
                       disabled={isLoading}
-                      className="w-56 justify-between bg-secondary hover:bg-accent/10 border border-border text-foreground"
+                      className="w-40 h-10 justify-between px-4 bg-secondary hover:bg-accent/10 border border-border text-foreground"
                       aria-label={`Agent voice: ${selectedVoice.label}`}
                     >
-                      <span className="flex flex-col items-start leading-tight">
-                        <span className="text-sm font-medium">
-                          {selectedVoice.label}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {selectedVoice.description}
-                        </span>
+                      <span className="text-sm font-medium">
+                        {selectedVoice.label}
                       </span>
                       <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="center"
-                    className="w-56 bg-popover border-border"
+                    className="w-40 bg-popover border-border"
                   >
-                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                      xAI Voices
+                    <div className="px-2 py-1.5 text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                      Agent Voice
                     </div>
                     {XAI_VOICES.map((voice) => (
                       <DropdownMenuItem
                         key={voice.id}
                         onClick={() => setSelectedVoiceId(voice.id)}
-                        className={`cursor-pointer ${
+                        className={`cursor-pointer px-3 py-2 ${
                           voice.id === selectedVoiceId
                             ? 'bg-accent/15 text-primary'
                             : 'text-foreground hover:bg-accent/10'
@@ -304,28 +297,28 @@ export default function LandingPage() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
 
-              {/* Entry CTA: starts token fetch, agent invite, and RTM setup for a new session. */}
-              <Button
-                onClick={handleStartConversation}
-                disabled={isLoading}
-                className="w-56 animate-fade-up animate-fade-up-d3 border-2 border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary disabled:hover:bg-primary disabled:hover:text-primary-foreground"
-                aria-label={
-                  isLoading
-                    ? 'Starting conversation with AI agent'
-                    : 'Start conversation with AI agent'
-                }
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Starting...
-                  </>
-                ) : (
-                  'Try it now!'
-                )}
-              </Button>
+                {/* Entry CTA: starts token fetch, agent invite, and RTM setup for a new session. */}
+                <Button
+                  onClick={handleStartConversation}
+                  disabled={isLoading}
+                  className="w-40 h-10 border-2 border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary disabled:hover:bg-primary disabled:hover:text-primary-foreground"
+                  aria-label={
+                    isLoading
+                      ? 'Starting conversation with AI agent'
+                      : 'Start conversation with AI agent'
+                  }
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Starting...
+                    </>
+                  ) : (
+                    'Try it now!'
+                  )}
+                </Button>
+              </div>
               {error && <p className="text-xs text-destructive">{error}</p>}
             </>
           ) : agoraData && rtmClient ? (
@@ -379,6 +372,23 @@ export default function LandingPage() {
               className="h-6 w-auto hover:opacity-80 transition-opacity translate-y-1"
             />
             <span className="sr-only">Agora</span>
+          </a>
+          <span className="text-xs text-muted-foreground/60" aria-hidden="true">
+            /
+          </span>
+          <a
+            href="https://x.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-primary transition-colors"
+            aria-label="Visit xAI's website"
+          >
+            <img
+              src="/xai-logo.png"
+              alt="xAI"
+              className="h-5 w-auto hover:opacity-80 transition-opacity"
+            />
+            <span className="sr-only">xAI</span>
           </a>
         </div>
       </footer>

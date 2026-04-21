@@ -14,11 +14,11 @@ export interface XaiVoiceOption {
 }
 
 export const XAI_VOICES: readonly XaiVoiceOption[] = [
-  { id: 'eve', label: 'Eve', description: 'Female · energetic, upbeat' },
-  { id: 'ara', label: 'Ara', description: 'Female · warm, friendly' },
-  { id: 'rex', label: 'Rex', description: 'Male · confident, clear' },
-  { id: 'sal', label: 'Sal', description: 'Neutral · smooth, balanced' },
-  { id: 'leo', label: 'Leo', description: 'Male · authoritative, strong' },
+  { id: 'eve', label: 'Eve', description: 'Energetic' },
+  { id: 'ara', label: 'Ara', description: 'Warm' },
+  { id: 'rex', label: 'Rex', description: 'Confident' },
+  { id: 'sal', label: 'Sal', description: 'Balanced' },
+  { id: 'leo', label: 'Leo', description: 'Authoritative' },
 ] as const;
 
 export const XAI_VOICE_IDS: readonly string[] = XAI_VOICES.map((v) => v.id);
