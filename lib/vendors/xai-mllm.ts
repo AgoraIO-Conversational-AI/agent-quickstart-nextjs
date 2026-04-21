@@ -176,9 +176,6 @@ export class XAI extends BaseMLLM {
     const config: Record<string, unknown> = {
       enable: true,
       vendor: 'xai',
-      // `style` describes the request/response protocol used by the backend
-      // (not the vendor). All MLLM vendors use "openai".
-      style: 'openai',
       url,
       api_key: apiKey,
       ...(Object.keys(mergedParams).length > 0 && { params: mergedParams }),

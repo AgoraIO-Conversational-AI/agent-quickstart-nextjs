@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  AgoraClient,
-  Agent,
-  Area,
-  DeepgramSTT,
-  ExpiresIn,
-  MiniMaxTTS,
-  OpenAI,
-} from 'agora-agent-server-sdk';
+import { AgoraClient, Agent, Area, ExpiresIn } from 'agora-agent-server-sdk';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
-// Custom XAI MLLM vendor lives in `lib/vendors/xai-mllm.ts`. It's loaded
-// via dynamic `await import(...)` inside the BYOK example below to mirror
-// the ElevenLabs pattern and avoid an unused static import.
+import { XAI } from '@/lib/vendors/xai-mllm';
 
 // System prompt that defines the agent's personality and behavior.
 // Swap this out to change what the agent talks about.
@@ -67,6 +57,7 @@ export async function POST(request: NextRequest) {
     // with a clear error message rather than a silent failure.
     const appId = requireEnv('NEXT_PUBLIC_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
+    const xaiApiKey = requireEnv('NEXT_XAI_API_KEY');
 
     if (!channel_name || !requester_id) {
       return NextResponse.json(
@@ -85,33 +76,16 @@ export async function POST(request: NextRequest) {
       appCertificate,
     });
 
-    // Pipeline: Deepgram (reseller) STT → OpenAI (reseller) LLM → MiniMax (reseller) TTS.
-    // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
+    // MLLM-only pipeline: xAI Realtime handles ASR, LLM, and TTS end-to-end,
+    // so there's no separate .withStt() / .withLlm() / .withTts() chain.
+    // Turn detection is configured INSIDE the XAI vendor (nested in the
+    // `mllm` block) rather than via the top-level Agent turnDetection.
     const agent = new Agent({
       name: `conversation-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
       instructions: ADA_PROMPT,
       greeting: GREETING,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
-      // VAD controls how the agent detects the start and end of a user's turn.
-      turnDetection: {
-        config: {
-          speech_threshold: 0.5,
-          start_of_speech: {
-            mode: 'vad',
-            vad_config: {
-              interrupt_duration_ms: 160, // ms of speech before interruption triggers
-              prefix_padding_ms: 300, // audio captured before speech is detected
-            },
-          },
-          end_of_speech: {
-            mode: 'vad',
-            vad_config: {
-              silence_duration_ms: 480, // ms of silence before turn ends
-            },
-          },
-        },
-      },
       // RTM is required for transcript events in the browser client.
       // enable_tools is required for MCP tool invocation.
       advancedFeatures: { enable_rtm: true, enable_tools: true },
@@ -119,85 +93,28 @@ export async function POST(request: NextRequest) {
       // - data_channel: 'rtm' enables RTM delivery path for state/metrics/errors
       // - enable_error_message emits AGENT_ERROR payloads
       parameters: { data_channel: 'rtm', enable_error_message: true },
-    })
-      .withStt(
-        new DeepgramSTT({
-          model: 'nova-3',
-          language: 'en',
-        }),
-        // BYOK: uncomment the following block and set NEXT_DEEPGRAM_API_KEY
-        // new DeepgramSTT({
-        //   apiKey: requireEnv('NEXT_DEEPGRAM_API_KEY'),
-        //   model: 'nova-3',
-        //   language: 'en',
-        // }),
-      )
-      .withLlm(
-        new OpenAI({
-          model: 'gpt-4o-mini',
-          greetingMessage: GREETING,
-          failureMessage: 'Please wait a moment.',
-          maxHistory: 15,
-          params: {
-            max_tokens: 1024,
-            temperature: 0.7,
-            top_p: 0.95,
+    }).withMllm(
+      new XAI({
+        apiKey: xaiApiKey,
+        // url defaults to wss://api.x.ai/v1/realtime — override via NEXT_XAI_URL if needed.
+        ...(process.env.NEXT_XAI_URL && { url: process.env.NEXT_XAI_URL }),
+        voice: process.env.NEXT_XAI_VOICE ?? 'eve',
+        language: 'en',
+        sampleRate: 24000,
+        outputModalities: ['text', 'audio'],
+        greetingMessage: GREETING,
+        // server_vad turn detection lives INSIDE the mllm block for xAI
+        // (unlike the other MLLM vendors which use top-level turn_detection).
+        turnDetection: {
+          mode: 'server_vad',
+          serverVadConfig: {
+            threshold: 0.5,
+            prefixPaddingMs: 640,
+            silenceDurationMs: 900,
           },
-        }),
-        // BYOK: uncomment the following block and set NEXT_LLM_API_KEY and NEXT_LLM_URL
-        // new OpenAI({
-        //   apiKey: requireEnv('NEXT_LLM_API_KEY'),
-        //   url: requireEnv('NEXT_LLM_URL'),
-        //   model: 'gpt-4o-mini',
-        //   greetingMessage: GREETING,
-        //   failureMessage: 'Please wait a moment.',
-        //   maxHistory: 15,
-        //   maxTokens: 1024,
-        //   temperature: 0.7,
-        //   topP: 0.95,
-        // }),
-      )
-      .withTts(
-        new MiniMaxTTS({
-          model: 'speech_2_6_turbo',
-          voiceId: 'English_captivating_female1',
-        }),
-        // BYOK — ElevenLabs (set NEXT_ELEVENLABS_API_KEY; optional NEXT_ELEVENLABS_VOICE_ID)
-        // new (await import('agora-agent-server-sdk')).ElevenLabsTTS({
-        //   key: requireEnv('NEXT_ELEVENLABS_API_KEY'),
-        //   modelId: 'eleven_flash_v2_5',
-        //   voiceId: process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB',
-        //   sampleRate: 24000,
-        // }),
-      );
-
-    // BYOK — XAI Realtime MLLM (set NEXT_XAI_API_KEY).
-    //
-    // MLLM mode replaces the ASR → LLM → TTS pipeline above; `.withMllm()`
-    // automatically disables the individual vendors, so you can leave the
-    // `.withStt(...).withLlm(...).withTts(...)` chain in place and just
-    // uncomment this block to switch the agent over to xAI.
-    //
-    // agent.withMllm(
-    //   new (await import('@/lib/vendors/xai-mllm')).XAI({
-    //     apiKey: requireEnv('NEXT_XAI_API_KEY'),
-    //     voice: 'eve',
-    //     language: 'en',
-    //     sampleRate: 24000,
-    //     outputModalities: ['text', 'audio'],
-    //     greetingMessage: GREETING,
-    //     failureMessage: 'Please wait a moment.',
-    //     maxHistory: 50,
-    //     turnDetection: {
-    //       mode: 'server_vad',
-    //       serverVadConfig: {
-    //         threshold: 0.5,
-    //         prefixPaddingMs: 640,
-    //         silenceDurationMs: 900,
-    //       },
-    //     },
-    //   }),
-    // );
+        },
+      }),
+    );
 
     // remoteUids restricts the agent to only process audio from this user
     const session = agent.createSession(client, {
