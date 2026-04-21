@@ -2,7 +2,7 @@
 
 import { useState, useRef, Suspense, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Loader2 } from 'lucide-react';
+import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import type { RTMClient } from 'agora-rtm';
 import type {
   AgoraTokenData,
@@ -11,6 +11,13 @@ import type {
   AgoraRenewalTokens,
 } from '../types/conversation';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { XAI_VOICES, DEFAULT_XAI_VOICE_ID } from '@/lib/vendors/xai-voices';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LoadingSkeleton } from './LoadingSkeleton';
 
@@ -68,6 +75,13 @@ export default function LandingPage() {
   const [agoraData, setAgoraData] = useState<AgoraTokenData | null>(null);
   const [rtmClient, setRtmClient] = useState<RTMClient | null>(null);
   const [agentJoinError, setAgentJoinError] = useState(false);
+  // Selected xAI voice for the pre-call screen. Persists across remounts via
+  // local component state only — defaults to the documented xAI default.
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>(
+    DEFAULT_XAI_VOICE_ID,
+  );
+  const selectedVoice =
+    XAI_VOICES.find((v) => v.id === selectedVoiceId) ?? XAI_VOICES[0];
 
   const handleStartConversation = async () => {
     setIsLoading(true);
@@ -98,6 +112,7 @@ export default function LandingPage() {
           body: JSON.stringify({
             requester_id: responseData.uid,
             channel_name: responseData.channel,
+            voice: selectedVoiceId,
           } as ClientStartRequest),
         })
           .then(async (res) => {
@@ -230,11 +245,72 @@ export default function LandingPage() {
 
           {!showConversation ? (
             <>
+              {/* Voice picker: lets the user pick which xAI voice the agent
+                  speaks with before the session starts. Disabled during
+                  loading so the selection can't change mid-invite. */}
+              <div className="flex flex-col items-center gap-1.5 animate-fade-up animate-fade-up-d2">
+                <span className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                  Agent Voice
+                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={isLoading}
+                      className="w-56 justify-between bg-secondary hover:bg-accent/10 border border-border text-foreground"
+                      aria-label={`Agent voice: ${selectedVoice.label}`}
+                    >
+                      <span className="flex flex-col items-start leading-tight">
+                        <span className="text-sm font-medium">
+                          {selectedVoice.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {selectedVoice.description}
+                        </span>
+                      </span>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="center"
+                    className="w-56 bg-popover border-border"
+                  >
+                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                      xAI Voices
+                    </div>
+                    {XAI_VOICES.map((voice) => (
+                      <DropdownMenuItem
+                        key={voice.id}
+                        onClick={() => setSelectedVoiceId(voice.id)}
+                        className={`cursor-pointer ${
+                          voice.id === selectedVoiceId
+                            ? 'bg-accent/15 text-primary'
+                            : 'text-foreground hover:bg-accent/10'
+                        }`}
+                      >
+                        <span className="flex flex-col leading-tight">
+                          <span className="text-sm font-medium">
+                            {voice.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {voice.description}
+                          </span>
+                        </span>
+                        {voice.id === selectedVoiceId && (
+                          <Check className="ml-auto h-3.5 w-3.5 text-primary" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               {/* Entry CTA: starts token fetch, agent invite, and RTM setup for a new session. */}
               <Button
                 onClick={handleStartConversation}
                 disabled={isLoading}
-                className="w-56 animate-fade-up animate-fade-up-d2 border-2 border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary disabled:hover:bg-primary disabled:hover:text-primary-foreground"
+                className="w-56 animate-fade-up animate-fade-up-d3 border-2 border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary disabled:hover:bg-primary disabled:hover:text-primary-foreground"
                 aria-label={
                   isLoading
                     ? 'Starting conversation with AI agent'

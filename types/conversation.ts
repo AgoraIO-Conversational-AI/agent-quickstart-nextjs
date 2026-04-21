@@ -11,6 +11,8 @@ export interface AgoraTokenData {
 export interface ClientStartRequest {
   requester_id: string;
   channel_name: string;
+  /** Optional xAI voice id selected by the user (`eve`, `ara`, `rex`, `sal`, `leo`). */
+  voice?: string;
 }
 
 export interface StopConversationRequest {

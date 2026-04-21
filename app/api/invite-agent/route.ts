@@ -3,6 +3,10 @@ import { AgoraClient, Agent, Area, ExpiresIn } from 'agora-agent-server-sdk';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
 import { XAI } from '@/lib/vendors/xai-mllm';
+import {
+  DEFAULT_XAI_VOICE_ID,
+  isXaiVoiceId,
+} from '@/lib/vendors/xai-voices';
 import { getEnv, requireEnv } from '@/lib/load-env';
 
 // System prompt that defines the agent's personality and behavior.
@@ -46,7 +50,20 @@ export async function POST(request: NextRequest) {
     // --- 1. Parse request ---
 
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name } = body;
+    const { requester_id, channel_name, voice: requestedVoice } = body;
+
+    // Resolve the voice with a clear precedence:
+    //   1. Allowlisted voice from the request body (user pick in the UI).
+    //   2. `NEXT_XAI_VOICE` env override (useful for server-side defaults).
+    //   3. Documented xAI default (`eve`).
+    // Unknown values from the client are silently dropped so a malformed
+    // request can never inject arbitrary strings into the MLLM config.
+    const envVoice = getEnv('NEXT_XAI_VOICE');
+    const voice = isXaiVoiceId(requestedVoice)
+      ? requestedVoice
+      : isXaiVoiceId(envVoice)
+        ? envVoice
+        : DEFAULT_XAI_VOICE_ID;
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
@@ -93,7 +110,7 @@ export async function POST(request: NextRequest) {
         apiKey: xaiApiKey,
         // url defaults to wss://api.x.ai/v1/realtime — override via NEXT_XAI_URL if needed.
         ...(getEnv('NEXT_XAI_URL') && { url: getEnv('NEXT_XAI_URL')! }),
-        voice: getEnv('NEXT_XAI_VOICE') ?? 'eve',
+        voice,
         language: 'en',
         sampleRate: 24000,
         outputModalities: ['text', 'audio'],
