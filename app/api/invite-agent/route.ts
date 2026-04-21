@@ -36,11 +36,14 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 - **Ask at most one question per turn**: Never stack questions.
 - **Guide, don't lecture**: Unlock the next step, not everything at once.`;
 
-// First thing the agent says when a user joins the channel.
-// Set NEXT_AGENT_GREETING in .env.local to override.
-const GREETING =
+// Greeting for the default Ada persona. Set NEXT_AGENT_GREETING in .env.local
+// to override. When the user supplies a custom system prompt we swap to a
+// neutral greeting below so the agent doesn't announce itself as "Ada from
+// Agora" and pollute the conversation history with a contradictory identity.
+const ADA_GREETING =
   getEnv('NEXT_AGENT_GREETING') ??
   `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
+const CUSTOM_PROMPT_GREETING = 'Hi, how can I help?';
 
 // agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
 const agentUid = getEnv('NEXT_PUBLIC_AGENT_UID') ?? String(DEFAULT_AGENT_UID);
@@ -73,16 +76,20 @@ export async function POST(request: NextRequest) {
     // Resolve the system prompt. User-supplied instructions override Ada when
     // provided, trimmed, and within a sane length cap to prevent runaway
     // payloads from breaking the MLLM request. Anything else falls back to the
-    // built-in Ada persona.
+    // built-in Ada persona. The greeting swaps alongside the prompt so the
+    // agent doesn't open a "custom persona" session by introducing itself as
+    // Ada — that crossed-wires greeting was the source of the apparent
+    // "Ada + custom prompt" blend.
     const MAX_PROMPT_CHARS = 8000;
     const trimmedInstructions =
       typeof requestedInstructions === 'string'
         ? requestedInstructions.trim()
         : '';
-    const instructions =
-      trimmedInstructions.length > 0
-        ? trimmedInstructions.slice(0, MAX_PROMPT_CHARS)
-        : ADA_PROMPT;
+    const usingCustomPrompt = trimmedInstructions.length > 0;
+    const instructions = usingCustomPrompt
+      ? trimmedInstructions.slice(0, MAX_PROMPT_CHARS)
+      : ADA_PROMPT;
+    const greeting = usingCustomPrompt ? CUSTOM_PROMPT_GREETING : ADA_GREETING;
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
@@ -113,8 +120,11 @@ export async function POST(request: NextRequest) {
     // `mllm` block) rather than via the top-level Agent turnDetection.
     const agent = new Agent({
       name: `conversation-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-      instructions,
-      greeting: GREETING,
+      // `instructions` intentionally omitted: in MLLM mode the SDK only wires
+      // it into the LLM-pipeline config (unused here). The real system prompt
+      // is passed to the XAI vendor below via `messages`, which is the
+      // actual path the xAI realtime API consumes.
+      greeting,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
       // RTM is required for transcript events in the browser client.
@@ -139,7 +149,7 @@ export async function POST(request: NextRequest) {
         language: 'en',
         sampleRate: 24000,
         outputModalities: ['text', 'audio'],
-        greetingMessage: GREETING,
+        greetingMessage: greeting,
         // server_vad turn detection lives INSIDE the mllm block for xAI
         // (unlike the other MLLM vendors which use top-level turn_detection).
         turnDetection: {
