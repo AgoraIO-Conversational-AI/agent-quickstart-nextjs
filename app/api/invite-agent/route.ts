@@ -1,9 +1,9 @@
-import '@/lib/load-env';
 import { NextRequest, NextResponse } from 'next/server';
 import { AgoraClient, Agent, Area, ExpiresIn } from 'agora-agent-server-sdk';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
 import { XAI } from '@/lib/vendors/xai-mllm';
+import { getEnv, requireEnv } from '@/lib/load-env';
 
 // System prompt that defines the agent's personality and behavior.
 // Swap this out to change what the agent talks about.
@@ -35,17 +35,11 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 // First thing the agent says when a user joins the channel.
 // Set NEXT_AGENT_GREETING in .env.local to override.
 const GREETING =
-  process.env.NEXT_AGENT_GREETING ??
+  getEnv('NEXT_AGENT_GREETING') ??
   `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
 
 // agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
-const agentUid = process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
-  return value;
-}
+const agentUid = getEnv('NEXT_PUBLIC_AGENT_UID') ?? String(DEFAULT_AGENT_UID);
 
 export async function POST(request: NextRequest) {
   try {
@@ -98,8 +92,8 @@ export async function POST(request: NextRequest) {
       new XAI({
         apiKey: xaiApiKey,
         // url defaults to wss://api.x.ai/v1/realtime — override via NEXT_XAI_URL if needed.
-        ...(process.env.NEXT_XAI_URL && { url: process.env.NEXT_XAI_URL }),
-        voice: process.env.NEXT_XAI_VOICE ?? 'eve',
+        ...(getEnv('NEXT_XAI_URL') && { url: getEnv('NEXT_XAI_URL')! }),
+        voice: getEnv('NEXT_XAI_VOICE') ?? 'eve',
         language: 'en',
         sampleRate: 24000,
         outputModalities: ['text', 'audio'],

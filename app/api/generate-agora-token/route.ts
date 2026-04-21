@@ -1,6 +1,6 @@
-import '@/lib/load-env';
 import { NextRequest, NextResponse } from 'next/server';
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import { getEnv } from '@/lib/load-env';
 
 const EXPIRATION_TIME_IN_SECONDS = 3600;
 
@@ -12,8 +12,8 @@ function generateChannelName(): string {
 
 export async function GET(request: NextRequest) {
   // console.log('Generating Agora token...');
-  const APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID;
-  const APP_CERTIFICATE = process.env.NEXT_AGORA_APP_CERTIFICATE;
+  const APP_ID = getEnv('NEXT_PUBLIC_AGORA_APP_ID');
+  const APP_CERTIFICATE = getEnv('NEXT_AGORA_APP_CERTIFICATE');
 
   if (!APP_ID || !APP_CERTIFICATE) {
     return NextResponse.json(

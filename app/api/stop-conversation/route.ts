@@ -1,7 +1,7 @@
-import '@/lib/load-env';
 import { NextResponse } from 'next/server';
 import { AgoraClient, Area } from 'agora-agent-server-sdk';
 import { StopConversationRequest } from '@/types/conversation';
+import { getEnv } from '@/lib/load-env';
 
 function isAgentAlreadyStoppingOrStopped(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
@@ -35,8 +35,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
-    const appCertificate = process.env.NEXT_AGORA_APP_CERTIFICATE;
+    const appId = getEnv('NEXT_PUBLIC_AGORA_APP_ID');
+    const appCertificate = getEnv('NEXT_AGORA_APP_CERTIFICATE');
     if (!appId || !appCertificate) {
       throw new Error(
         'Missing Agora configuration. Set NEXT_PUBLIC_AGORA_APP_ID and NEXT_AGORA_APP_CERTIFICATE.',
