@@ -2,7 +2,7 @@
 
 import { useState, useRef, Suspense, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import { Check, ChevronDown, Loader2, Pencil } from 'lucide-react';
 import type { RTMClient } from 'agora-rtm';
 import type {
   AgoraTokenData,
@@ -83,6 +83,15 @@ export default function LandingPage() {
   const selectedVoice =
     XAI_VOICES.find((v) => v.id === selectedVoiceId) ?? XAI_VOICES[0];
 
+  // Optional system-prompt override. Blank means "use the server's default
+  // Ada persona"; any non-empty, non-whitespace value is sent as-is to the
+  // invite-agent route, which clamps it to 8000 chars server-side.
+  const [customPrompt, setCustomPrompt] = useState<string>('');
+  const [showPromptEditor, setShowPromptEditor] = useState<boolean>(false);
+  const PROMPT_MAX_CHARS = 8000;
+  const trimmedPromptLength = customPrompt.trim().length;
+  const hasCustomPrompt = trimmedPromptLength > 0;
+
   const handleStartConversation = async () => {
     setIsLoading(true);
     setError(null);
@@ -113,6 +122,9 @@ export default function LandingPage() {
             requester_id: responseData.uid,
             channel_name: responseData.channel,
             voice: selectedVoiceId,
+            // Only send when the user actually typed something non-empty;
+            // otherwise let the server use its default Ada persona.
+            ...(hasCustomPrompt && { instructions: customPrompt.trim() }),
           } as ClientStartRequest),
         })
           .then(async (res) => {
@@ -319,6 +331,66 @@ export default function LandingPage() {
                   )}
                 </Button>
               </div>
+
+              {/* Optional prompt override. Collapsed by default so the hero
+                  stays clean; expands into a textarea when the user wants to
+                  steer the agent's persona for this session. */}
+              <div className="flex flex-col items-center gap-2 w-full max-w-md animate-fade-up animate-fade-up-d3">
+                <button
+                  type="button"
+                  onClick={() => setShowPromptEditor((v) => !v)}
+                  disabled={isLoading}
+                  aria-expanded={showPromptEditor}
+                  aria-controls="custom-prompt-editor"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase text-muted-foreground hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Pencil className="h-3 w-3" />
+                  <span>
+                    {hasCustomPrompt ? 'Prompt Customized' : 'Customize Prompt'}
+                  </span>
+                  <ChevronDown
+                    className={`h-3 w-3 transition-transform ${showPromptEditor ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {showPromptEditor && (
+                  <div
+                    id="custom-prompt-editor"
+                    className="w-full flex flex-col gap-1.5"
+                  >
+                    <textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      disabled={isLoading}
+                      maxLength={PROMPT_MAX_CHARS}
+                      rows={5}
+                      placeholder="Override the default system prompt. Describe the agent's role, tone, and rules. Leave blank to use the default Ada persona."
+                      aria-label="Custom system prompt"
+                      className="w-full px-3 py-2 rounded-md bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-y min-h-[96px] max-h-[280px] disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setCustomPrompt('')}
+                        disabled={isLoading || !hasCustomPrompt}
+                        className="hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed uppercase tracking-wide font-medium"
+                      >
+                        Reset
+                      </button>
+                      <span
+                        className={
+                          trimmedPromptLength > PROMPT_MAX_CHARS - 200
+                            ? 'text-destructive'
+                            : ''
+                        }
+                      >
+                        {trimmedPromptLength} / {PROMPT_MAX_CHARS}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {error && <p className="text-xs text-destructive">{error}</p>}
             </>
           ) : agoraData && rtmClient ? (

@@ -50,7 +50,12 @@ export async function POST(request: NextRequest) {
     // --- 1. Parse request ---
 
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name, voice: requestedVoice } = body;
+    const {
+      requester_id,
+      channel_name,
+      voice: requestedVoice,
+      instructions: requestedInstructions,
+    } = body;
 
     // Resolve the voice with a clear precedence:
     //   1. Allowlisted voice from the request body (user pick in the UI).
@@ -64,6 +69,20 @@ export async function POST(request: NextRequest) {
       : isXaiVoiceId(envVoice)
         ? envVoice
         : DEFAULT_XAI_VOICE_ID;
+
+    // Resolve the system prompt. User-supplied instructions override Ada when
+    // provided, trimmed, and within a sane length cap to prevent runaway
+    // payloads from breaking the MLLM request. Anything else falls back to the
+    // built-in Ada persona.
+    const MAX_PROMPT_CHARS = 8000;
+    const trimmedInstructions =
+      typeof requestedInstructions === 'string'
+        ? requestedInstructions.trim()
+        : '';
+    const instructions =
+      trimmedInstructions.length > 0
+        ? trimmedInstructions.slice(0, MAX_PROMPT_CHARS)
+        : ADA_PROMPT;
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
@@ -94,7 +113,7 @@ export async function POST(request: NextRequest) {
     // `mllm` block) rather than via the top-level Agent turnDetection.
     const agent = new Agent({
       name: `conversation-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-      instructions: ADA_PROMPT,
+      instructions,
       greeting: GREETING,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,

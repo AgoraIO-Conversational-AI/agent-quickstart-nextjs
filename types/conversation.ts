@@ -15,6 +15,8 @@ export interface ClientStartRequest {
   channel_name: string;
   /** Optional xAI voice id selected by the user (`eve`, `ara`, `rex`, `sal`, `leo`). */
   voice?: string;
+  /** Optional system prompt override — replaces the built-in Ada persona when provided. */
+  instructions?: string;
 }
 
 export interface StopConversationRequest {
