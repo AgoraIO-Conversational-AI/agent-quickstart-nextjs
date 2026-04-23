@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AgoraClient, Agent, Area, ExpiresIn } from 'agora-agent-server-sdk';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
-import { XAI } from '@/lib/vendors/xai-mllm';
+import { XAI, XAI_SERVER_VAD_DEFAULTS } from '@/lib/vendors/xai-mllm';
 import {
   DEFAULT_XAI_VOICE_ID,
   isXaiVoiceId,
@@ -47,6 +47,20 @@ const CUSTOM_PROMPT_GREETING = 'Hi, how can I help?';
 
 // agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
 const agentUid = getEnv('NEXT_PUBLIC_AGENT_UID') ?? String(DEFAULT_AGENT_UID);
+
+function parseVadNumber(key: string, fallback: number): number {
+  const raw = getEnv(key);
+  if (raw === undefined || raw === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/** When true, SDK logs the compiled join body (includes secrets such as `mllm.api_key`). */
+function logAgoraJoinRequestEnabled(): boolean {
+  const v = getEnv('NEXT_AGORA_LOG_JOIN_REQUEST');
+  if (!v) return false;
+  return v === '1' || /^true$/i.test(v) || /^yes$/i.test(v);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -96,6 +110,26 @@ export async function POST(request: NextRequest) {
     const appId = requireEnv('NEXT_PUBLIC_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
     const xaiApiKey = requireEnv('NEXT_XAI_API_KEY');
+    const xaiModel = getEnv('NEXT_XAI_MODEL');
+
+    // xAI ServerVad — defaults match Python ServerVad(...); override via NEXT_XAI_VAD_*.
+    const xaiTurnDetection = {
+      mode: 'server_vad' as const,
+      serverVadConfig: {
+        threshold: parseVadNumber(
+          'NEXT_XAI_VAD_THRESHOLD',
+          XAI_SERVER_VAD_DEFAULTS.threshold,
+        ),
+        prefixPaddingMs: parseVadNumber(
+          'NEXT_XAI_VAD_PREFIX_PADDING_MS',
+          XAI_SERVER_VAD_DEFAULTS.prefixPaddingMs,
+        ),
+        silenceDurationMs: parseVadNumber(
+          'NEXT_XAI_VAD_SILENCE_DURATION_MS',
+          XAI_SERVER_VAD_DEFAULTS.silenceDurationMs,
+        ),
+      },
+    };
 
     if (!channel_name || !requester_id) {
       return NextResponse.json(
@@ -139,6 +173,8 @@ export async function POST(request: NextRequest) {
         apiKey: xaiApiKey,
         // url defaults to wss://api.x.ai/v1/realtime — override via NEXT_XAI_URL if needed.
         ...(getEnv('NEXT_XAI_URL') && { url: getEnv('NEXT_XAI_URL')! }),
+        // Model defaults to grok-4-1-non-reasoning (see DEFAULT_XAI_MODEL); override via NEXT_XAI_MODEL.
+        ...(xaiModel && { model: xaiModel }),
         // xAI's realtime API (per Agora's sample payloads) takes the system
         // prompt as a top-level `messages` array in OpenAI chat format — NOT
         // via `params.instructions`. MLLM vendors also don't inherit
@@ -152,14 +188,7 @@ export async function POST(request: NextRequest) {
         greetingMessage: greeting,
         // server_vad turn detection lives INSIDE the mllm block for xAI
         // (unlike the other MLLM vendors which use top-level turn_detection).
-        turnDetection: {
-          mode: 'server_vad',
-          serverVadConfig: {
-            threshold: 0.5,
-            prefixPaddingMs: 640,
-            silenceDurationMs: 900,
-          },
-        },
+        turnDetection: xaiTurnDetection,
       }),
     );
 
@@ -170,7 +199,8 @@ export async function POST(request: NextRequest) {
       remoteUids: [requester_id],
       idleTimeout: 30,
       expiresIn: ExpiresIn.hours(1),
-      debug: false, // enable debug to show restful API calls in the console
+      // When NEXT_AGORA_LOG_JOIN_REQUEST=1, SDK prints `[Agora Debug] Request:` + full JSON body.
+      debug: logAgoraJoinRequestEnabled(),
     });
 
     const agentId = await session.start();

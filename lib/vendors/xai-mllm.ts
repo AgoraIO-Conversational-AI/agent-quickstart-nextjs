@@ -23,8 +23,8 @@
  *       mode: 'server_vad',
  *       serverVadConfig: {
  *         threshold: 0.5,
- *         prefixPaddingMs: 640,
- *         silenceDurationMs: 900,
+ *         prefixPaddingMs: 300,
+ *         silenceDurationMs: 200,
  *       },
  *     },
  *   }),
@@ -35,6 +35,20 @@
  * agent, which disables the standard ASR → LLM → TTS pipeline.
  */
 import { BaseMLLM, type MllmConfig } from 'agora-agent-server-sdk';
+
+/** Default backend model for xAI Voice / Realtime when `model` is omitted in options. */
+export const DEFAULT_XAI_MODEL = 'grok-4-1-non-reasoning';
+
+/**
+ * Default server-side VAD, aligned with xAI Python:
+ * `ServerVad(type="server_vad", threshold=0.5, prefix_padding_ms=300, silence_duration_ms=200)`.
+ * Serialized under Agora `mllm.turn_detection` as `server_vad_config` snake_case keys.
+ */
+export const XAI_SERVER_VAD_DEFAULTS = {
+  threshold: 0.5,
+  prefixPaddingMs: 300,
+  silenceDurationMs: 200,
+} as const;
 
 // ---- Turn detection (nested inside the mllm block for xAI) ----
 //
@@ -88,6 +102,11 @@ export interface XAIOptions {
    * Forwarded into `params.voice`.
    */
   voice?: string;
+  /**
+   * xAI model id for the realtime / voice session (e.g. `"grok-4-1-non-reasoning"`).
+   * Forwarded into `params.model`. Defaults to {@link DEFAULT_XAI_MODEL}.
+   */
+  model?: string;
   /**
    * Language hint (e.g. `"en"`).
    * Forwarded into `params.language` when provided.
@@ -147,6 +166,7 @@ export class XAI extends BaseMLLM {
       apiKey,
       url = 'wss://api.x.ai/v1/realtime',
       voice,
+      model,
       language,
       sampleRate = 24000,
       params,
@@ -168,6 +188,7 @@ export class XAI extends BaseMLLM {
       ...(voice !== undefined && { voice }),
       ...(language !== undefined && { language }),
       ...(sampleRate !== undefined && { sample_rate: sampleRate }),
+      model: model ?? DEFAULT_XAI_MODEL,
       ...params,
     };
 
