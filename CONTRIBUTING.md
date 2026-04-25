@@ -54,7 +54,7 @@ git checkout -b feature/your-feature-name
 3. Test your changes locally:
 
 ```bash
-pnpm build
+pnpm run verify
 ```
 
 4. Commit your changes with a clear, descriptive commit message
@@ -65,7 +65,7 @@ pnpm build
 
 - **TypeScript**: All new code must be written in TypeScript
 - **Formatting**: Follow the existing code style (we use Prettier defaults)
-- **Linting**: Ensure your code passes ESLint checks (`pnpm lint .`)
+- **Linting**: Ensure your code passes ESLint checks (`pnpm run lint`)
 - **Comments**: Add comments for non-obvious patterns, especially:
   - StrictMode guards and React lifecycle patterns
   - Agora SDK-specific requirements
@@ -136,21 +136,26 @@ Before starting work on a major feature:
 When changing implementation:
 - Update relevant sections in `README.md`
 - Update `DOCS/GUIDE.md` if the change affects the tutorial
-- Update `agents.md` if the architecture changes
+- Update `AGENTS.md` if the architecture changes
 - Keep code comments in sync with the code
 
 ## Testing
 
-Currently, this project does not have automated tests. When adding tests:
-- Place unit tests next to the code they test
-- Use descriptive test names
-- Test both success and error cases
+This project ships with a verification workflow:
+
+```bash
+pnpm run doctor
+pnpm run verify:api
+pnpm run verify
+```
+
+Use `pnpm run verify` before opening a PR. `pnpm run verify:api` is the narrower check for server-route contract changes.
 
 ## Questions?
 
 - Open an issue for questions about contributing
 - Check existing issues and PRs for similar discussions
-- Review `agents.md` for the project architecture overview
+- Review `AGENTS.md` for the project architecture overview
 
 ## Code of Conduct
 
