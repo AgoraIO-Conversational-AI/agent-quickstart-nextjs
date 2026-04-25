@@ -2,7 +2,7 @@ import coreWebVitals from 'eslint-config-next/core-web-vitals';
 import tseslint from 'typescript-eslint';
 
 /** @type {import('eslint').Linter.Config[]} */
-export default [
+const config = [
   ...coreWebVitals,
   {
     plugins: {
@@ -21,3 +21,5 @@ export default [
     },
   },
 ];
+
+export default config;

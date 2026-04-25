@@ -7,11 +7,14 @@
     "node": ">=22"
   },
   "scripts": {
+    "doctor": "node scripts/doctor.mjs",
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "verify:api": "node --import tsx scripts/verify-api-contracts.ts",
+    "typecheck": "tsc --noEmit",
+    "verify": "pnpm run doctor && pnpm run lint && pnpm run typecheck && pnpm run verify:api && pnpm run build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.39",
@@ -43,6 +46,7 @@
     "eslint-config-next": "^16.2.2",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.6",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.58.1"
   }

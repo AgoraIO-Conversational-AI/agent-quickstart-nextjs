@@ -38,7 +38,6 @@ export function ConnectionStatusPanel({
       <button
         type="button"
         className="relative block"
-        role="status"
         aria-label={getConnectionLabel(connectionState, connectionSeverity)}
         aria-expanded={isOpen}
         aria-controls="connection-details-panel"

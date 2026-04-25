@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { IMicrophoneAudioTrack } from 'agora-rtc-react';
 import { Settings, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ export function MicrophoneSelector({
   const [isOpen, setIsOpen] = useState(false);
 
   // Pull the current browser microphone list and reconcile it with the active Agora track.
-  const fetchMicrophones = async () => {
+  const fetchMicrophones = useCallback(async () => {
     try {
       // Import AgoraRTC dynamically to access getMicrophones
       const AgoraRTC = (await import('agora-rtc-react')).default;
@@ -54,14 +54,14 @@ export function MicrophoneSelector({
     } catch (error) {
       console.error('Error fetching microphones:', error);
     }
-  };
+  }, [localMicrophoneTrack]);
 
   // Refresh device options once the local mic track exists.
   useEffect(() => {
     if (localMicrophoneTrack) {
       fetchMicrophones();
     }
-  }, [localMicrophoneTrack]);
+  }, [fetchMicrophones, localMicrophoneTrack]);
 
   // Swap the active input device on the already-created local microphone track.
   const handleDeviceChange = async (deviceId: string) => {
@@ -117,14 +117,12 @@ export function MicrophoneSelector({
         AgoraRTC.onMicrophoneChanged = undefined;
       });
     };
-  }, [localMicrophoneTrack]);
+  }, [fetchMicrophones, localMicrophoneTrack]);
 
   // Hide the picker when there is nothing meaningful to choose between.
   if (devices.length <= 1) {
     return null;
   }
-
-  const currentDevice = devices.find((d) => d.deviceId === currentDeviceId);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

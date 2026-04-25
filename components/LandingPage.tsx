@@ -2,6 +2,7 @@
 
 import { useState, useRef, Suspense, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import type { RTMClient } from 'agora-rtm';
 import type {
@@ -297,9 +298,11 @@ export default function LandingPage() {
             className="hover:text-primary transition-colors"
             aria-label="Visit Agora's website"
           >
-            <img
+            <Image
               src="/agora-logo-rgb-blue.svg"
               alt="Agora"
+              width={86}
+              height={24}
               className="h-6 w-auto hover:opacity-80 transition-opacity translate-y-1"
             />
             <span className="sr-only">Agora</span>

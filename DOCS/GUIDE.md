@@ -118,7 +118,7 @@ Add the following code to the `LandingPage.tsx` file:
 ```typescript
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 // Agora requires access to the browser's WebRTC API,
@@ -134,14 +134,14 @@ const AgoraProvider = dynamic(
 
     return {
       default: ({ children }: { children: React.ReactNode }) => {
-        // Create the Agora RTC client once using useMemo
-        const client = useMemo(
-          () => AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }),
-          []
-        );
+        // Persist the RTC client across StrictMode's simulated remounts.
+        const clientRef = useRef<ReturnType<typeof AgoraRTC.createClient> | null>(null);
+        if (!clientRef.current) {
+          clientRef.current = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+        }
 
         // The provider makes the client available to all child components
-        return <AgoraRTCProvider client={client}>{children}</AgoraRTCProvider>;
+        return <AgoraRTCProvider client={clientRef.current}>{children}</AgoraRTCProvider>;
       },
     };
   },
@@ -334,7 +334,7 @@ This component is the foundation for our real-time audio communication, so let's
 - `usePublish`: Publishes our audio track to the channel so others can hear us
 - `useClientEvent`: Sets up event handlers for important events like users joining or leaving
 
-> **Note on React StrictMode:** In development, React StrictMode mounts components twice to surface bugs. Without the `isReady` guard, `useJoin` would call `client.join()`, then immediately `client.leave()` (fake unmount cleanup), then `client.join()` again — causing an audio disruption. The `setTimeout(fn, 0)` pattern prevents this: StrictMode cleanup fires synchronously before any setTimeout callback, so only the real second mount's timer fires, and `useJoin` joins exactly once.
+> **Note on React StrictMode:** In development, React StrictMode mounts components twice to surface bugs. Keep the RTC client in a `useRef`, not a `useMemo`, so the provider does not create two client instances during that cycle. The `isReady` guard then prevents `useJoin` from calling `client.join()` during the fake first mount.
 
 > **Note:** We are loading the `APP_ID` from the environment variables using the non-null assertion operator, so make sure to set it in `.env.local` file.
 
@@ -523,7 +523,7 @@ Open the `components/LandingPage.tsx` file and update it with the full implement
 ```typescript
 'use client';
 
-import { useState, useMemo, Suspense, useEffect } from 'react';
+import { useState, useRef, Suspense, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import type { RTMClient } from 'agora-rtm';
 import type {
@@ -543,11 +543,11 @@ const AgoraProvider = dynamic(
     const { AgoraRTCProvider, default: AgoraRTC } = await import('agora-rtc-react');
     return {
       default: ({ children }: { children: React.ReactNode }) => {
-        const client = useMemo(
-          () => AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }),
-          []
-        );
-        return <AgoraRTCProvider client={client}>{children}</AgoraRTCProvider>;
+        const clientRef = useRef<ReturnType<typeof AgoraRTC.createClient> | null>(null);
+        if (!clientRef.current) {
+          clientRef.current = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+        }
+        return <AgoraRTCProvider client={clientRef.current}>{children}</AgoraRTCProvider>;
       },
     };
   },

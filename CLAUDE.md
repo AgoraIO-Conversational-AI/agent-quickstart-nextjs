@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> Read `agents.md` for the full project map (directory layout, API routes, data flow, known gotchas) before making changes.
+> Read `AGENTS.md` for the current project map, commands, and validation rules before making changes.
 
 ## Project
 
@@ -9,9 +9,9 @@ Next.js 16 (App Router) quickstart demonstrating Agora Conversational AI Engine.
 ## Commands
 
 ```bash
-pnpm dev      # start dev server (http://localhost:3000)
-pnpm build    # production build
-pnpm lint     # ESLint
+pnpm run doctor   # local prerequisites and env checks
+pnpm dev          # start dev server (http://localhost:3000)
+pnpm run verify   # doctor + lint + typecheck + API contracts + production build
 ```
 
 ## Key Patterns
@@ -89,11 +89,11 @@ Tailwind must scan uikit classes: `./node_modules/agora-agent-uikit/dist/**/*.{j
 | `app/api/stop-conversation/route.ts` | Stops the agent |
 | `DOCS/GUIDE.md` | Step-by-step build guide — must stay in sync with implementation |
 | `DOCS/TEXT_STREAMING_GUIDE.md` | Text streaming / transcription deep-dive |
-| `agents.md` | Machine-readable project map for AI context |
+| `AGENTS.md` | Primary agent-facing project map and validation guide |
 
 ## After Changing Implementation Files
 
-After editing anything in `components/` or `app/api/`, manually verify that `DOCS/GUIDE.md`, `DOCS/TEXT_STREAMING_GUIDE.md`, `README.md`, and `agents.md` still match the implementation, then run `pnpm lint` and `pnpm build`.
+After editing anything in `components/` or `app/api/`, manually verify that `DOCS/GUIDE.md`, `DOCS/TEXT_STREAMING_GUIDE.md`, `README.md`, and `AGENTS.md` still match the implementation, then run `pnpm run verify`.
 
 ## What NOT To Do
 

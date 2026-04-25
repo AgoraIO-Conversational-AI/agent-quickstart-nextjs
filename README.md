@@ -2,6 +2,12 @@
 
 Official Next.js quickstart for building a browser-based voice AI experience with Agora Conversational AI Engine.
 
+## Prerequisites
+
+- Node.js 22+
+- pnpm
+- Agora App ID and App Certificate with Conversational AI enabled
+
 ## Run It
 
 1. Create a project in [Agora Console](https://console.agora.io/) and copy your `App ID` and `App Certificate`.
@@ -16,6 +22,7 @@ git clone https://github.com/AgoraIO-Conversational-AI/agent-quickstart-nextjs.g
 cd agent-quickstart-nextjs
 pnpm install
 cp env.local.example .env.local
+pnpm run doctor
 pnpm dev
 ```
 
@@ -29,6 +36,28 @@ Optional convenience override:
 - `NEXT_PUBLIC_AGENT_UID` defaults to `123456`
 
 The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed defaults for STT, LLM, and TTS, so no additional vendor API keys are required for the base quickstart.
+
+## Commands
+
+```bash
+pnpm run doctor
+pnpm dev
+pnpm run lint
+pnpm run typecheck
+pnpm run verify:api
+pnpm run build
+pnpm run verify
+```
+
+## Verification
+
+Run this before shipping changes:
+
+```bash
+pnpm run verify
+```
+
+This checks local prerequisites, lint, type safety, the core API route contracts, and the production build.
 
 ## Architecture
 
@@ -76,9 +105,18 @@ Examples:
 - `app/api/stop-conversation/route.ts` stops the agent session
 - `components/LandingPage.tsx` starts the session and manages RTM login
 - `components/ConversationComponent.tsx` manages RTC, transcript state, `AgentVisualizer`, and `ConvoTextStream`
+- `AGENTS.md` is the primary agent-facing guide
+
+## Troubleshooting
+
+- `pnpm run doctor` fails: copy `env.local.example` to `.env.local` and set `NEXT_PUBLIC_AGORA_APP_ID` plus `NEXT_AGORA_APP_CERTIFICATE`
+- RTM login fails: confirm the token route still uses `RtcTokenBuilder.buildTokenWithRtm`
+- Transcript speakers are inverted: check the `uid === "0"` remap logic in `components/ConversationComponent.tsx`
+- Agent never appears in channel: confirm `NEXT_PUBLIC_AGENT_UID` matches the value used in `app/api/invite-agent/route.ts`
 
 ## More Docs
 
 - [DOCS/GUIDE.md](./DOCS/GUIDE.md)
 - [DOCS/TEXT_STREAMING_GUIDE.md](./DOCS/TEXT_STREAMING_GUIDE.md)
+- [AGENTS.md](./AGENTS.md)
 - [Agent UIKit Preview](https://agoraio-conversational-ai.github.io/agent-uikit/)
