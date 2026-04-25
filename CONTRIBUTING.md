@@ -64,7 +64,7 @@ pnpm run verify
 ### Coding Standards
 
 - **TypeScript**: All new code must be written in TypeScript
-- **Formatting**: Follow the existing code style (we use Prettier defaults)
+- **Formatting**: Follow the existing code style and keep `pnpm run lint` clean
 - **Linting**: Ensure your code passes ESLint checks (`pnpm run lint`)
 - **Comments**: Add comments for non-obvious patterns, especially:
   - StrictMode guards and React lifecycle patterns

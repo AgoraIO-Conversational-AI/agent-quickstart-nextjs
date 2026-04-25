@@ -890,8 +890,7 @@ export async function POST(request: NextRequest) {
     const body: ClientStartRequest = await request.json();
     const { requester_id, channel_name } = body;
 
-    const appId =
-      process.env.NEXT_PUBLIC_AGORA_APP_ID || requireEnv('NEXT_AGORA_APP_ID');
+    const appId = requireEnv('NEXT_PUBLIC_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
 
     if (!channel_name || !requester_id) {
@@ -1025,8 +1024,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const appId =
-      process.env.NEXT_PUBLIC_AGORA_APP_ID || process.env.NEXT_AGORA_APP_ID;
+    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
     const appCertificate = process.env.NEXT_AGORA_APP_CERTIFICATE;
     if (!appId || !appCertificate) {
       throw new Error(
