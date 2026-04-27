@@ -2,7 +2,6 @@
 
 import { useState, useRef, Suspense, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import type { RTMClient } from 'agora-rtm';
 import type {
@@ -217,15 +216,19 @@ export default function LandingPage() {
 
       {/* Hero shell: either shows the pre-call CTA or swaps in the live conversation experience. */}
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="z-10 text-center flex flex-col items-center gap-4">
-          <h1 className="text-xl font-semibold animate-fade-up">
-            Voice AI Quickstart
+        <div className="z-10 flex max-w-lg flex-col items-center gap-4 px-4 text-center">
+          <p className="animate-fade-up text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Agora Conversational AI
+          </p>
+          <h1 className="animate-fade-up animate-fade-up-d1 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Talk to a voice agent now
           </h1>
 
           {!showConversation && (
-            <p className="text-sm text-muted-foreground animate-fade-up animate-fade-up-d1">
-              Experience the power of <br className="sm:hidden" />
-              Agora&apos;s Conversational AI Engine.
+            <p className="animate-fade-up animate-fade-up-d2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+              This Next.js quickstart streams real-time speech and a live transcript from the
+              ConvoAI engine—sub-second latency, production-style pipeline, and API routes you can
+              read and ship from one repo. No extra wiring to feel the product.
             </p>
           )}
 
@@ -235,7 +238,7 @@ export default function LandingPage() {
               <Button
                 onClick={handleStartConversation}
                 disabled={isLoading}
-                className="w-56 animate-fade-up animate-fade-up-d2 border-2 border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary disabled:hover:bg-primary disabled:hover:text-primary-foreground"
+                className="w-56 animate-fade-up animate-fade-up-d3 border-2 border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary disabled:hover:bg-primary disabled:hover:text-primary-foreground"
                 aria-label={
                   isLoading
                     ? 'Starting conversation with AI agent'
@@ -298,11 +301,13 @@ export default function LandingPage() {
             className="hover:text-primary transition-colors"
             aria-label="Visit Agora's website"
           >
-            <Image
+            <img
               src="/agora-logo-rgb-blue.svg"
               alt="Agora"
               width={86}
               height={24}
+              loading="eager"
+              fetchPriority="high"
               className="h-6 w-auto hover:opacity-80 transition-opacity translate-y-1"
             />
             <span className="sr-only">Agora</span>

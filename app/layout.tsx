@@ -8,9 +8,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Talk to an AI today, with Agora Conversational AI Engine!',
+  title: 'Talk to a voice agent now | Agora',
   description:
-    "A voice first AI web-app powered by Agora's Conversational AI Engine. The easiest way to add voice to your LLM, without deploying new infrastructure.",
+    "Next.js quickstart: real-time voice agent with live transcript, streaming audio, and low latency from Agora's Conversational AI Engine—API routes in one repo.",
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -40,7 +40,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning={true}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
