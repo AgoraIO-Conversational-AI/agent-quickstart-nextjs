@@ -203,7 +203,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground relative overflow-hidden">
+    <div className="flex h-dvh min-h-screen flex-col bg-background text-foreground relative overflow-hidden">
       {/* Faint ambient gradient — provides depth signal on the pre-call screen */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -215,31 +215,40 @@ export default function LandingPage() {
       />
 
       {/* Hero shell: either shows the pre-call CTA or swaps in the live conversation experience. */}
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="z-10 flex max-w-lg flex-col items-center gap-4 px-4 text-center">
-          <p className="animate-fade-up text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            Agora Conversational AI
-          </p>
-          <h1 className="animate-fade-up animate-fade-up-d1 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Talk to your voice agent
-          </h1>
-
-          {!showConversation && (
-            <p className="animate-fade-up animate-fade-up-d2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-              This Next.js quickstart streams real-time speech and a live
-              transcript from the ConvoAI engine—sub-second latency,
-              production-style pipeline, and API routes you can read and ship
-              from one repo. No extra wiring to feel the product.
-            </p>
-          )}
-
+      <div
+        className={`flex-1 flex min-h-0 flex-col ${
+          showConversation
+            ? 'items-stretch justify-stretch'
+            : 'items-center justify-center'
+        }`}
+      >
+        <div
+          className={`z-10 flex flex-1 min-h-0 flex-col ${
+            showConversation
+              ? 'h-full min-h-0 w-full max-w-none items-stretch gap-0 px-0 text-left'
+              : 'w-full max-w-none items-center justify-center px-4 text-center'
+          }`}
+        >
           {!showConversation ? (
-            <>
+            <div
+              className="mx-auto flex w-[min(92vw,26.25rem)] animate-fade-up flex-col items-center rounded-[20px] border border-[#2b2b2b] px-10 py-10 text-center shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(164.988deg, rgba(54,54,54,0.2) 1.0596%, rgba(0,0,0,0) 96.089%), linear-gradient(90deg, rgb(16,16,16) 0%, rgb(16,16,16) 100%)',
+              }}
+            >
+              <h1 className="text-[28px] font-medium leading-[1.2] text-white">
+                Try Agora&apos;s Voice Agent
+              </h1>
+              <p className="mt-[14px] text-sm font-medium leading-6 text-muted-foreground">
+                Built on Agora&apos;s flagship Conversational AI engine, for
+                effortless agentic conversations,
+              </p>
               {/* Entry CTA: starts token fetch, agent invite, and RTM setup for a new session. */}
               <Button
                 onClick={handleStartConversation}
                 disabled={isLoading}
-                className="w-56 animate-fade-up animate-fade-up-d3 border-2 border-primary bg-primary text-primary-foreground hover:bg-transparent hover:text-primary disabled:hover:bg-primary disabled:hover:text-primary-foreground"
+                className="mt-12 h-10 w-full rounded-lg border border-primary bg-primary text-[14px] font-medium text-black hover:border-white hover:bg-white hover:text-black disabled:hover:border-primary disabled:hover:bg-primary disabled:hover:text-black"
                 aria-label={
                   isLoading
                     ? 'Starting conversation with AI agent'
@@ -252,11 +261,11 @@ export default function LandingPage() {
                     Starting...
                   </>
                 ) : (
-                  'Try it Now'
+                  'Start Conversation'
                 )}
               </Button>
-              {error && <p className="text-xs text-destructive">{error}</p>}
-            </>
+              {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
+            </div>
           ) : agoraData && rtmClient ? (
             <>
               {/* Non-fatal invite warning: the browser session can still render even if agent start failed. */}
@@ -290,8 +299,8 @@ export default function LandingPage() {
       </div>
 
       {/* Persistent attribution footer for the pre-call and in-call views. */}
-      <footer className="fixed bottom-0 left-0 py-4 pl-4 md:py-6 md:pl-6 z-40">
-        <div className="flex items-center justify-start gap-2 text-muted-foreground">
+      <footer className="fixed bottom-0 right-0 py-4 pr-4 md:py-6 md:pr-6 z-40">
+        <div className="flex items-center justify-end gap-2 text-muted-foreground">
           <span className="text-xs font-medium tracking-wide uppercase">
             Powered by
           </span>

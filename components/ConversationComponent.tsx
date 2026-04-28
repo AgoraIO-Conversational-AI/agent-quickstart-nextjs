@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { X } from 'lucide-react';
 import { setParameter } from 'agora-rtc-sdk-ng/esm';
 import {
   useRTCClient,
@@ -451,75 +450,103 @@ export default function ConversationComponent({
 
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      const openButton = document.querySelector(
+        '#chatbox button[aria-label="Open transcription"]',
+      ) as HTMLButtonElement | null;
+      openButton?.click();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
   return (
-    <div className="flex flex-col gap-6 p-4 h-full text-left">
-      {/* Top-left status affordance: opens transport and agent error details without covering the main controls. */}
-      <div className="absolute top-4 left-4">
-        <ConnectionStatusPanel
-          connectionState={connectionState}
-          connectionSeverity={connectionSeverity}
-          connectionIssues={connectionIssues}
-          isOpen={isConnectionDetailsOpen}
-          onToggle={() => setIsConnectionDetailsOpen((open) => !open)}
-        />
-      </div>
-
-      {/* Top-right destructive action: stops the cloud agent and ends the current session. */}
-      <div className="absolute top-4 right-4">
-        <Button
-          variant="destructive"
-          size="icon"
-          className="h-9 w-9 rounded-full border-2 border-destructive bg-destructive text-destructive-foreground hover:bg-transparent hover:text-destructive"
-          onClick={onEndConversation}
-          aria-label="End conversation with AI agent"
-          title="End conversation"
-        >
-          <X />
-        </Button>
-      </div>
-
-      {/* Center stage: the visualizer shows agent lifecycle/speaking state, while hidden RemoteUser mounts keep agent audio subscribed. */}
-      <div
-        className="relative h-56 w-full flex items-center justify-center"
-        role="region"
-        aria-label="AI agent status visualization"
-      >
-        <AgentVisualizer state={visualizerState} size="lg" />
-        {remoteUsers.map((user) => (
-          <div key={user.uid} className="hidden">
-            <RemoteUser user={user} />
+    <div className="flex min-h-0 flex-1 flex-col text-left">
+      <div className="flex h-[76px] shrink-0 items-center justify-between border-b border-border px-4 md:px-6">
+          <div className="flex items-center gap-3">
+            <img
+              src="/agora-logo-mark.svg"
+              alt="Agora"
+              className="h-10 w-10 shrink-0 object-contain"
+            />
+            <div className="flex flex-col justify-center gap-1">
+              <span className="text-lg font-semibold leading-none tracking-[-0.025em] text-foreground">Agora Conversational AI</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium leading-6 text-muted-foreground">Currently using</span>
+                <span className="rounded-md border border-border bg-transparent px-2 py-0.5 text-xs font-semibold leading-4 text-foreground shadow-sm">NextJS</span>
+                <span className="rounded-md border border-border bg-transparent px-2 py-0.5 text-xs font-semibold leading-4 text-foreground shadow-sm">Ai UI Kit</span>
+                <span className="rounded-md border border-border bg-transparent px-2 py-0.5 text-xs font-semibold leading-4 text-foreground shadow-sm">ConvoAI Engine</span>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-
-      {/* Bottom dock: microphone mute/unmute plus input-device switching for the local user. */}
-      <div
-        className="fixed bottom-14 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-card/80 backdrop-blur-md border border-border rounded-full px-4 py-2"
-        role="group"
-        aria-label="Audio controls"
-      >
-        <div className="conversation-mic-host flex items-center justify-center">
-          <MicButtonWithVisualizer
-            isEnabled={isEnabled}
-            setIsEnabled={setIsEnabled}
-            track={localMicrophoneTrack}
-            onToggle={handleMicToggle}
-            className="overflow-visible"
-            aria-label={isEnabled ? 'Mute microphone' : 'Unmute microphone'}
-            enabledColor="hsl(var(--primary))"
-            disabledColor="hsl(var(--destructive))"
+          <div className="flex items-center gap-2 pr-1">
+          <ConnectionStatusPanel
+            connectionState={connectionState}
+            connectionSeverity={connectionSeverity}
+            connectionIssues={connectionIssues}
+            isOpen={isConnectionDetailsOpen}
+            onToggle={() => setIsConnectionDetailsOpen((open) => !open)}
           />
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-8 rounded-md border border-destructive bg-transparent px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
+            onClick={onEndConversation}
+            aria-label="End conversation with AI agent"
+            title="End conversation"
+          >
+            End Conversation
+          </Button>
         </div>
-        <MicrophoneSelector localMicrophoneTrack={localMicrophoneTrack} />
       </div>
 
-      {/* Transcript panel: completed turns plus the current partial turn stream into the floating chat UI. */}
-      <ConvoTextStream
-        messageList={messageList}
-        currentInProgressMessage={currentInProgressMessage}
-        agentUID={agentUID}
-        className="conversation-transcript"
-      />
+      <div className="flex min-h-0 w-full flex-1 gap-0 px-4 pb-4 pt-4 md:px-6">
+        <aside className="transcript-rail hidden h-full min-h-0 w-[26rem] shrink-0 overflow-hidden rounded-2xl border border-border bg-card/20 lg:flex" aria-label="Transcription panel">
+          <ConvoTextStream
+            messageList={messageList}
+            currentInProgressMessage={currentInProgressMessage}
+            agentUID={agentUID}
+            className="conversation-transcript"
+          />
+        </aside>
+
+        <div className="flex min-h-0 flex-1 flex-col border-l border-border/80 pl-4 md:pl-6">
+          <div className="flex min-h-0 flex-1 flex-col pb-6 pt-3">
+            <div className="flex min-h-0 flex-1 items-center justify-center">
+              <div className="relative h-full min-h-[20rem] w-full max-w-4xl flex items-center justify-center" role="region" aria-label="AI agent status visualization">
+                <AgentVisualizer state={visualizerState} size="lg" />
+                {remoteUsers.map((user) => (
+                  <div key={user.uid} className="hidden">
+                    <RemoteUser user={user} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="shrink-0 pt-4">
+              <div
+                className="mx-auto flex w-fit items-center gap-3 rounded-full border border-border bg-card/80 px-4 py-2 backdrop-blur-md"
+                role="group"
+                aria-label="Audio controls"
+              >
+                <div className="conversation-mic-host flex items-center justify-center">
+                  <MicButtonWithVisualizer
+                    isEnabled={isEnabled}
+                    setIsEnabled={setIsEnabled}
+                    track={localMicrophoneTrack}
+                    onToggle={handleMicToggle}
+                    className="overflow-visible"
+                    aria-label={isEnabled ? 'Mute microphone' : 'Unmute microphone'}
+                    enabledColor="hsl(var(--primary))"
+                    disabledColor="hsl(var(--destructive))"
+                  />
+                </div>
+                <MicrophoneSelector localMicrophoneTrack={localMicrophoneTrack} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

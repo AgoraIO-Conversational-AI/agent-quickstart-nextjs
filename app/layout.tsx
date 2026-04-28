@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import { Instrument_Sans } from 'next/font/google';
 import './globals.css';
+
+const instrumentSans = Instrument_Sans({
+  subsets: ['latin'],
+  variable: '--font-instrument-sans',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -39,8 +45,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className="h-full">
+      <body className={`${instrumentSans.variable} h-full min-h-screen`}>{children}</body>
     </html>
   );
 }
