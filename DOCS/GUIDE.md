@@ -516,7 +516,7 @@ export interface StopConversationRequest {
 
 Open the `components/LandingPage.tsx` file and update it with the full implementation. The key additions here are:
 
-- **Module preloading**: Kick off dynamic imports on mount so they're cached when the user clicks "Try it now!" — this eliminates the ~1–2 second import delay
+- **Module preloading**: Kick off dynamic imports on mount so they're cached when the user clicks "Try it Now" — this eliminates the ~1–2 second import delay
 - **Parallel setup**: Agent invite and RTM login run in `Promise.all` — both only need the token, so there's no reason to run them sequentially
 - **RTM client**: Created here and passed down to `ConversationComponent` so the toolkit can subscribe to transcript messages
 
@@ -558,7 +558,7 @@ export default function LandingPage() {
   const [showConversation, setShowConversation] = useState(false);
 
   // Preload heavy modules on mount so they're already cached when the user
-  // clicks "Try it now!" — eliminates the dynamic-import delay on first click.
+  // clicks "Try it Now" — eliminates the dynamic-import delay on first click.
   useEffect(() => {
     import('agora-rtc-react').catch(() => {});
     import('agora-rtm').catch(() => {});
@@ -692,7 +692,7 @@ export default function LandingPage() {
                 hover:bg-[#00c2ff] hover:text-black transition-all duration-300 shadow-lg hover:shadow-[#00c2ff]/20
                 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
               >
-                {isLoading ? 'Starting...' : 'Try it now!'}
+                {isLoading ? 'Starting...' : 'Try it Now'}
               </button>
               {error && <p className="mt-4 text-red-500">{error}</p>}
             </>
@@ -807,7 +807,7 @@ Now that we have our basic RTC functionality and token generation working, let's
 
 1. Run the application using `pnpm dev`
 2. Open the application in your browser, using the url `http://localhost:3000`
-3. Click on the "Try it now!" button
+3. Click on the "Try it Now" button
 4. You should see the connection status change to "Connected"
 
 ## Add Agora's Conversational AI Engine
