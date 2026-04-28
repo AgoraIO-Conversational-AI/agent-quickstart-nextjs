@@ -452,7 +452,7 @@ export default function ConversationComponent({
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
   return (
-    <div className="flex flex-col gap-6 p-4 h-full">
+    <div className="flex flex-col gap-6 p-4 h-full text-left">
       {/* Top-left status affordance: opens transport and agent error details without covering the main controls. */}
       <div className="absolute top-4 left-4">
         <ConnectionStatusPanel

@@ -58,7 +58,7 @@ export default function LandingPage() {
   const [showConversation, setShowConversation] = useState(false);
 
   // Preload heavy modules on mount so they're already cached when the user
-  // clicks "Try it now!" — eliminates the ~1.8s dynamic-import delay.
+  // clicks "Try it Now" — eliminates the ~1.8s dynamic-import delay.
   useEffect(() => {
     import('agora-rtc-react').catch(() => {});
     import('agora-rtm').catch(() => {});
@@ -221,14 +221,15 @@ export default function LandingPage() {
             Agora Conversational AI
           </p>
           <h1 className="animate-fade-up animate-fade-up-d1 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Talk to a voice agent now
+            Talk to your voice agent
           </h1>
 
           {!showConversation && (
             <p className="animate-fade-up animate-fade-up-d2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-              This Next.js quickstart streams real-time speech and a live transcript from the
-              ConvoAI engine—sub-second latency, production-style pipeline, and API routes you can
-              read and ship from one repo. No extra wiring to feel the product.
+              This Next.js quickstart streams real-time speech and a live
+              transcript from the ConvoAI engine—sub-second latency,
+              production-style pipeline, and API routes you can read and ship
+              from one repo. No extra wiring to feel the product.
             </p>
           )}
 
@@ -251,7 +252,7 @@ export default function LandingPage() {
                     Starting...
                   </>
                 ) : (
-                  'Try it now!'
+                  'Try it Now'
                 )}
               </Button>
               {error && <p className="text-xs text-destructive">{error}</p>}

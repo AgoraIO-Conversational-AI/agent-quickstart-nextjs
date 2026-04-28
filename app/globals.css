@@ -270,12 +270,23 @@ body {
   color: hsl(var(--primary)) !important;
 }
 
+#chatbox .flex.w-full.items-start.gap-2.flex-row {
+  justify-content: flex-start !important;
+}
+
+#chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col {
+  align-items: flex-start !important;
+  text-align: left !important;
+}
+
 #chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col > .rounded-\[15px\] {
   color: hsl(var(--primary)) !important;
+  text-align: left !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col > .rounded-\[15px\] * {
   color: inherit !important;
+  text-align: inherit !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > div.flex.h-8.w-8.flex-shrink-0 {
@@ -283,15 +294,29 @@ body {
   background-color: hsl(var(--muted)) !important;
   border: 1px solid hsl(var(--border)) !important;
   color: hsl(var(--foreground)) !important;
+  order: 2 !important;
+}
+
+#chatbox .flex.w-full.items-start.gap-2.flex-row-reverse {
+  flex-direction: row !important;
+  justify-content: flex-end !important;
+}
+
+#chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > .flex.flex-col {
+  align-items: flex-end !important;
+  order: 1 !important;
+  text-align: right !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > .flex.flex-col > .rounded-\[15px\] {
   background-color: hsl(var(--muted)) !important;
   color: hsl(var(--foreground)) !important;
+  text-align: right !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > .flex.flex-col > .rounded-\[15px\] * {
   color: inherit !important;
+  text-align: inherit !important;
 }
 
 /* --- Chatbox height transitions --- */
