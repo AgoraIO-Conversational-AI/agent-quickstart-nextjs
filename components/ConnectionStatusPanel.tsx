@@ -1,4 +1,5 @@
 import React from 'react';
+import { Wifi } from 'lucide-react';
 import { ConversationErrorCard, type ConnectionIssue } from './ConversationErrorCard';
 
 type ConnectionStatusPanelProps = {
@@ -32,40 +33,34 @@ export function ConnectionStatusPanel({
   isOpen,
   onToggle,
 }: ConnectionStatusPanelProps) {
+  const healthLabel = connectionSeverity === 'normal' ? 'Good' : getConnectionLabel(connectionState, connectionSeverity);
   return (
-    <div className="relative flex-shrink-0">
+    <div className="group relative flex-shrink-0">
       {/* Minimal status affordance: color and ping convey RTC health before the user opens details. */}
       <button
         type="button"
-        className="relative block"
+        className="relative inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-foreground transition-colors hover:bg-accent"
         aria-label={getConnectionLabel(connectionState, connectionSeverity)}
         aria-expanded={isOpen}
         aria-controls="connection-details-panel"
         onClick={onToggle}
+        title={healthLabel}
       >
-        <span className="relative flex h-2 w-2">
-          {connectionState !== 'DISCONNECTED' && connectionState !== 'DISCONNECTING' && (
-            <span
-              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                connectionSeverity === 'normal'
-                  ? 'bg-green-500'
-                  : connectionSeverity === 'warning'
-                    ? 'bg-amber-500'
-                    : 'bg-red-500'
-              }`}
-            />
-          )}
-          <span
-            className={`relative inline-flex h-2 w-2 rounded-full ${
-              connectionSeverity === 'normal'
-                ? 'bg-green-500'
-                : connectionSeverity === 'warning'
-                  ? 'bg-amber-500'
-                  : 'bg-red-500'
-            }`}
-          />
-        </span>
+        <Wifi className="h-4 w-4" />
+        <span
+          className={`absolute right-1 top-1 inline-flex h-1.5 w-1.5 rounded-full ${
+            connectionSeverity === 'normal'
+              ? 'bg-green-500'
+              : connectionSeverity === 'warning'
+                ? 'bg-amber-500'
+                : 'bg-red-500'
+          }`}
+        />
+        <span className="sr-only">{healthLabel}</span>
       </button>
+      <div className="pointer-events-none absolute -bottom-7 left-1/2 z-10 -translate-x-1/2 rounded bg-foreground px-2 py-1 text-[10px] font-medium text-background opacity-0 transition-opacity group-hover:opacity-100">
+        {healthLabel}
+      </div>
 
       {/* Expandable detail panel: current RTC state plus the captured agent/RTM issues. */}
       <div

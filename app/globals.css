@@ -76,7 +76,7 @@
   --viz-stop-3: 285 58% 48%;
 
   /* Font */
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: var(--font-instrument-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -134,11 +134,13 @@
     --viz-stop-1: 194 100% 58%;
     --viz-stop-2: 215 42% 72%;
     --viz-stop-3: 272 62% 72%;
+
+    --font-sans: var(--font-instrument-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-instrument-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: hsl(var(--foreground));
   background-color: hsl(var(--background));
 }
@@ -183,70 +185,51 @@ body {
 }
 
 /* --- ConvoTextStream overrides ---
-   Fixed width and clearance for the mic dock. Outer #chatbox wraps both the FAB (collapsed)
-   and the panel — panel chrome only when expanded (:has), so the collapsed state stays
-   visually transparent. Uikit inline styles may require !important on overrides below. */
+   Left-side transcript rail. Keep the uikit component intact and only reshape its shell. */
 #chatbox {
-  width: 24rem !important;  /* 384px — matches md min/max-w-96 the uikit uses */
-  left: auto !important;
-  bottom: 8rem !important;  /* clears the dock pill at bottom-14 with comfortable margin */
-  background: transparent !important;
-  backdrop-filter: none !important;
-  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  background-color: transparent !important;
+  backdrop-filter: blur(10px) !important;
+  border: 0 !important;
   border-radius: 0 !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.1) !important;
+}
+
+.transcript-rail #chatbox {
+  position: static !important;
+  inset: auto !important;
 }
 
 #chatbox:has(> .chatbox.expanded) {
-  background-color: hsl(var(--card) / 0.95) !important;
+  background-color: transparent !important;
   backdrop-filter: blur(8px) !important;
   border: 1px solid hsl(var(--border)) !important;
   border-radius: 0.75rem !important;
 }
 
-/* Collapsed: uikit gives #chatbox a wide hit area; push the FAB toward the right edge */
-#chatbox:not(:has(> .chatbox.expanded)) {
-  display: flex !important;
-  justify-content: flex-end !important;
-}
-
 /* Remove the border-2 border-white ring the uikit adds to the chat toggle button */
 #chatbox button[aria-label="Open transcription"] {
   border: none !important;
-}
-
-#chatbox:not(:has(> .chatbox.expanded)) button[aria-label="Open transcription"] {
-  margin-right: 0 !important;
-  margin-inline-end: 0 !important;
-}
-
-/* Collapsed FAB: uikit hardcodes dark bg + white icon. Theme for light OS mode. */
-@media (prefers-color-scheme: light) {
-  #chatbox:not(:has(> .chatbox.expanded)) button[aria-label="Open transcription"] {
-    background-color: hsl(var(--card)) !important;
-    border: 2px solid hsl(var(--border)) !important;
-    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.08);
-  }
-
-  #chatbox:not(:has(> .chatbox.expanded)) button[aria-label="Open transcription"] svg {
-    color: hsl(var(--primary)) !important;
-  }
-
-  #chatbox:not(:has(> .chatbox.expanded)) button[aria-label="Open transcription"]:hover {
-    background-color: hsl(var(--muted)) !important;
-  }
-
-  #chatbox:not(:has(> .chatbox.expanded)) button[aria-label="Open transcription"]:hover svg,
-  #chatbox:not(:has(> .chatbox.expanded)) button[aria-label="Open transcription"]:active svg {
-    color: hsl(var(--foreground)) !important;
-  }
-
-  #chatbox:not(:has(> .chatbox.expanded)) button[aria-label="Open transcription"]:active {
-    background-color: hsl(var(--muted)) !important;
-  }
+  display: none !important;
 }
 
 /* Inner panel: uikit uses var(--background) without hsl() → invalid; falls back to #171717 in light mode */
 #chatbox .chatbox.expanded {
+  background-color: transparent !important;
+  border: 0 !important;
+  height: 100% !important;
+  padding: 0.375rem 0.25rem 0.5rem !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#chatbox .chatbox.expanded,
+#chatbox .chatbox.expanded > div {
   background-color: transparent !important;
 }
 
@@ -256,6 +239,7 @@ body {
 
 #chatbox .chatbox.expanded button[aria-label="Close transcription"] {
   color: hsl(var(--foreground)) !important;
+  display: none !important;
 }
 
 /*
@@ -264,10 +248,7 @@ body {
  * AI = flex-row, user = flex-row-reverse.
  */
 #chatbox .flex.w-full.items-start.gap-2.flex-row > div.flex.h-8.w-8.flex-shrink-0 {
-  box-sizing: border-box !important;
-  background-color: hsl(var(--primary) / 0.15) !important;
-  border: 2px solid hsl(var(--primary)) !important;
-  color: hsl(var(--primary)) !important;
+  display: none !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row {
@@ -277,11 +258,19 @@ body {
 #chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col {
   align-items: flex-start !important;
   text-align: left !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 1 auto !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col > .rounded-\[15px\] {
-  color: hsl(var(--primary)) !important;
+  color: #e7e7e7 !important;
   text-align: left !important;
+  background-color: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 0.75rem !important;
+  max-width: 100% !important;
+  align-self: flex-start !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col > .rounded-\[15px\] * {
@@ -290,11 +279,7 @@ body {
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > div.flex.h-8.w-8.flex-shrink-0 {
-  box-sizing: border-box !important;
-  background-color: hsl(var(--muted)) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  color: hsl(var(--foreground)) !important;
-  order: 2 !important;
+  display: none !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row-reverse {
@@ -306,17 +291,42 @@ body {
   align-items: flex-end !important;
   order: 1 !important;
   text-align: right !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 1 auto !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > .flex.flex-col > .rounded-\[15px\] {
-  background-color: hsl(var(--muted)) !important;
-  color: hsl(var(--foreground)) !important;
-  text-align: right !important;
+  background-color: #fdfcfb !important;
+  color: #000000 !important;
+  text-align: left !important;
+  border: 1px solid #d7d7d7 !important;
+  border-radius: 0.75rem !important;
+  max-width: 100% !important;
+  align-self: flex-end !important;
 }
 
 #chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > .flex.flex-col > .rounded-\[15px\] * {
   color: inherit !important;
   text-align: inherit !important;
+}
+
+/* Labels above the bubble, matching the reference */
+#chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col::before,
+#chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > .flex.flex-col::before {
+  display: block !important;
+  margin-bottom: 0.35rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+#chatbox .flex.w-full.items-start.gap-2.flex-row > .flex.flex-col::before {
+  content: 'Agent';
+}
+
+#chatbox .flex.w-full.items-start.gap-2.flex-row-reverse > .flex.flex-col::before {
+  content: 'You';
 }
 
 /* --- Chatbox height transitions --- */
@@ -327,7 +337,7 @@ body {
 }
 
 .chatbox.expanded {
-  height: 600px;
+  height: 100%;
   overflow: hidden; /* clip scroll area at rounded corners */
 }
 
@@ -444,20 +454,33 @@ strong {
 
 /* Transcript panel sizing: give mobile more breathing room around the top controls. */
 .conversation-transcript .chatbox.expanded {
-  width: min(24rem, calc(100vw - 2rem));
-  min-width: 0;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  padding: 0.375rem 0.25rem 0.5rem !important;
+}
+
+.conversation-transcript {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
 }
 
 @media (max-width: 767px) {
   .conversation-transcript {
+    position: fixed !important;
     left: 1rem !important;
-    right: 1rem !important;
-    bottom: 5.75rem !important;
+    right: auto !important;
+    bottom: 1rem !important;
+    top: 1rem !important;
+    height: calc(100vh - 2rem) !important;
   }
 
   .conversation-transcript .chatbox.expanded {
-    width: min(18rem, calc(100vw - 2rem));
-    max-width: calc(100vw - 2rem);
-    max-height: min(20rem, calc(100vh - 14rem));
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
   }
 }
