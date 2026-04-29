@@ -204,16 +204,6 @@ export default function LandingPage() {
 
   return (
     <div className="flex h-dvh min-h-screen flex-col bg-background text-foreground relative overflow-hidden">
-      {/* Faint ambient gradient — provides depth signal on the pre-call screen */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 40% at 50% 60%, hsl(194 100% 50% / 0.04) 0%, transparent 70%)',
-        }}
-      />
-
       {/* Hero shell: either shows the pre-call CTA or swaps in the live conversation experience. */}
       <div
         className={`flex-1 flex min-h-0 flex-col ${
