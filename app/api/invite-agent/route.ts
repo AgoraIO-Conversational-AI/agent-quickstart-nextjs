@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Pipeline: Deepgram (reseller) STT → OpenAI (reseller) LLM → MiniMax (reseller) TTS.
     // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
     const agent = new Agent({
-      name: `conversation-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      client,
       instructions: ADA_PROMPT,
       greeting: GREETING,
       failureMessage: 'Please wait a moment.',
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
       );
 
     // remoteUids restricts the agent to only process audio from this user
-    const session = agent.createSession(client, {
+    const session = agent.createSession({
       channel: channel_name,
       agentUid,
       remoteUids: [requester_id],
