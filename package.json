@@ -21,7 +21,7 @@
     "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@radix-ui/react-slot": "^1.1.1",
     "agora-agent-client-toolkit": "1.2.0",
-    "agora-agents": "^2.0.1",
+    "agora-agents": "^2.3.1",
     "agora-agent-uikit": "1.1.0",
     "agora-rtc-react": "^2.5.1",
     "agora-rtc-sdk-ng": "^4.24.3",

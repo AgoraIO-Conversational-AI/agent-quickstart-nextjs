@@ -320,7 +320,7 @@ async function verifyInviteAgentSuccess() {
     remoteUids?: string[];
   } | null = null;
 
-  Agent.prototype.createSession = ((_: unknown, sessionConfig: unknown) => {
+  Agent.prototype.createSession = ((sessionConfig: unknown) => {
     capturedSessionConfig = sessionConfig as {
       channel?: string;
       agentUid?: string;
