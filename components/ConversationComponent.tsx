@@ -105,8 +105,7 @@ export default function ConversationComponent({
   // Tracks granular RTC connection state for the status dot.
   // Agora states: DISCONNECTED | CONNECTING | CONNECTED | DISCONNECTING | RECONNECTING
   const [connectionState, setConnectionState] = useState<string>('CONNECTING');
-  const agentUID =
-    process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
+  const agentUID = String(DEFAULT_AGENT_UID);
   const [joinedUID, setJoinedUID] = useState<UID>(0);
 
   // Transcript + agent state — managed with AgoraVoiceAI (see effect below).

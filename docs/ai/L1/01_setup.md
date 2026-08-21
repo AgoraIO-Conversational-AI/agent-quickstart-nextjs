@@ -29,11 +29,7 @@ agora project doctor --deep
 - `NEXT_PUBLIC_AGORA_APP_ID`: Agora project App ID.
 - `NEXT_AGORA_APP_CERTIFICATE`: Agora App Certificate (server only).
 
-Optional:
-
-- `NEXT_PUBLIC_AGENT_UID` (defaults to `123456`).
-- `NEXT_AGENT_GREETING`.
-- BYOK keys (`NEXT_DEEPGRAM_API_KEY`, `NEXT_LLM_URL`, `NEXT_LLM_API_KEY`, `NEXT_ELEVENLABS_API_KEY`, `NEXT_ELEVENLABS_VOICE_ID`).
+The base `.env.local` contract contains only these Agora credentials. Agent behavior defaults live in code, and optional BYOK examples are documented later in the root README.
 
 ## Primary Commands
 
@@ -76,7 +72,7 @@ Requires env/project binding:
 
 | Symptom | Probable Cause | First Check | Fix Path |
 | --- | --- | --- | --- |
-| Agent never joins | Invite route or env mismatch | `pnpm run doctor` and invite route logs | Verify `NEXT_PUBLIC_AGENT_UID` and invite payload |
+| Agent never joins | Invite route or env mismatch | `pnpm run doctor` and invite route logs | Verify the shared agent UID and invite payload |
 | Transcript missing | RTM token capability missing | Token route implementation | Ensure `buildTokenWithRtm` remains unchanged |
 | `verify` fails at doctor | Project not bound | `agora project use` output | Re-bind project and rewrite `.env.local` |
 | Mic publishes but no agent response | Agent start failed | UI warning (`agentJoinError`) | Inspect `/api/invite-agent` response |

@@ -31,7 +31,7 @@ The sections below (Start Here, Patterns, Anti-Patterns, etc.) remain the canoni
 - UI components: `agora-agent-uikit` for visualizer, transcript, and mic controls
 - Server SDK: `agora-agents` for managed agent session startup
 - API routes: token generation, agent invite, chat, and stop routes live in `app/api`
-- Default agent config: Agora-managed STT, LLM, and TTS; no third-party vendor keys are required for the base quickstart
+- Default agent config: Agora-managed STT, LLM, and TTS; `.env.local` contains only Agora project credentials
 
 ## Supported Modes
 

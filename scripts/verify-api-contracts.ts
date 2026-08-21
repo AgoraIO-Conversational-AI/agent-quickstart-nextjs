@@ -14,7 +14,6 @@ function getJson(response: Response) {
 
 process.env.NEXT_PUBLIC_AGORA_APP_ID = '0123456789abcdef0123456789abcdef';
 process.env.NEXT_AGORA_APP_CERTIFICATE = 'fedcba9876543210fedcba9876543210';
-process.env.NEXT_PUBLIC_AGENT_UID = '123456';
 
 async function verifyGenerateAgoraTokenRoute() {
   const { GET: generateAgoraToken } =
@@ -370,7 +369,7 @@ async function verifyInviteAgentSuccess() {
     );
     assert(
       sessionConfig.agentUid === '123456',
-      'POST /api/invite-agent should use NEXT_PUBLIC_AGENT_UID for the agent session',
+      'POST /api/invite-agent should use the shared default agent UID',
     );
     assert(
       JSON.stringify(sessionConfig.remoteUids) ===
