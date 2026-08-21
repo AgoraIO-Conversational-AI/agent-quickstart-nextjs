@@ -18,7 +18,7 @@
 ## Agent Startup Pitfalls
 
 - Missing `NEXT_PUBLIC_AGORA_APP_ID`/`NEXT_AGORA_APP_CERTIFICATE` yields hard 500s on token/invite/stop routes.
-- Mismatch between `NEXT_PUBLIC_AGENT_UID` and invite route `agentUid` causes agent presence confusion.
+- Changing the agent UID outside `lib/agora.ts` can desynchronize the browser and invite route.
 - RTM subscription failures may only surface through SAL status or raw signaling fallback events.
 
 ## Frontend Lifecycle Pitfalls

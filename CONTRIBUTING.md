@@ -31,18 +31,14 @@ pnpm install
 cp env.local.example .env.local
 ```
 
-Use the Agora CLI to create or select a project, then copy the exported values into `.env.local` using the variable names from `env.local.example`:
+Use the Agora CLI to create or select a project, then write its credentials directly to `.env.local`:
 
 ```bash
 agora login
 agora project create my-first-voice-agent --feature rtc --feature convoai
 agora project use my-first-voice-agent
-agora project env --with-secrets
+agora project env write .env.local
 ```
-
-Map:
-- `NEXT_PUBLIC_AGORA_APP_ID=<AGORA_APP_ID>`
-- `NEXT_AGORA_APP_CERTIFICATE=<AGORA_APP_CERTIFICATE>`
 
 4. Start the development server:
 

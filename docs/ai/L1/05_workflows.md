@@ -20,7 +20,8 @@ Target file: `app/api/invite-agent/route.ts`.
 Typical edits:
 
 - System prompt (`ADA_PROMPT`).
-- Greeting default (`NEXT_AGENT_GREETING`).
+- Greeting default (`GREETING`).
+- Shared agent UID (`DEFAULT_AGENT_UID` in `lib/agora.ts`).
 - VAD (`turnDetection.config.*`).
 - STT/LLM/TTS model/provider blocks.
 
@@ -90,9 +91,9 @@ Bootstrap behavior:
 ## Workflow: Enable BYOK Provider Path
 
 1. Uncomment relevant provider block in invite route.
-2. Add env vars to `.env.local` and `env.local.example`.
+2. Add the provider variables shown in the lower README BYOK section to your local environment.
 3. Keep default no-key path intact for baseline quickstart behavior.
-4. Document changes in README environment section.
+4. Keep provider variables out of `env.local.example`; they are not part of the base contract.
 5. Re-run `pnpm run verify` before shipping.
 
 ## Workflow: Docs Refresh After Runtime Changes

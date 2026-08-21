@@ -62,11 +62,7 @@ Required:
 - `NEXT_PUBLIC_AGORA_APP_ID`
 - `NEXT_AGORA_APP_CERTIFICATE`
 
-Optional and behavior-affecting:
-
-- `NEXT_PUBLIC_AGENT_UID`
-- `NEXT_AGENT_GREETING`
-- BYOK provider variables
+This is the complete base `.env.local` contract. The optional BYOK route and provider snippets use additional variables only when a developer explicitly enables them.
 
 ## Test Coverage for Interfaces
 

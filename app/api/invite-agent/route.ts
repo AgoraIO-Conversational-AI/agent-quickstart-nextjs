@@ -39,13 +39,10 @@ If you don't know a specific fact about Agora, say so plainly and suggest checki
 - **Guide, don't lecture**: Unlock the next step, not everything at once.`;
 
 // First thing the agent says when a user joins the channel.
-// Set NEXT_AGENT_GREETING in .env.local to override.
-const GREETING =
-  process.env.NEXT_AGENT_GREETING ??
-  `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
+const GREETING = `Hi there! I'm Ada, your virtual assistant from Agora. How can I help?`;
 
-// agentUid identifies the AI in the RTC channel — must match NEXT_PUBLIC_AGENT_UID on the client
-const agentUid = process.env.NEXT_PUBLIC_AGENT_UID ?? String(DEFAULT_AGENT_UID);
+// agentUid identifies the AI in the RTC channel and shares its default with the client.
+const agentUid = String(DEFAULT_AGENT_UID);
 
 function requireEnv(name: string): string {
   const value = process.env[name];

@@ -71,16 +71,12 @@ Copy those two values into Vercel Project Settings -> Environment Variables.
 
 Defined in [`env.local.example`](env.local.example).
 
-| Variable                     | Required | Default  | Notes                                                                                          |
-| ---------------------------- | :------: | :------: | ---------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_AGORA_APP_ID`   |    ✅    |    —     | Agora Console → Project → App ID.                                                              |
-| `NEXT_AGORA_APP_CERTIFICATE` |    ✅    |    —     | Agora Console → Project → App Certificate. **Server-side only.**                               |
-| `NEXT_PUBLIC_AGENT_UID`      |          | `123456` | Must match the `agentUid` in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts). |
-| `NEXT_AGENT_GREETING`        |          |    —     | Override the agent's opening line.                                                             |
+| Variable                     | Required | Notes                                                            |
+| ---------------------------- | :------: | ---------------------------------------------------------------- |
+| `NEXT_PUBLIC_AGORA_APP_ID`   |    ✅    | Agora Console → Project → App ID.                                |
+| `NEXT_AGORA_APP_CERTIFICATE` |    ✅    | Agora Console → Project → App Certificate. **Server-side only.** |
 
 The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed STT, LLM, and TTS, so no extra vendor API keys are required for the base quickstart.
-
-> **Default vs BYOK** — the quickstart ships with Agora-managed inference for a zero-key install. Switch to BYOK below when you need to bring your own provider quotas, models, or vendors.
 
 ## Commands
 
@@ -108,7 +104,7 @@ Run `pnpm run verify` before shipping changes — it covers local prerequisites,
   <img src="./system-architecture.svg" alt="System architecture">
 </picture>
 
-The browser fetches a combined RTC + RTM token (`buildTokenWithRtm`) from this app, joins the channel using a single RTC client, and uses RTM as the data channel for transcript, agent state, metrics, and error events. The Conversational AI Engine joins the same channel as the configured `NEXT_PUBLIC_AGENT_UID` and runs the STT → LLM → TTS pipeline in Agora Cloud.
+The browser fetches a combined RTC + RTM token (`buildTokenWithRtm`) from this app, joins the channel using a single RTC client, and uses RTM as the data channel for transcript, agent state, metrics, and error events. The Conversational AI Engine joins the same channel as the shared agent UID in [`lib/agora.ts`](lib/agora.ts) and runs the STT → LLM → TTS pipeline in Agora Cloud.
 
 ## What You Get
 
@@ -129,7 +125,7 @@ The browser fetches a combined RTC + RTM token (`buildTokenWithRtm`) from this a
 
 ## Optional BYOK
 
-The quickstart defaults to Agora-managed inference. To bring your own keys, uncomment the matching blocks in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) and add the corresponding env vars.
+The base `.env.local` contract contains only Agora credentials. If you are migrating from a supported provider, uncomment the matching snippet in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) and add its variables to your local environment.
 
 ```bash
 # Deepgram STT
@@ -165,7 +161,7 @@ NEXT_ELEVENLABS_VOICE_ID=...
 - **Manual clone / env values:** `agora project use <your-project>` then `agora project env write .env.local`.
 - **RTM login fails:** keep [`app/api/generate-agora-token/route.ts`](app/api/generate-agora-token/route.ts) on `RtcTokenBuilder.buildTokenWithRtm` — RTC-only tokens will not satisfy `rtm.login`.
 - **Transcript speakers inverted:** check the `uid === "0"` remap in [`components/ConversationComponent.tsx`](components/ConversationComponent.tsx).
-- **Agent never appears in channel:** ensure `NEXT_PUBLIC_AGENT_UID` matches the value used in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts).
+- **Agent never appears in channel:** ensure the shared agent UID in [`lib/agora.ts`](lib/agora.ts) is used by both the client and invite route.
 
 ## More Docs
 

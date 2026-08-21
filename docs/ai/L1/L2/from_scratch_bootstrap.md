@@ -26,7 +26,7 @@ Why: provider schemas, SDK builder fields, token behavior, and RTM event details
 Implement these pieces in order:
 
 1. Create a Next.js App Router project with React, TypeScript, Tailwind, and the Agora dependencies from `package.json`.
-2. Add `env.local.example` with `NEXT_PUBLIC_AGORA_APP_ID`, `NEXT_AGORA_APP_CERTIFICATE`, optional `NEXT_PUBLIC_AGENT_UID`, optional `NEXT_AGENT_GREETING`, and BYOK examples.
+2. Add `env.local.example` with only `NEXT_PUBLIC_AGORA_APP_ID` and `NEXT_AGORA_APP_CERTIFICATE`; keep optional BYOK examples in the README and source comments.
 3. Implement `GET /api/generate-agora-token` with `RtcTokenBuilder.buildTokenWithRtm`; return `{ token, uid, channel }` and replace invalid or zero UIDs.
 4. Implement `POST /api/invite-agent` with `AgoraClient`, `Agent`, managed `DeepgramSTT`, `OpenAI`, `MiniMaxTTS`, RTM enabled, metrics enabled, and `{ requester_id, channel_name }` input.
 5. Implement `POST /api/stop-conversation` with idempotent already-stopping/not-found handling.
@@ -45,7 +45,7 @@ Implement these pieces in order:
 - `useJoin`, `useLocalMicrophoneTrack`, and `usePublish` own leave, track close, and publish cleanup.
 - Transcript normalization remaps toolkit `uid="0"` before rendering.
 - `INTERRUPTED` turns stay in message history; only `IN_PROGRESS` renders separately.
-- `NEXT_PUBLIC_AGENT_UID` stays aligned with the invite route `agentUid`.
+- Both the client and invite route derive the agent UID from `DEFAULT_AGENT_UID` in `lib/agora.ts`.
 
 ## Verification
 

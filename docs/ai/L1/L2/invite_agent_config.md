@@ -11,9 +11,9 @@ All of the managed agent configuration is built in `app/api/invite-agent/route.t
 | Constant            | Default                                              | Purpose                                                   |
 | ------------------- | ---------------------------------------------------- | --------------------------------------------------------- |
 | `ADA_PROMPT`        | Long-form instructions for "Ada", an Agora assistant | The system prompt for the LLM.                            |
-| `GREETING`          | Friendly first line                                   | Spoken on session start unless `NEXT_AGENT_GREETING` set. |
+| `GREETING`          | Friendly first line                                   | Spoken on session start.                                 |
 
-`NEXT_AGENT_GREETING` overrides `GREETING` at runtime. `ADA_PROMPT` has no env override — edit the constant.
+Agent behavior is configured in code: edit `GREETING` or `ADA_PROMPT` directly.
 
 ## The Agent Builder Chain
 
@@ -25,7 +25,7 @@ const client = new AgoraClient({ area: Area.US, appId, appCertificate });
 const agent = new Agent({
   name: `conversation-${Date.now()}-${randomHex}`,
   instructions: ADA_PROMPT,
-  greeting: process.env.NEXT_AGENT_GREETING ?? GREETING,
+  greeting: GREETING,
   failureMessage: 'Please wait a moment.',
   maxHistory: 50,
   turnDetection: {
@@ -75,7 +75,7 @@ const agentId = await session.start();
 | Option        | Effect                                                                               |
 | ------------- | ------------------------------------------------------------------------------------ |
 | `channel`     | The RTC channel name the agent joins.                                                |
-| `agentUid`    | The UID the agent occupies in the channel — must match `NEXT_PUBLIC_AGENT_UID`.      |
+| `agentUid`    | The UID the agent occupies in the channel, shared through `lib/agora.ts`.             |
 | `remoteUids`  | Restricts the agent to the requester's UID — protects against cross-channel sniping. |
 | `idleTimeout` | Seconds of silence before the session ends.                                          |
 | `expiresIn`   | Hard ceiling on session length, mirrors the 1-hour RTC token.                        |
@@ -89,7 +89,7 @@ Edit `ADA_PROMPT`. Keep it under the LLM's context window — `gpt-4o-mini` hand
 
 ### Change the greeting
 
-Either edit `GREETING` (changes everyone) or set `NEXT_AGENT_GREETING` in `.env.local` / Vercel (changes the deployment only).
+Edit `GREETING` in `app/api/invite-agent/route.ts`.
 
 ### Change VAD behavior
 
