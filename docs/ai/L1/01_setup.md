@@ -9,6 +9,8 @@
 - Agora CLI (`agora`) for project binding and environment bootstrap.
 - Agora project with Conversational AI enabled.
 
+Install the Agora CLI from the root `README.md` instructions. On Windows, use the PowerShell installer first; if it fails, run the shell installer from Git Bash and then verify with `agora --help`.
+
 ## Install and Bootstrap
 
 1. Install dependencies.
