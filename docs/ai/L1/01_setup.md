@@ -84,7 +84,7 @@ Requires env/project binding:
 Local:
 
 - Uses `.env.local` created by `agora project env write`.
-- Uses `next dev --webpack`.
+- Uses the default Next.js Turbopack development server via `next dev`.
 - Best for flow debugging and transcript behavior checks.
 
 Vercel:
