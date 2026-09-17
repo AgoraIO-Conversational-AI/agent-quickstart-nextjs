@@ -76,6 +76,10 @@
 - Invite failures are intentionally non-fatal to allow UI fallback state visibility.
 - Raw RTM fallback parsing exists because higher-level hooks may miss some signaling payloads in edge conditions.
 
+## Toolkit 2.10.0 Migration
+
+Pass `rtmEngine` directly to `AgoraVoiceAI.init`; the nested `rtmConfig` is no longer supported. UIKit 1.1.0 declares an optional Toolkit ^1.2.0 peer, while this workspace resolves Toolkit 2.10.0. Validate transcript, agent state, metrics, and teardown in a real call before shipping.
+
 ## Related Deep Dives
 
 - [conversation_lifecycle.md](L2/conversation_lifecycle.md) — Start/stop race and lifecycle ownership details.
