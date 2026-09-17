@@ -215,7 +215,7 @@ export default function ConversationComponent({
       try {
         const ai = await AgoraVoiceAI.init({
           rtcEngine: client,
-          rtmConfig: { rtmEngine: rtmClient },
+          rtmEngine: rtmClient,
           renderMode: TranscriptHelperMode.TEXT,
           enableLog: true,
         });

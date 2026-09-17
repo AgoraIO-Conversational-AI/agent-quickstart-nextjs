@@ -18,14 +18,14 @@ importers:
         specifier: ^1.1.1
         version: 1.2.4(@types/react@19.2.14)(react@19.2.4)
       agora-agent-client-toolkit:
-        specifier: 1.2.0
-        version: 1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
+        specifier: 2.10.0
+        version: 2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
       agora-agent-uikit:
         specifier: 1.1.0
-        version: 1.1.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 1.1.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       agora-agents:
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: ^2.9.0
+        version: 2.9.0
       agora-rtc-react:
         specifier: ^2.5.1
         version: 2.5.1(react@19.2.4)
@@ -1289,8 +1289,8 @@ packages:
       agora-rtc-react: '>=2.0.0'
       react: '>=18.0.0'
 
-  agora-agent-client-toolkit@1.2.0:
-    resolution: {integrity: sha512-rbSDfk6veGsvNxSgccPa1zCCJ7QQw0NjoETHiHSXGURkzw90KwOQ2ZIOX6dueMFvZLUBr1UPQodCpOHroHY5bw==}
+  agora-agent-client-toolkit@2.10.0:
+    resolution: {integrity: sha512-IeFZiqXS146mFQLJQWf9o1K+UdQ6Wv2Agk7AfVK51XSujre/ULafYVQR0S+vAKNAFnrXsH3+zkAkCXzTW27DMA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       agora-rtc-sdk-ng: '>=4.23.4'
@@ -1319,8 +1319,8 @@ packages:
       agora-rtm-sdk:
         optional: true
 
-  agora-agents@2.3.1:
-    resolution: {integrity: sha512-Wh235kF6PlW/74YnAcdzqq95PCQZXhlSMFh8aoUbRsCYURLSM5VHdhJfkjAGRbklYe5E460+jRRQEUU8Qdjsvg==}
+  agora-agents@2.9.0:
+    resolution: {integrity: sha512-ZjP82k8Yz+DIRmzfujN6Zk97VqoQY6RIXMogiO3u7gCPNGWF+lD4ANRvis1pDE/BlFAFpFHv4bE2IlAVLP6BSw==}
     engines: {node: '>=18.0.0'}
 
   agora-rtc-react@2.5.1:
@@ -3954,14 +3954,14 @@ snapshots:
 
   acorn@8.16.0: {}
 
-  agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4):
+  agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4):
     dependencies:
-      agora-agent-client-toolkit: 1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
+      agora-agent-client-toolkit: 2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
       agora-rtc-react: 2.5.1(react@19.2.4)
       react: 19.2.4
     optional: true
 
-  agora-agent-client-toolkit@1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)):
+  agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)):
     dependencies:
       agora-rtc-sdk-ng: 4.24.3
     optionalDependencies:
@@ -3971,7 +3971,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  agora-agent-uikit@1.1.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  agora-agent-uikit@1.1.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@lottiefiles/dotlottie-react': 0.17.15(react@19.2.4)
       '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3989,14 +3989,14 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
       tailwind-merge: 3.5.0
     optionalDependencies:
-      agora-agent-client-toolkit: 1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
-      agora-agent-client-toolkit-react: 1.2.0(agora-agent-client-toolkit@1.2.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
+      agora-agent-client-toolkit: 2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3))
+      agora-agent-client-toolkit-react: 1.2.0(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3)(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4)
       agora-rtc-react: 2.5.1(react@19.2.4)
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
 
-  agora-agents@2.3.1:
+  agora-agents@2.9.0:
     dependencies:
       agora-token: 2.0.5
 
