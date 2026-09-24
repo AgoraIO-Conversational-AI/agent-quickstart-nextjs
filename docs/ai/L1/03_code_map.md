@@ -7,7 +7,7 @@
 ```text
 app/                 Next.js routes + API handlers
 components/          Client UI and RTC/RTM lifecycle
-lib/                 Shared constants and transcript helpers
+lib/                 Shared helpers and server-side chat completions handler
 scripts/             Verification and doctor helpers
 docs/                Human-oriented guides
 docs/ai/             Progressive disclosure docs (this system)
@@ -33,6 +33,7 @@ types/               Shared TypeScript route/component contracts
 
 ## Shared Logic (`lib`)
 
+- `chat-completions.ts`: server-side custom LLM SSE handler factory, shared by the route and contract tests.
 - `agora.ts`: default constants (`DEFAULT_AGENT_UID`).
 - `conversation.ts`: transcript normalization, spacing cleanup, timestamp normalization, visualizer state mapping.
 
@@ -79,7 +80,7 @@ types/               Shared TypeScript route/component contracts
 
 - `components/` owns client runtime lifecycle and UI state.
 - `app/api/` owns privileged operations needing app certificate.
-- `lib/` owns pure transforms reusable across client modules.
+- `lib/` owns reusable helpers; `chat-completions.ts` is server-side only.
 - `docs/` owns human-facing implementation narrative and runbooks.
 
 ## Related Deep Dives

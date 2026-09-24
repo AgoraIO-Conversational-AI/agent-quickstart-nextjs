@@ -169,6 +169,7 @@ NEXT_ELEVENLABS_VOICE_ID=...
 - `components/QuickstartPipelineMetrics.tsx` — per-stage latency chips in the header
 - `components/QuickstartTranscriptPanel.tsx` — live transcript rail
 - `components/QuickstartPreCallCard.tsx` — pre-call hero card
+- `lib/chat-completions.ts` — server-side custom LLM SSE handler used by the chat completions route
 - `lib/conversation.ts` — transcript normalization and visualizer state mapping
 - `AGENTS.md` — primary agent-facing guide
 
