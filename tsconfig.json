@@ -25,12 +25,6 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "agora-agent-uikit": [
-        "./node_modules/agora-agent-uikit/dist/index.d.ts"
-      ],
-      "agora-agent-uikit/rtc": [
-        "./node_modules/agora-agent-uikit/dist/rtc/index.d.ts"
       ]
     }
   },
