@@ -1,25 +1,17 @@
 import { NextResponse } from 'next/server';
-import { AgoraClient, Area } from 'agora-agents';
+import { AgoraClient, Area, V3Error } from 'agora-agents';
 import { StopConversationRequest } from '@/types/conversation';
 
-function isAgentAlreadyStoppingOrStopped(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-
-  const maybeErr = error as {
-    statusCode?: number;
-    body?: { detail?: string; reason?: string };
-    message?: string;
-  };
-
-  const statusCode = maybeErr.statusCode;
-  const reason = maybeErr.body?.reason?.toLowerCase();
-  const detail = maybeErr.body?.detail?.toLowerCase() ?? maybeErr.message?.toLowerCase() ?? '';
-
-  if (statusCode === 404) return true;
-  if (reason === 'invalidrequest' && detail.includes('already in the process of shutting down')) {
-    return true;
-  }
-  return false;
+function isSessionAlreadyStoppingOrStopped(error: unknown): boolean {
+  if (!(error instanceof V3Error)) return false;
+  // 404 TaskNotFound: the session is gone.
+  if (error.statusCode === 404) return true;
+  // 409 TaskNotRunning / TaskConflict: the session already stopped or is stopping.
+  const reason =
+    error.body && typeof error.body === 'object' && 'reason' in error.body
+      ? (error.body as { reason?: unknown }).reason
+      : undefined;
+  return error.statusCode === 409 && (reason === 'TaskNotRunning' || reason === 'TaskConflict');
 }
 
 export async function POST(request: Request) {
@@ -42,16 +34,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
+    // The v3 preview session API is only available in Area.US.
     const client = new AgoraClient({
       area: Area.US,
       appId,
       appCertificate,
     });
     try {
-      await client.stopAgent(agent_id);
+      // agent_id carries the session ID returned by /api/invite-agent.
+      await client.v3.sessions.stop({ agentSessionId: agent_id });
     } catch (error) {
-      if (isAgentAlreadyStoppingOrStopped(error)) {
+      if (isSessionAlreadyStoppingOrStopped(error)) {
         // Treat stop as idempotent: agent is already exiting (or gone).
         return NextResponse.json({ success: true, state: 'already-stopping' });
       }

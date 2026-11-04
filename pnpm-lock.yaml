@@ -24,8 +24,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0)))(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0))))(debug@4.4.3(supports-color@7.2.0)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0)))(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0))))(debug@4.4.3(supports-color@7.2.0)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       agora-agents:
-        specifier: ^3.0.0-alpha.3
-        version: 3.0.0-alpha.3
+        specifier: file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz
+        version: file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz
       agora-rtc-react:
         specifier: ^2.5.1
         version: 2.5.1(react@19.2.4)
@@ -35,9 +35,6 @@ importers:
       agora-rtm:
         specifier: ^2.2.3
         version: 2.2.3(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0)))
-      agora-token:
-        specifier: ^2.0.5
-        version: 2.0.5
       ai:
         specifier: ^6.0.107
         version: 6.0.137(zod@3.25.76)
@@ -1319,8 +1316,9 @@ packages:
       agora-rtm-sdk:
         optional: true
 
-  agora-agents@3.0.0-alpha.3:
-    resolution: {integrity: sha512-Zar5PUMUkFf0C8gRUIFfQrTHVJQhDpVu+z1hALWu1h8XzKGs2Fz7rWkQUZ7cWGT2dDPiFHPyAH7pPn2scDUjpg==}
+  agora-agents@file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz:
+    resolution: {integrity: sha512-h3Ki9Rdh8AqpFuy95ScASWlcYbhDJo4xs3Q/EK41nbIxdynXtttmx32+4yTwTx7l9YDQ8QYu5+7ViJ+OqRS00g==, tarball: file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz}
+    version: 3.0.0-alpha.3
     engines: {node: '>=18.0.0'}
 
   agora-rtc-react@2.5.1:
@@ -1339,9 +1337,6 @@ packages:
     resolution: {integrity: sha512-5O6uINrtnNDXijZEAmTwLzC1J6GizQoRb4moRx+DsVeYjcEbMjZAFcSnZVYHsjq3LrWetdknMhGt2o0zZJEBtQ==}
     peerDependencies:
       agora-rtc-sdk-ng: 4.23.0
-
-  agora-token@2.0.5:
-    resolution: {integrity: sha512-0NcbzC3iuutlksv3b4bCMKHrW3pko6gdiGEMRo6APDice24kfXAuWyAlG9hRBrrPBVDShwm9/GUz2Scd3zuZQw==}
 
   agora-token@2.0.7:
     resolution: {integrity: sha512-DfDXjZjUFyv6NENIDjhMj77KKmA6uG7kMHdpBWXZU3LnLNZ0/jGSsZ4UdQWxaF7ZUETxmnmxvrnVIsUscV3Y5A==}
@@ -4000,7 +3995,7 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  agora-agents@3.0.0-alpha.3:
+  agora-agents@file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz:
     dependencies:
       agora-token: 2.0.7
 
@@ -4028,12 +4023,6 @@ snapshots:
   agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0))):
     dependencies:
       agora-rtc-sdk-ng: 4.24.3(debug@4.4.3(supports-color@7.2.0))
-
-  agora-token@2.0.5:
-    dependencies:
-      crc-32: 1.2.2
-      cuint: 0.2.2
-      md5: 2.3.0
 
   agora-token@2.0.7:
     dependencies:

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // --- 2. Build and start the agent ---
 
     // AgoraClient authenticates API calls to the Agora Conversational AI service.
-    // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
+    // The v3 preview session API is only available in Area.US.
     const client = new AgoraClient({
       area: Area.US,
       appId,
@@ -106,20 +106,8 @@ export async function POST(request: NextRequest) {
           },
         },
       },
-      // RTM is required for transcript events in the browser client.
-      // enable_tools is required for MCP tool invocation.
-      advancedFeatures: { enable_rtm: true, enable_tools: true },
-      // Required for browser RTM events:
-      // - data_channel: 'rtm' enables RTM delivery path for state/metrics/errors
-      // - enable_error_message emits AGENT_ERROR payloads
-      // - enable_metrics emits AGENT_METRICS latency payloads
-      parameters: {
-        // web client → ultra-low-latency chorus profile
-        audio_scenario: 'chorus',
-        data_channel: 'rtm',
-        enable_error_message: true,
-        enable_metrics: true,
-      },
+      // No RTM or data-channel switches: v3 sessions always deliver transcripts
+      // and agent state to the browser over RTM.
     })
       .withStt(
         new DeepgramSTT({
@@ -172,20 +160,25 @@ export async function POST(request: NextRequest) {
         // }),
       );
 
-    // remoteUids restricts the agent to only process audio from this user
-    const session = agent.createSession({
+    // An ephemeral session runs this configuration once without saving it.
+    // The v3 preview API is US-only, so the client above must use Area.US.
+    // remoteUids restricts the agent to only process audio from this user.
+    const session = agent.createEphemeralSession({
       channel: channel_name,
       agentUid,
       remoteUids: [requester_id],
       idleTimeout: 30,
+      maxDuration: 3600, // hard stop after one hour (seconds)
+      audioScenario: 'chorus', // web client → ultra-low-latency chorus profile
       expiresIn: ExpiresIn.hours(1),
       debug: false, // enable debug to show restful API calls in the console
     });
 
-    const agentId = await session.start();
+    // start() returns the session ID, which the stop route needs.
+    const sessionId = await session.start();
 
     return NextResponse.json({
-      agent_id: agentId,
+      agent_id: sessionId,
       create_ts: Math.floor(Date.now() / 1000),
       state: 'RUNNING',
     } as AgentResponse);

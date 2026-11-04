@@ -1,11 +1,40 @@
-import { AgoraClient, Agent } from 'agora-agents';
-import { RtcTokenBuilder } from 'agora-token';
+import { inflateSync } from 'node:zlib';
+import { AgoraClient, Agent, Area, V3Error } from 'agora-agents';
 import { NextRequest } from 'next/server';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+// Read the service list from an AccessToken2 ("007") token: service type → account.
+// RTC = 1, RTM = 2, ConvoAI = 9. Client tokens must carry RTC and RTM only.
+function decodeTokenServices(token: string): Map<number, string> {
+  assert(token.startsWith('007'), 'token should be an AccessToken2 token');
+  const bytes = inflateSync(Buffer.from(token.slice(3), 'base64'));
+  let offset = 0;
+  const u16 = () => {
+    const n = bytes.readUInt16LE(offset);
+    offset += 2;
+    return n;
+  };
+  const str = () => {
+    const n = u16();
+    offset += n;
+    return bytes.subarray(offset - n, offset).toString();
+  };
+  str(); // signature
+  str(); // app ID
+  offset += 12; // issued, expiry, salt
+  const services = new Map<number, string>();
+  for (let count = u16(); count > 0; count--) {
+    const type = u16();
+    for (let privileges = u16(); privileges > 0; privileges--) offset += 6;
+    if (type === 1) str(); // channel
+    services.set(type, type === 1 || type === 2 ? str() : '');
+  }
+  return services;
 }
 
 function getJson(response: Response) {
@@ -18,88 +47,56 @@ process.env.NEXT_AGORA_APP_CERTIFICATE = 'fedcba9876543210fedcba9876543210';
 async function verifyGenerateAgoraTokenRoute() {
   const { GET: generateAgoraToken } =
     await import('../app/api/generate-agora-token/route');
-  const originalBuildTokenWithRtm = RtcTokenBuilder.buildTokenWithRtm;
-  let tokenBuilderArgs: unknown[] | null = null;
+  const request = new NextRequest(
+    'http://localhost:3000/api/generate-agora-token?uid=4321&channel=test-channel',
+  );
+  const response = await generateAgoraToken(request);
+  const body = await getJson(response);
 
-  RtcTokenBuilder.buildTokenWithRtm = ((...args: unknown[]) => {
-    tokenBuilderArgs = args;
-    return 'mock-rtc-rtm-token';
-  }) as typeof RtcTokenBuilder.buildTokenWithRtm;
-
-  try {
-    const request = new NextRequest(
-      'http://localhost:3000/api/generate-agora-token?uid=4321&channel=test-channel',
-    );
-    const response = await generateAgoraToken(request);
-    const body = await getJson(response);
-
-    assert(
-      response.status === 200,
-      'GET /api/generate-agora-token should return 200',
-    );
-    assert(
-      body.token === 'mock-rtc-rtm-token',
-      'GET /api/generate-agora-token should return the built token',
-    );
-    assert(
-      body.uid === '4321',
-      'GET /api/generate-agora-token should preserve the requested uid',
-    );
-    assert(
-      body.channel === 'test-channel',
-      'GET /api/generate-agora-token should preserve the requested channel',
-    );
-
-    assert(
-      Array.isArray(tokenBuilderArgs),
-      'GET /api/generate-agora-token should call buildTokenWithRtm',
-    );
-    assert(
-      tokenBuilderArgs?.[2] === 'test-channel',
-      'buildTokenWithRtm should use the requested channel',
-    );
-    assert(
-      tokenBuilderArgs?.[3] === '4321',
-      'buildTokenWithRtm should receive the requested uid as account string',
-    );
-  } finally {
-    RtcTokenBuilder.buildTokenWithRtm = originalBuildTokenWithRtm;
-  }
+  assert(
+    response.status === 200,
+    'GET /api/generate-agora-token should return 200',
+  );
+  assert(
+    body.uid === '4321',
+    'GET /api/generate-agora-token should preserve the requested uid',
+  );
+  assert(
+    body.channel === 'test-channel',
+    'GET /api/generate-agora-token should preserve the requested channel',
+  );
+  const services = decodeTokenServices(body.token as string);
+  assert(
+    JSON.stringify([...services.keys()].sort()) === JSON.stringify([1, 2]),
+    'GET /api/generate-agora-token should return an RTC + RTM token with no ConvoAI service',
+  );
+  assert(
+    services.get(1) === '4321' && services.get(2) === '4321',
+    'GET /api/generate-agora-token should sign RTC and RTM for the requested uid',
+  );
 }
 
 async function verifyGenerateAgoraTokenReplacesZeroUid() {
   const { GET: generateAgoraToken } =
     await import('../app/api/generate-agora-token/route');
-  const originalBuildTokenWithRtm = RtcTokenBuilder.buildTokenWithRtm;
-  let tokenBuilderArgs: unknown[] | null = null;
+  const request = new NextRequest(
+    'http://localhost:3000/api/generate-agora-token?uid=0&channel=test-channel',
+  );
+  const response = await generateAgoraToken(request);
+  const body = await getJson(response);
 
-  RtcTokenBuilder.buildTokenWithRtm = ((...args: unknown[]) => {
-    tokenBuilderArgs = args;
-    return 'mock-rtc-rtm-token';
-  }) as typeof RtcTokenBuilder.buildTokenWithRtm;
-
-  try {
-    const request = new NextRequest(
-      'http://localhost:3000/api/generate-agora-token?uid=0&channel=test-channel',
-    );
-    const response = await generateAgoraToken(request);
-    const body = await getJson(response);
-
-    assert(
-      response.status === 200,
-      'GET /api/generate-agora-token?uid=0 should return 200',
-    );
-    assert(
-      typeof body.uid === 'string' && body.uid !== '0',
-      'GET /api/generate-agora-token?uid=0 should generate an RTM-safe uid',
-    );
-    assert(
-      Array.isArray(tokenBuilderArgs) && tokenBuilderArgs[3] === body.uid,
-      'buildTokenWithRtm should mint the token for the generated uid',
-    );
-  } finally {
-    RtcTokenBuilder.buildTokenWithRtm = originalBuildTokenWithRtm;
-  }
+  assert(
+    response.status === 200,
+    'GET /api/generate-agora-token?uid=0 should return 200',
+  );
+  assert(
+    typeof body.uid === 'string' && body.uid !== '0',
+    'GET /api/generate-agora-token?uid=0 should generate an RTM-safe uid',
+  );
+  assert(
+    decodeTokenServices(body.token as string).get(2) === body.uid,
+    'GET /api/generate-agora-token should mint the token for the generated uid',
+  );
 }
 
 async function verifyChatCompletionsMissingEnv() {
@@ -312,23 +309,26 @@ async function verifyInviteAgentValidation() {
 
 async function verifyInviteAgentSuccess() {
   const { POST: inviteAgent } = await import('../app/api/invite-agent/route');
-  const originalCreateSession = Agent.prototype.createSession;
-  let capturedSessionConfig: {
+  const originalCreateEphemeralSession = Agent.prototype.createEphemeralSession;
+  type CapturedSessionConfig = {
     channel?: string;
     agentUid?: string;
     remoteUids?: string[];
-  } | null = null;
+    audioScenario?: string;
+  };
+  let capturedSessionConfig: CapturedSessionConfig | null = null;
+  let capturedAgent: Agent | null = null;
 
-  Agent.prototype.createSession = ((sessionConfig: unknown) => {
-    capturedSessionConfig = sessionConfig as {
-      channel?: string;
-      agentUid?: string;
-      remoteUids?: string[];
-    };
+  Agent.prototype.createEphemeralSession = function (
+    this: Agent,
+    sessionConfig: unknown,
+  ) {
+    capturedAgent = this;
+    capturedSessionConfig = sessionConfig as CapturedSessionConfig;
     return {
-      start: async () => 'mock-agent-id',
+      start: async () => 'mock-session-id',
     };
-  }) as unknown as typeof Agent.prototype.createSession;
+  } as unknown as typeof Agent.prototype.createEphemeralSession;
 
   try {
     const request = new NextRequest('http://localhost:3000/api/invite-agent', {
@@ -346,8 +346,8 @@ async function verifyInviteAgentSuccess() {
       'POST /api/invite-agent should return 200 on success',
     );
     assert(
-      body.agent_id === 'mock-agent-id',
-      'POST /api/invite-agent should return the started agent id',
+      body.agent_id === 'mock-session-id',
+      'POST /api/invite-agent should return the started session id',
     );
     assert(
       body.state === 'RUNNING',
@@ -355,17 +355,13 @@ async function verifyInviteAgentSuccess() {
     );
     assert(
       capturedSessionConfig !== null,
-      'POST /api/invite-agent should call createSession',
+      'POST /api/invite-agent should call createEphemeralSession',
     );
-    const sessionConfig = capturedSessionConfig as {
-      channel?: string;
-      agentUid?: string;
-      remoteUids?: string[];
-    };
+    const sessionConfig = capturedSessionConfig as CapturedSessionConfig;
 
     assert(
       sessionConfig.channel === 'test-channel',
-      'POST /api/invite-agent should pass the requested channel to createSession',
+      'POST /api/invite-agent should pass the requested channel to createEphemeralSession',
     );
     assert(
       sessionConfig.agentUid === '123456',
@@ -376,8 +372,19 @@ async function verifyInviteAgentSuccess() {
         JSON.stringify(['user-4321']),
       'POST /api/invite-agent should scope the session to the requesting user',
     );
+    assert(
+      sessionConfig.audioScenario === 'chorus',
+      'POST /api/invite-agent should request the chorus audio scenario',
+    );
+    // v3 rejects legacy RTM/data-channel switches; the agent config must not carry them.
+    const agentConfig = (capturedAgent as Agent | null)?.config;
+    assert(
+      agentConfig?.advancedFeatures === undefined &&
+        agentConfig?.parameters === undefined,
+      'POST /api/invite-agent should not set advancedFeatures or parameters',
+    );
   } finally {
-    Agent.prototype.createSession = originalCreateSession;
+    Agent.prototype.createEphemeralSession = originalCreateEphemeralSession;
   }
 }
 
@@ -404,45 +411,86 @@ async function verifyStopConversationValidation() {
   );
 }
 
+type SessionsApi = AgoraClient['v3']['sessions'];
+
+async function withMockedSessionStop(
+  stop: (request: { agentSessionId: string }) => Promise<unknown>,
+  run: () => Promise<void>,
+) {
+  const sessionsPrototype = Object.getPrototypeOf(
+    new AgoraClient({ area: Area.US, appId: 'x', appCertificate: 'y' }).v3.sessions,
+  ) as SessionsApi;
+  const originalStop = sessionsPrototype.stop;
+  sessionsPrototype.stop = stop as SessionsApi['stop'];
+  try {
+    await run();
+  } finally {
+    sessionsPrototype.stop = originalStop;
+  }
+}
+
+function stopRequest(agentId: string) {
+  return new NextRequest('http://localhost:3000/api/stop-conversation', {
+    body: JSON.stringify({ agent_id: agentId }),
+    method: 'POST',
+  });
+}
+
 async function verifyStopConversationSuccess() {
   const { POST: stopConversation } =
     await import('../app/api/stop-conversation/route');
-  const originalStopAgent = AgoraClient.prototype.stopAgent;
-  let stoppedAgentId: string | null = null;
+  let stoppedSessionId: string | null = null;
 
-  AgoraClient.prototype.stopAgent = async function (
-    this: AgoraClient,
-    agentId: string,
-  ) {
-    stoppedAgentId = agentId;
-  } as typeof AgoraClient.prototype.stopAgent;
+  await withMockedSessionStop(
+    async ({ agentSessionId }) => {
+      stoppedSessionId = agentSessionId;
+      return {};
+    },
+    async () => {
+      const response = await stopConversation(stopRequest('mock-session-id'));
+      const body = await getJson(response);
 
-  try {
-    const request = new NextRequest(
-      'http://localhost:3000/api/stop-conversation',
-      {
-        body: JSON.stringify({ agent_id: 'mock-agent-id' }),
-        method: 'POST',
-      },
-    );
-    const response = await stopConversation(request);
-    const body = await getJson(response);
+      assert(
+        response.status === 200,
+        'POST /api/stop-conversation should return 200 on success',
+      );
+      assert(
+        body.success === true,
+        'POST /api/stop-conversation should return success',
+      );
+      assert(
+        stoppedSessionId === 'mock-session-id',
+        'POST /api/stop-conversation should stop the requested session id',
+      );
+    },
+  );
+}
 
-    assert(
-      response.status === 200,
-      'POST /api/stop-conversation should return 200 on success',
-    );
-    assert(
-      body.success === true,
-      'POST /api/stop-conversation should return success',
-    );
-    assert(
-      stoppedAgentId === 'mock-agent-id',
-      'POST /api/stop-conversation should call stopAgent with the requested agent id',
-    );
-  } finally {
-    AgoraClient.prototype.stopAgent = originalStopAgent;
-  }
+async function verifyStopConversationAlreadyStopped() {
+  const { POST: stopConversation } =
+    await import('../app/api/stop-conversation/route');
+  const notRunning = new V3Error(
+    409,
+    { reason: 'TaskNotRunning' },
+    { headers: new Headers() } as unknown as ConstructorParameters<
+      typeof V3Error
+    >[2],
+  );
+
+  await withMockedSessionStop(
+    async () => {
+      throw notRunning;
+    },
+    async () => {
+      const response = await stopConversation(stopRequest('mock-session-id'));
+      const body = await getJson(response);
+
+      assert(
+        response.status === 200 && body.state === 'already-stopping',
+        'POST /api/stop-conversation should treat a stopped session as success',
+      );
+    },
+  );
 }
 
 async function main() {
@@ -455,6 +503,7 @@ async function main() {
   await verifyInviteAgentSuccess();
   await verifyStopConversationValidation();
   await verifyStopConversationSuccess();
+  await verifyStopConversationAlreadyStopped();
 
   console.log('API contract checks passed');
 }

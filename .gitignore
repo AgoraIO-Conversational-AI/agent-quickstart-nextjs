@@ -137,3 +137,5 @@ dist
 .pnpm-store/
 
 .DS_Store
+# Pre-release SDK build pinned by package.json (remove once agora-agents publishes it)
+!vendor/*.tgz
