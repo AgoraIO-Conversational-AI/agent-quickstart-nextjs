@@ -75,7 +75,7 @@ Requires env/project binding:
 | Symptom | Probable Cause | First Check | Fix Path |
 | --- | --- | --- | --- |
 | Agent never joins | Invite route or env mismatch | `pnpm run doctor` and invite route logs | Verify the shared agent UID and invite payload |
-| Transcript missing | RTM token capability missing | Token route implementation | Ensure `buildTokenWithRtm` remains unchanged |
+| Transcript missing | RTM token capability missing | Token route implementation | Ensure the route still uses `generateClientToken` |
 | `verify` fails at doctor | Project not bound | `agora project use` output | Re-bind project and rewrite `.env.local` |
 | Mic publishes but no agent response | Agent start failed | UI warning (`agentJoinError`) | Inspect `/api/invite-agent` response |
 

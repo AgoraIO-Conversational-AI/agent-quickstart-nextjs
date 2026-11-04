@@ -52,7 +52,7 @@ Do not recreate Agora ConvoAI integration from memory. Provider schemas, SDK bui
 
 ## Invariants
 
-- Keep `RtcTokenBuilder.buildTokenWithRtm` for RTM-capable tokens.
+- Keep `generateClientToken` (RTC + RTM, no ConvoAI service) for RTM-capable browser tokens.
 - Treat this repo as the official baseline; customize after preserving a working token, invite, RTC, RTM, and transcript flow.
 - Preserve StrictMode `isReady` guard for join/mic initialization.
 - Preserve UID remap (`uid="0"`) and `INTERRUPTED` message-list inclusion.

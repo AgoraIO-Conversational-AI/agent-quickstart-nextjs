@@ -23,7 +23,7 @@
 
 ## Token and RTM Contract
 
-- Token route must use `RtcTokenBuilder.buildTokenWithRtm`.
+- Token route must use `generateClientToken` (RTC + RTM, no ConvoAI service). Tokens returned to clients never carry the ConvoAI service.
 - RTC-only token builders break RTM login/subscription.
 - Renewal flow independently mints RTC and RTM tokens while keeping shared channel.
 

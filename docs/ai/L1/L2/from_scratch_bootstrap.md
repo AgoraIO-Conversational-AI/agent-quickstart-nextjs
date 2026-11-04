@@ -27,7 +27,7 @@ Implement these pieces in order:
 
 1. Create a Next.js App Router project with React, TypeScript, Tailwind, and the Agora dependencies from `package.json`.
 2. Add `env.local.example` with only `NEXT_PUBLIC_AGORA_APP_ID` and `NEXT_AGORA_APP_CERTIFICATE`; keep optional BYOK examples in the README and source comments.
-3. Implement `GET /api/generate-agora-token` with `RtcTokenBuilder.buildTokenWithRtm`; return `{ token, uid, channel }` and replace invalid or zero UIDs.
+3. Implement `GET /api/generate-agora-token` with `generateClientToken` from `agora-agents` (RTC + RTM, no ConvoAI service); return `{ token, uid, channel }` and replace invalid or zero UIDs.
 4. Implement `POST /api/invite-agent` with `AgoraClient`, `Agent`, managed `DeepgramSTT`, `OpenAI`, `MiniMaxTTS`, RTM enabled, metrics enabled, and `{ requester_id, channel_name }` input.
 5. Implement `POST /api/stop-conversation` with idempotent already-stopping/not-found handling.
 6. Implement optional `POST /api/chat/completions` only when exposing a custom LLM SSE proxy.
@@ -38,7 +38,7 @@ Implement these pieces in order:
 
 ## Required Copy-Forward Invariants
 
-- Token generation uses `RtcTokenBuilder.buildTokenWithRtm`, not an RTC-only builder.
+- Token generation uses `generateClientToken`, not an RTC-only builder and not `generateConvoAIToken`.
 - The browser never receives `NEXT_AGORA_APP_CERTIFICATE`.
 - `LandingPage` creates/logs in/subscribes/logs out the RTM client.
 - `ConversationComponent` waits for `isReady && joinSuccess` before `AgoraVoiceAI.init`.

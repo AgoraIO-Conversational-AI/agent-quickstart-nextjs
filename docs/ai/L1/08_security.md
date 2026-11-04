@@ -20,7 +20,7 @@
 - Tokens expire (default 1 hour).
 - Token endpoint allows caller-provided UID/channel but still uses server secret signing.
 - Renewal flow requests new RTC/RTM tokens near expiry.
-- RTM capability is required and intentionally embedded by `buildTokenWithRtm`.
+- RTM capability is required and intentionally embedded by `generateClientToken`, which grants RTC + RTM only. The browser token carries no ConvoAI service, so it cannot call the Conversational AI REST API.
 
 ## Input Validation and Failure Handling
 

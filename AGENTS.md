@@ -121,14 +121,14 @@ useEffect(() => {
 
 ### Tokens and Styling
 
-- RTM token access must come from `RtcTokenBuilder.buildTokenWithRtm`; a standard RTC-only token does not grant RTM access.
+- RTM token access must come from `generateClientToken` in `agora-agents` (RTC + RTM); a standard RTC-only token does not grant RTM access. Tokens returned to the browser must never carry the ConvoAI service: `generateConvoAIToken` stays server-side.
 - Tailwind must scan uikit classes with `./node_modules/agora-agent-uikit/dist/**/*.{js,mjs}` in `tailwind.config.ts`.
 
 ## Working Rules
 
 - Prefer the smallest change that keeps the quickstart copyable and production-style.
 - Keep RTC client creation StrictMode-safe with `useRef`, not `useMemo`.
-- Keep token generation on `RtcTokenBuilder.buildTokenWithRtm`.
+- Keep token generation on `generateClientToken` (RTC + RTM, no ConvoAI service).
 - Keep transcript UID remapping aligned with the toolkit sentinel behavior.
 - Do not require third-party vendor API keys unless the code actually introduces a BYOK provider path.
 - Keep README, AGENTS, and `docs/ai/` aligned with implementation changes.
@@ -173,7 +173,7 @@ pnpm run build
 - Do not remove the `isReady` guard.
 - Do not set `reactStrictMode: false` as a workaround.
 - Do not use the deprecated `turnDetection.type: 'agora_vad'` flat API; use `turnDetection.config.start_of_speech` and `turnDetection.config.end_of_speech`.
-- Do not replace `RtcTokenBuilder.buildTokenWithRtm` with an RTC-only token builder.
+- Do not replace `generateClientToken` with an RTC-only token builder or with `generateConvoAIToken`.
 - Do not hide SDK requirements only in `CLAUDE.md`; all agent-facing guidance belongs in `AGENTS.md`.
 
 ## Done Criteria

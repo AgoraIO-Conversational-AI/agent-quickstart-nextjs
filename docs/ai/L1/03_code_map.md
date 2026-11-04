@@ -17,7 +17,7 @@ types/               Shared TypeScript route/component contracts
 
 ## API Route Ownership (`app/api`)
 
-- `generate-agora-token/route.ts`: builds RTC+RTM token via `buildTokenWithRtm`.
+- `generate-agora-token/route.ts`: builds an RTC + RTM token via `generateClientToken` (no ConvoAI service).
 - `invite-agent/route.ts`: validates input/env, configures and starts agent session.
 - `stop-conversation/route.ts`: stops agent and handles idempotent already-stopping cases.
 - `chat/completions/route.ts`: optional OpenAI-compatible SSE proxy for custom LLM path.

@@ -36,7 +36,7 @@
 ## Fast Triage Checklist
 
 1. Run `agora project doctor --deep`.
-2. Verify token route still uses `buildTokenWithRtm`.
+2. Verify token route still uses `generateClientToken`.
 3. Check `uid="0"` remap path.
 4. Check `isReady` guard and hook ownership constraints.
 5. Inspect connection issues panel for RTM/SAL/agent error signals.

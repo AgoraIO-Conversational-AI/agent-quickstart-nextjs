@@ -96,6 +96,10 @@ Defined in [`env.local.example`](env.local.example).
 
 The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed STT, LLM, and TTS, so no extra vendor API keys are required for the base quickstart.
 
+### SDK version
+
+This branch pins `agora-agents` to a vendored pre-release build, `vendor/agora-agents-2.13.0-fb7a392.tgz` (2.13.0 plus `generateClientToken`, [AgoraIO/agora-agents-ts#128](https://github.com/AgoraIO/agora-agents-ts/pull/128)). It will be replaced with the published npm version once released. `.gitignore` un-ignores `vendor/*.tgz` so the tarball is committed.
+
 ## Commands
 
 ```bash
@@ -122,7 +126,7 @@ Run `pnpm run verify` before shipping changes — it covers local prerequisites,
   <img src="./system-architecture.svg" alt="System architecture">
 </picture>
 
-The browser fetches a combined RTC + RTM token (`buildTokenWithRtm`) from this app, joins the channel using a single RTC client, and uses RTM as the data channel for transcript, agent state, metrics, and error events. The Conversational AI Engine joins the same channel as the shared agent UID in [`lib/agora.ts`](lib/agora.ts) and runs the STT → LLM → TTS pipeline in Agora Cloud.
+The browser fetches a combined RTC + RTM token (`generateClientToken`, no ConvoAI service) from this app, joins the channel using a single RTC client, and uses RTM as the data channel for transcript, agent state, metrics, and error events. The Conversational AI Engine joins the same channel as the shared agent UID in [`lib/agora.ts`](lib/agora.ts) and runs the STT → LLM → TTS pipeline in Agora Cloud.
 
 ## What You Get
 
@@ -178,7 +182,7 @@ NEXT_ELEVENLABS_VOICE_ID=...
 - **Agent does not join or transcripts are missing:** run `agora project doctor --deep`.
 - **`pnpm run doctor` fails:** run `agora project env write .env.local`, then retry.
 - **Manual clone / env values:** `agora project use <your-project>` then `agora project env write .env.local`.
-- **RTM login fails:** keep [`app/api/generate-agora-token/route.ts`](app/api/generate-agora-token/route.ts) on `RtcTokenBuilder.buildTokenWithRtm` — RTC-only tokens will not satisfy `rtm.login`.
+- **RTM login fails:** keep [`app/api/generate-agora-token/route.ts`](app/api/generate-agora-token/route.ts) on `generateClientToken` (RTC + RTM, no ConvoAI service) — RTC-only tokens will not satisfy `rtm.login`.
 - **Transcript speakers inverted:** check the `uid === "0"` remap in [`components/ConversationComponent.tsx`](components/ConversationComponent.tsx).
 - **Agent never appears in channel:** ensure the shared agent UID in [`lib/agora.ts`](lib/agora.ts) is used by both the client and invite route.
 

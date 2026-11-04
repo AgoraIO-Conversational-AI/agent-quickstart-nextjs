@@ -20,7 +20,7 @@ Browser UI (LandingPage + ConversationComponent)
   -> POST /api/stop-conversation
 
 Next.js API routes
-  -> agora-token (RtcTokenBuilder.buildTokenWithRtm)
+  -> agora-agents generateClientToken (RTC + RTM, no ConvoAI service)
   -> agora-agents (start/stop managed agent)
 
 Agora Cloud
