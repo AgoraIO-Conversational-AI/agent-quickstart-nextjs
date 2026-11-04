@@ -98,7 +98,7 @@ The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/inv
 
 ### SDK version and v3 preview
 
-- This branch pins `agora-agents` to a vendored pre-release build, `vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz` (3.0.0-alpha.3 plus `generateClientToken`, [AgoraIO/agora-agents-ts#127](https://github.com/AgoraIO/agora-agents-ts/pull/127)). It will be replaced with the published npm version once released. `pnpm install` resolves it from the repo; `.gitignore` un-ignores `vendor/*.tgz` so the tarball is committed.
+- This branch pins `agora-agents` to a vendored pre-release build, `vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz` (3.0.0-alpha.3 plus `generateClientToken`, [AgoraIO/agora-agents-ts#127](https://github.com/AgoraIO/agora-agents-ts/pull/127)). It will be replaced with the published npm version once released. `pnpm install` resolves it from the repo; `.gitignore` un-ignores `vendor/*.tgz` so the tarball is committed.
 - Agents start as ephemeral v3 sessions (`agent.createEphemeralSession`). The v3 session API is a preview and is **US-only**, so both API routes use `Area.US`.
 - On v3 sessions RTM is the only data channel and is always on. Transcripts and agent state arrive over RTM; agent metrics and error events are not delivered in this preview.
 

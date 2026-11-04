@@ -24,8 +24,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(agora-agent-client-toolkit-react@1.2.0(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0)))(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0))))(debug@4.4.3(supports-color@7.2.0)))(agora-rtc-react@2.5.1(react@19.2.4))(react@19.2.4))(agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0)))(agora-rtm@2.2.3(agora-rtc-sdk-ng@4.24.3(debug@4.4.3(supports-color@7.2.0))))(debug@4.4.3(supports-color@7.2.0)))(agora-rtc-react@2.5.1(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       agora-agents:
-        specifier: file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz
-        version: file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz
+        specifier: file:vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz
+        version: file:vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz
       agora-rtc-react:
         specifier: ^2.5.1
         version: 2.5.1(react@19.2.4)
@@ -1316,8 +1316,8 @@ packages:
       agora-rtm-sdk:
         optional: true
 
-  agora-agents@file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz:
-    resolution: {integrity: sha512-h3Ki9Rdh8AqpFuy95ScASWlcYbhDJo4xs3Q/EK41nbIxdynXtttmx32+4yTwTx7l9YDQ8QYu5+7ViJ+OqRS00g==, tarball: file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz}
+  agora-agents@file:vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz:
+    resolution: {integrity: sha512-JazNqYVzMSgeKjCuU74OdIU4RzwBFqx0Nb0w4d6bn7zUE/YDOE7lNY7tqODBGyH9M3O0raCYRQwwFea3KjC6sw==, tarball: file:vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz}
     version: 3.0.0-alpha.3
     engines: {node: '>=18.0.0'}
 
@@ -3995,7 +3995,7 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  agora-agents@file:vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz:
+  agora-agents@file:vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz:
     dependencies:
       agora-token: 2.0.7
 

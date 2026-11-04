@@ -25,7 +25,7 @@ Why: provider schemas, SDK builder fields, token behavior, and RTM event details
 
 Implement these pieces in order:
 
-1. Create a Next.js App Router project with React, TypeScript, Tailwind, and the Agora dependencies from `package.json`. `agora-agents` is currently a vendored pre-release build (`vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz`); copy the tarball or use the published npm version once released.
+1. Create a Next.js App Router project with React, TypeScript, Tailwind, and the Agora dependencies from `package.json`. `agora-agents` is currently a vendored pre-release build (`vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz`); copy the tarball or use the published npm version once released.
 2. Add `env.local.example` with only `NEXT_PUBLIC_AGORA_APP_ID` and `NEXT_AGORA_APP_CERTIFICATE`; keep optional BYOK examples in the README and source comments.
 3. Implement `GET /api/generate-agora-token` with `generateClientToken` from `agora-agents` (RTC + RTM, no ConvoAI service, `tokenExpire: 3600` relative seconds); return `{ token, uid, channel }` and replace invalid or zero UIDs.
 4. Implement `POST /api/invite-agent` with `AgoraClient` (`Area.US`; the v3 session API preview is US-only), `Agent`, managed `DeepgramSTT`, `OpenAI`, `MiniMaxTTS`, and `{ requester_id, channel_name }` input. Start with `agent.createEphemeralSession(...)` and return the session ID from `session.start()` as `agent_id`. Do not set `advancedFeatures` or `parameters`; v3 rejects them, and RTM is always on.

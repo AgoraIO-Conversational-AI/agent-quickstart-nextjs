@@ -8,7 +8,7 @@
 - `pnpm` package manager.
 - Agora CLI (`agora`) for project binding and environment bootstrap.
 - Agora project with Conversational AI enabled.
-- `agora-agents` is installed from the vendored pre-release tarball `vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz` (pinned in `package.json`) until the build is published to npm; `pnpm install` needs the file present in the repo.
+- `agora-agents` is installed from the vendored pre-release tarball `vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz` (pinned in `package.json`) until the build is published to npm; `pnpm install` needs the file present in the repo.
 - The v3 session API is a US-only preview; both agent routes use `Area.US`.
 
 Install the Agora CLI from the root `README.md` instructions. On Windows, use the PowerShell installer first; if it fails, run the shell installer from Git Bash and then verify with `agora --help`.

@@ -29,7 +29,7 @@ The sections below (Start Here, Patterns, Anti-Patterns, etc.) remain the canoni
 - Messaging: `agora-rtm` for transcripts and agent state. RTM is the only data channel on v3 sessions and is always on; agent metrics and error events are not delivered in the current v3 preview.
 - Toolkit core: `agora-agent-client-toolkit` for `AgoraVoiceAI`, transcript helpers, and turn status
 - UI components: `agora-agent-uikit` for visualizer, transcript, and mic controls
-- Server SDK: `agora-agents` for ephemeral v3 session startup (`createEphemeralSession`), session stop (`client.v3.sessions.stop`), and client tokens (`generateClientToken`). This branch pins a vendored pre-release build (`vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz`) until it is published to npm.
+- Server SDK: `agora-agents` for ephemeral v3 session startup (`createEphemeralSession`), session stop (`client.v3.sessions.stop`), and client tokens (`generateClientToken`). This branch pins a vendored pre-release build (`vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz`) until it is published to npm.
 - v3 session API: preview, US-only (`Area.US`)
 - API routes: token generation, agent invite, chat, and stop routes live in `app/api`
 - Default agent config: Agora-managed STT, LLM, and TTS; `.env.local` contains only Agora project credentials

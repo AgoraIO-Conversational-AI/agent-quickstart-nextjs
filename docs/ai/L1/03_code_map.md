@@ -42,7 +42,7 @@ types/               Shared TypeScript route/component contracts
 - `scripts/verify-api-contracts.ts`: imports route handlers and validates contract behavior.
 - `scripts/doctor.mjs`: local setup checks consumed by `pnpm run doctor`.
 - `tailwind.config.ts`: includes `agora-agent-uikit` dist classes in content scan.
-- `vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz`: pre-release `agora-agents` build pinned by `package.json` until published.
+- `vendor/agora-agents-3.0.0-alpha.3-4d0777d.tgz`: pre-release `agora-agents` build pinned by `package.json` until published.
 
 ## Fast File Lookup
 
