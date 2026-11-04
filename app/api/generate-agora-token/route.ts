@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import { generateClientToken } from 'agora-agents';
 
 const EXPIRATION_TIME_IN_SECONDS = 3600;
 
@@ -29,21 +29,16 @@ export async function GET(request: NextRequest) {
     : parsedUid;
   const channelName = searchParams.get('channel') || generateChannelName();
 
-  const expirationTime =
-    Math.floor(Date.now() / 1000) + EXPIRATION_TIME_IN_SECONDS;
-
   try {
-    // console.log('Building RTC+RTM token: uid =', uid, 'channel =', channelName);
-    const token = RtcTokenBuilder.buildTokenWithRtm(
-      APP_ID,
-      APP_CERTIFICATE,
+    // RTC + RTM only: the browser joins the channel and reads agent events over RTM,
+    // but this token cannot call the Conversational AI REST API.
+    const token = generateClientToken({
+      appId: APP_ID,
+      appCertificate: APP_CERTIFICATE,
       channelName,
-      uid.toString(),
-      RtcRole.PUBLISHER,
-      expirationTime,
-      expirationTime,
-    );
-    // console.log('Token generated successfully (RTC + RTM)');
+      uid,
+      tokenExpire: EXPIRATION_TIME_IN_SECONDS,
+    });
 
     return NextResponse.json({
       token,

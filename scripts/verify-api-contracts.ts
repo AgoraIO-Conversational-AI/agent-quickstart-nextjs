@@ -1,11 +1,40 @@
+import { inflateSync } from 'node:zlib';
 import { AgoraClient, Agent } from 'agora-agents';
-import { RtcTokenBuilder } from 'agora-token';
 import { NextRequest } from 'next/server';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+// Read the service list from an AccessToken2 ("007") token: service type → account.
+// RTC = 1, RTM = 2, ConvoAI = 9. Client tokens must carry RTC and RTM only.
+function decodeTokenServices(token: string): Map<number, string> {
+  assert(token.startsWith('007'), 'token should be an AccessToken2 token');
+  const bytes = inflateSync(Buffer.from(token.slice(3), 'base64'));
+  let offset = 0;
+  const u16 = () => {
+    const n = bytes.readUInt16LE(offset);
+    offset += 2;
+    return n;
+  };
+  const str = () => {
+    const n = u16();
+    offset += n;
+    return bytes.subarray(offset - n, offset).toString();
+  };
+  str(); // signature
+  str(); // app ID
+  offset += 12; // issued, expiry, salt
+  const services = new Map<number, string>();
+  for (let count = u16(); count > 0; count--) {
+    const type = u16();
+    for (let privileges = u16(); privileges > 0; privileges--) offset += 6;
+    if (type === 1) str(); // channel
+    services.set(type, type === 1 || type === 2 ? str() : '');
+  }
+  return services;
 }
 
 function getJson(response: Response) {
@@ -18,88 +47,56 @@ process.env.NEXT_AGORA_APP_CERTIFICATE = 'fedcba9876543210fedcba9876543210';
 async function verifyGenerateAgoraTokenRoute() {
   const { GET: generateAgoraToken } =
     await import('../app/api/generate-agora-token/route');
-  const originalBuildTokenWithRtm = RtcTokenBuilder.buildTokenWithRtm;
-  let tokenBuilderArgs: unknown[] | null = null;
+  const request = new NextRequest(
+    'http://localhost:3000/api/generate-agora-token?uid=4321&channel=test-channel',
+  );
+  const response = await generateAgoraToken(request);
+  const body = await getJson(response);
 
-  RtcTokenBuilder.buildTokenWithRtm = ((...args: unknown[]) => {
-    tokenBuilderArgs = args;
-    return 'mock-rtc-rtm-token';
-  }) as typeof RtcTokenBuilder.buildTokenWithRtm;
-
-  try {
-    const request = new NextRequest(
-      'http://localhost:3000/api/generate-agora-token?uid=4321&channel=test-channel',
-    );
-    const response = await generateAgoraToken(request);
-    const body = await getJson(response);
-
-    assert(
-      response.status === 200,
-      'GET /api/generate-agora-token should return 200',
-    );
-    assert(
-      body.token === 'mock-rtc-rtm-token',
-      'GET /api/generate-agora-token should return the built token',
-    );
-    assert(
-      body.uid === '4321',
-      'GET /api/generate-agora-token should preserve the requested uid',
-    );
-    assert(
-      body.channel === 'test-channel',
-      'GET /api/generate-agora-token should preserve the requested channel',
-    );
-
-    assert(
-      Array.isArray(tokenBuilderArgs),
-      'GET /api/generate-agora-token should call buildTokenWithRtm',
-    );
-    assert(
-      tokenBuilderArgs?.[2] === 'test-channel',
-      'buildTokenWithRtm should use the requested channel',
-    );
-    assert(
-      tokenBuilderArgs?.[3] === '4321',
-      'buildTokenWithRtm should receive the requested uid as account string',
-    );
-  } finally {
-    RtcTokenBuilder.buildTokenWithRtm = originalBuildTokenWithRtm;
-  }
+  assert(
+    response.status === 200,
+    'GET /api/generate-agora-token should return 200',
+  );
+  assert(
+    body.uid === '4321',
+    'GET /api/generate-agora-token should preserve the requested uid',
+  );
+  assert(
+    body.channel === 'test-channel',
+    'GET /api/generate-agora-token should preserve the requested channel',
+  );
+  const services = decodeTokenServices(body.token as string);
+  assert(
+    JSON.stringify([...services.keys()].sort()) === JSON.stringify([1, 2]),
+    'GET /api/generate-agora-token should return an RTC + RTM token with no ConvoAI service',
+  );
+  assert(
+    services.get(1) === '4321' && services.get(2) === '4321',
+    'GET /api/generate-agora-token should sign RTC and RTM for the requested uid',
+  );
 }
 
 async function verifyGenerateAgoraTokenReplacesZeroUid() {
   const { GET: generateAgoraToken } =
     await import('../app/api/generate-agora-token/route');
-  const originalBuildTokenWithRtm = RtcTokenBuilder.buildTokenWithRtm;
-  let tokenBuilderArgs: unknown[] | null = null;
+  const request = new NextRequest(
+    'http://localhost:3000/api/generate-agora-token?uid=0&channel=test-channel',
+  );
+  const response = await generateAgoraToken(request);
+  const body = await getJson(response);
 
-  RtcTokenBuilder.buildTokenWithRtm = ((...args: unknown[]) => {
-    tokenBuilderArgs = args;
-    return 'mock-rtc-rtm-token';
-  }) as typeof RtcTokenBuilder.buildTokenWithRtm;
-
-  try {
-    const request = new NextRequest(
-      'http://localhost:3000/api/generate-agora-token?uid=0&channel=test-channel',
-    );
-    const response = await generateAgoraToken(request);
-    const body = await getJson(response);
-
-    assert(
-      response.status === 200,
-      'GET /api/generate-agora-token?uid=0 should return 200',
-    );
-    assert(
-      typeof body.uid === 'string' && body.uid !== '0',
-      'GET /api/generate-agora-token?uid=0 should generate an RTM-safe uid',
-    );
-    assert(
-      Array.isArray(tokenBuilderArgs) && tokenBuilderArgs[3] === body.uid,
-      'buildTokenWithRtm should mint the token for the generated uid',
-    );
-  } finally {
-    RtcTokenBuilder.buildTokenWithRtm = originalBuildTokenWithRtm;
-  }
+  assert(
+    response.status === 200,
+    'GET /api/generate-agora-token?uid=0 should return 200',
+  );
+  assert(
+    typeof body.uid === 'string' && body.uid !== '0',
+    'GET /api/generate-agora-token?uid=0 should generate an RTM-safe uid',
+  );
+  assert(
+    decodeTokenServices(body.token as string).get(2) === body.uid,
+    'GET /api/generate-agora-token should mint the token for the generated uid',
+  );
 }
 
 async function verifyChatCompletionsMissingEnv() {

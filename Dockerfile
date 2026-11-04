@@ -5,6 +5,8 @@ WORKDIR /app
 RUN npm install -g pnpm@9
 
 COPY package.json pnpm-lock.yaml ./
+# Pre-release agora-agents tarball referenced by package.json (file:vendor/...)
+COPY vendor ./vendor
 RUN pnpm install --frozen-lockfile
 
 # ── build ─────────────────────────────────────────────────────────────────────
