@@ -48,7 +48,7 @@ Agora Cloud
 - Session bootstrap: `LandingPage` (`agoraData`, `rtmClient`, loading/error flags).
 - RTC transport and mic: `ConversationComponent` + `agora-rtc-react` hooks.
 - Transcript + agent state: `AgoraVoiceAI` events mapped through `lib/conversation.ts`.
-- Metrics and connection issues: `AGENT_METRICS`, `MESSAGE_ERROR`, `SAL_STATUS`, RTM fallback parsing. Agent metrics and agent error events are not delivered on v3 preview sessions; the handlers remain wired.
+- Metrics and connection issues: `AGENT_METRICS`, `MESSAGE_ERROR`, `SAL_STATUS`, RTM fallback parsing. v3 preview sessions do not deliver the RTM `message.metrics` and `message.error` payloads, so `AGENT_METRICS` and `MESSAGE_ERROR` do not fire; the handlers remain wired.
 
 ## External Dependencies
 

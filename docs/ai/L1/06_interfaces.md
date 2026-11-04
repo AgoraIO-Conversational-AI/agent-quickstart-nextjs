@@ -56,7 +56,7 @@ Optional SSE proxy path (not default runtime path). Requires `NEXT_LLM_API_KEY` 
 ## Event/Data Interfaces
 
 - RTM transcript/state consumed through `AgoraVoiceAI` event emitter. RTM is the only data channel on v3 sessions and is always on.
-- Agent metrics and agent error events are not delivered on v3 preview sessions; the `AGENT_METRICS`/`AGENT_ERROR` handlers stay wired but receive nothing.
+- v3 preview sessions do not deliver the RTM `message.metrics` and `message.error` payloads, so the `AGENT_METRICS` and `MESSAGE_ERROR` handlers stay wired but receive nothing.
 - Raw RTM `message` event parsed as fallback for `message.error` and `message.sal_status` payloads.
 - `AGENT_METRICS` payloads displayed by `QuickstartPipelineMetrics` (empty on v3 preview sessions).
 
