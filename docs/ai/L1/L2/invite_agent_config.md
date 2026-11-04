@@ -4,7 +4,7 @@
 
 ## Where It Lives
 
-All of the managed agent configuration is built in `app/api/invite-agent/route.ts`. The route receives `{ requester_id, channel_name }` from `LandingPage`, constructs an `Agent` from `agora-agents`, and starts a session bound to the requester's RTC channel.
+All of the managed agent configuration is built in `app/api/invite-agent/route.ts`. The route receives `{ requester_id, channel_name }` from `LandingPage`, constructs an `Agent` from `agora-agents`, and starts an ephemeral v3 session (unsaved config) bound to the requester's RTC channel.
 
 ## Top-Level Constants
 
@@ -17,13 +17,13 @@ Agent behavior is configured in code: edit `GREETING` or `ADA_PROMPT` directly.
 
 ## The Agent Builder Chain
 
-`AgoraClient` is constructed first — it carries the region and credentials for all API calls. `area` belongs here, not on the session.
+`AgoraClient` is constructed first — it carries the region and credentials for all API calls. `area` belongs here, not on the session. The v3 session API is a US-only preview, so it must be `Area.US`.
 
 ```ts
 const client = new AgoraClient({ area: Area.US, appId, appCertificate });
 
 const agent = new Agent({
-  name: `conversation-${Date.now()}-${randomHex}`,
+  client,
   instructions: ADA_PROMPT,
   greeting: GREETING,
   failureMessage: 'Please wait a moment.',
@@ -35,12 +35,7 @@ const agent = new Agent({
       end_of_speech:   { /* VAD on-end params */ },
     },
   },
-  advancedFeatures: { enable_rtm: true, enable_tools: true },
-  parameters: {
-    data_channel: 'rtm',
-    enable_error_message: true,
-    enable_metrics: true,
-  },
+  // No advancedFeatures or parameters: v3 rejects them. RTM is always on.
 })
   .withStt(new DeepgramSTT({ model: 'nova-3', language: 'en' }))
   .withLlm(new OpenAI({
@@ -56,20 +51,24 @@ const agent = new Agent({
   }));
 ```
 
+The agent no longer sets `advancedFeatures` (`enable_rtm`, `enable_tools`) or `parameters` (`audio_scenario`, `data_channel`, `enable_error_message`, `enable_metrics`); v3 rejects them. RTM is the only data channel on v3 and is always on, so transcripts and agent state still reach the browser over RTM. Agent metrics and error events are not delivered in this preview. `audio_scenario` moved to the session as `audioScenario`.
+
 ## Session Options
 
-`createSession` takes the `AgoraClient` as its first argument, then the session options object. `session.start()` is called separately and returns the `agentId`.
+`createEphemeralSession` runs the configuration once on the v3 Platform API without saving it. It takes only the session options object (the client comes from the `Agent`). `session.start()` is called separately and returns the **session ID**.
 
 ```ts
-const session = agent.createSession(client, {
+const session = agent.createEphemeralSession({
   channel: channel_name,
   agentUid,
   remoteUids: [requester_id],
   idleTimeout: 30,
+  maxDuration: 3600,
+  audioScenario: 'chorus',
   expiresIn: ExpiresIn.hours(1),
   debug: false,
 });
-const agentId = await session.start();
+const sessionId = await session.start();
 ```
 
 | Option        | Effect                                                                               |
@@ -78,7 +77,9 @@ const agentId = await session.start();
 | `agentUid`    | The UID the agent occupies in the channel, shared through `lib/agora.ts`.             |
 | `remoteUids`  | Restricts the agent to the requester's UID — protects against cross-channel sniping. |
 | `idleTimeout` | Seconds of silence before the session ends.                                          |
-| `expiresIn`   | Hard ceiling on session length, mirrors the 1-hour RTC token.                        |
+| `maxDuration` | Hard stop after 3600 seconds (one hour).                                             |
+| `audioScenario` | `'chorus'`: ultra-low-latency profile for the web client.                          |
+| `expiresIn`   | Session expiry, mirrors the 1-hour RTC token.                                        |
 | `debug`       | Logs Agora REST API calls to the console when `true`.                                |
 
 ## Editing Each Surface
@@ -119,14 +120,16 @@ On success the route returns `AgentResponse`:
 }
 ```
 
-`agent_id` is what `LandingPage` later passes to `/api/stop-conversation`.
+`agent_id` carries the v3 session ID (the field name is unchanged for wire compatibility). It is what `LandingPage` later passes to `/api/stop-conversation`, which calls `client.v3.sessions.stop({ agentSessionId: agent_id })`. Interrupt, speak, and think are not available on Platform sessions.
 
 ## Verification
 
-`scripts/verify-api-contracts.ts` mocks `Agent.prototype.createSession` and asserts:
+`scripts/verify-api-contracts.ts` mocks `Agent.prototype.createEphemeralSession` and asserts:
 
 - Missing `channel_name` or `requester_id` → `400`.
-- Mocked success → `200` with `agent_id`, `create_ts`, `state`.
+- Mocked success → `200` with `agent_id` (the mocked session ID), `create_ts`, `state`.
+- Session options carry the requested `channel`, the shared `agentUid`, `remoteUids: [requester_id]`, and `audioScenario: 'chorus'`.
+- The agent config has no `advancedFeatures` or `parameters`.
 
 After editing this file, run:
 
@@ -142,7 +145,9 @@ pnpm run typecheck
 | `400 channel_name and requester_id are required`       | Browser sent an empty body or wrong field names.               |
 | `500 Agora credentials are not set`                    | `NEXT_AGORA_APP_CERTIFICATE` missing in env.                   |
 | Agent joins but never speaks                           | TTS misconfigured (wrong `voiceId` or missing BYOK key).       |
-| Agent state stuck on `IDLE`                            | `enable_rtm: true` missing or RTM client not subscribed yet.   |
+| Agent state stuck on `IDLE`                            | RTM client not logged in or not subscribed yet.                |
+| Session start rejected                                 | `advancedFeatures`/`parameters` added back, or non-US `Area`.  |
+| Latency header empty                                   | Expected: metrics are not delivered on v3 preview sessions.    |
 | `verify:api` fails on the route                        | New required field added without updating the harness.         |
 
 ## See Also

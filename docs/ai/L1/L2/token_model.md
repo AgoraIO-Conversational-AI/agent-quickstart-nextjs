@@ -4,7 +4,9 @@
 
 ## The One Token Rule
 
-This quickstart issues **one** token string per request that carries both RTC and RTM privileges. The builder used is `RtcTokenBuilder.buildTokenWithRtm` from `agora-token`. An RTC-only token does not authorize RTM login — using `buildTokenWithUid` will silently break RTM.
+This quickstart issues **one** token string per request that carries both RTC and RTM privileges. The builder used is `generateClientToken` from `agora-agents`. An RTC-only token does not authorize RTM login — using an RTC-only builder will silently break RTM.
+
+The token carries **RTC + RTM only, no ConvoAI service**, so the browser cannot use it to call the Conversational AI REST API. Policy: tokens returned to clients must be RTC + RTM only; ConvoAI-service tokens stay server-side. `agora-token` is no longer a direct dependency of this app.
 
 ## Token Build
 
@@ -15,15 +17,13 @@ const EXPIRATION_TIME_IN_SECONDS = 3600;
 const uid = parsedUidFromQuery > 0 ? parsedUidFromQuery : generateUid();
 const channel = parsedChannelFromQuery ?? randomChannelName();
 
-const token = RtcTokenBuilder.buildTokenWithRtm(
+const token = generateClientToken({
   appId,
   appCertificate,
-  channel,
-  String(uid),
-  role,
-  EXPIRATION_TIME_IN_SECONDS,
-  EXPIRATION_TIME_IN_SECONDS,
-);
+  channelName: channel,
+  uid,
+  tokenExpire: EXPIRATION_TIME_IN_SECONDS,
+});
 
 return NextResponse.json({ token, uid: String(uid), channel });
 ```
@@ -33,7 +33,7 @@ Notes:
 - `uid` is stringified in the response but the browser parses it numerically before calling `useJoin`.
 - `uid=0`, negative UIDs, and missing UIDs all generate a non-zero UID. Agora RTC accepts `0` as auto-assign, but RTM login needs the token subject to match a concrete non-zero user ID.
 - `channel` is generated server-side when the caller omits it. The browser uses whatever the route returns.
-- `EXPIRATION_TIME_IN_SECONDS` is 1 hour — keep it aligned with the `expiresIn: ExpiresIn.hours(1)` value in `invite-agent/route.ts`.
+- `EXPIRATION_TIME_IN_SECONDS` is 1 hour, passed as a relative duration (not an absolute timestamp) — keep it aligned with the `expiresIn: ExpiresIn.hours(1)` value in `invite-agent/route.ts`.
 
 ## Initial Distribution
 
@@ -70,19 +70,20 @@ Why two fetches?
 
 ## Verification Coverage
 
-`scripts/verify-api-contracts.ts` mocks `RtcTokenBuilder.buildTokenWithRtm` to return a sentinel string and asserts:
+`scripts/verify-api-contracts.ts` calls the real route (no token mock), decodes the returned AccessToken2 (`007`) token, and asserts:
 
 - `200` status.
 - Response includes `token`, `uid`, `channel`, and `uid=0` returns a generated non-zero UID.
-- The mock was called with the expected arity (8 args).
+- The token's services are exactly RTC (1) + RTM (2) — no ConvoAI service — and both are signed for the returned UID.
 
-If you change the builder signature or expiry, update the harness.
+If you change the builder or the services it grants, update the harness.
 
 ## Failure Modes
 
 | Symptom                                                          | Cause                                                                          |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | RTM login throws `INVALID_TOKEN`                                 | Token built with RTC-only builder.                                              |
+| `verify:api` fails on token services                             | Token route returns a token with services other than RTC + RTM (for example ConvoAI). |
 | RTC disconnects ~1 hour into a call with no renewal              | `handleTokenWillExpire` not wired or returned early because `joinedUid` was 0. |
 | RTM keeps working but RTC drops                                  | Only RTC `renewToken` failed; check `rtcRes` JSON for `error`.                  |
 | `500 Agora credentials are not set`                              | `NEXT_AGORA_APP_CERTIFICATE` missing or empty in server env.                    |

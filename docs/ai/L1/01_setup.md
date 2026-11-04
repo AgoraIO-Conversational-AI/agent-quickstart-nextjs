@@ -8,6 +8,8 @@
 - `pnpm` package manager.
 - Agora CLI (`agora`) for project binding and environment bootstrap.
 - Agora project with Conversational AI enabled.
+- `agora-agents` is installed from the vendored pre-release tarball `vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz` (pinned in `package.json`) until the build is published to npm; `pnpm install` needs the file present in the repo.
+- The v3 session API is a US-only preview; both agent routes use `Area.US`.
 
 Install the Agora CLI from the root `README.md` instructions. On Windows, use the PowerShell installer first; if it fails, run the shell installer from Git Bash and then verify with `agora --help`.
 
@@ -75,7 +77,7 @@ Requires env/project binding:
 | Symptom | Probable Cause | First Check | Fix Path |
 | --- | --- | --- | --- |
 | Agent never joins | Invite route or env mismatch | `pnpm run doctor` and invite route logs | Verify the shared agent UID and invite payload |
-| Transcript missing | RTM token capability missing | Token route implementation | Ensure `buildTokenWithRtm` remains unchanged |
+| Transcript missing | RTM token capability missing | Token route implementation | Keep the token route on `generateClientToken` (RTC + RTM, no ConvoAI service) |
 | `verify` fails at doctor | Project not bound | `agora project use` output | Re-bind project and rewrite `.env.local` |
 | Mic publishes but no agent response | Agent start failed | UI warning (`agentJoinError`) | Inspect `/api/invite-agent` response |
 

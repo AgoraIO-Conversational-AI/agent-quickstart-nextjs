@@ -23,14 +23,20 @@
 
 ## Token and RTM Contract
 
-- Token route must use `RtcTokenBuilder.buildTokenWithRtm`.
+- Token route must use `generateClientToken` from `agora-agents` (RTC + RTM, no ConvoAI service).
 - RTC-only token builders break RTM login/subscription.
+- Tokens returned to clients must be RTC + RTM only; ConvoAI-service tokens stay server-side.
 - Renewal flow independently mints RTC and RTM tokens while keeping shared channel.
 
 ## API and Error Handling Style
 
 - Route handlers validate required body/env early and return clear status codes.
-- Stop route is idempotent for already-stopping/not-found agent states.
+- Stop route is idempotent for already-stopping/not-found sessions (404, 409 `TaskNotRunning`/`TaskConflict`).
+
+## v3 Agent Config
+
+- Do not set `advancedFeatures` (`enable_rtm`, `enable_tools`) or `parameters` (`data_channel`, `enable_metrics`, `enable_error_message`, `audio_scenario`); v3 rejects them. `audioScenario` belongs on the session options.
+- Use `Area.US`; the v3 session API preview is US-only.
 - Frontend logs detailed technical errors and shows concise user-facing messages.
 
 ## Styling and UI Kit Rules

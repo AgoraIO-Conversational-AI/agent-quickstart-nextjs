@@ -17,9 +17,9 @@ types/               Shared TypeScript route/component contracts
 
 ## API Route Ownership (`app/api`)
 
-- `generate-agora-token/route.ts`: builds RTC+RTM token via `buildTokenWithRtm`.
-- `invite-agent/route.ts`: validates input/env, configures and starts agent session.
-- `stop-conversation/route.ts`: stops agent and handles idempotent already-stopping cases.
+- `generate-agora-token/route.ts`: builds RTC+RTM token (no ConvoAI service) via `generateClientToken` from `agora-agents`.
+- `invite-agent/route.ts`: validates input/env, configures the agent, and starts an ephemeral v3 session (`createEphemeralSession`); returns the session ID as `agent_id`.
+- `stop-conversation/route.ts`: stops the session via `client.v3.sessions.stop` and handles idempotent already-stopping cases (404, 409 `TaskNotRunning`/`TaskConflict`).
 - `chat/completions/route.ts`: optional OpenAI-compatible SSE proxy for custom LLM path.
 
 ## Client Ownership (`components`)
@@ -28,7 +28,7 @@ types/               Shared TypeScript route/component contracts
 - `ConversationComponent.tsx`: RTC join, mic publish, toolkit init, transcript/metrics/issues state.
 - `QuickstartConversationLayout.tsx`: in-call framing and slots.
 - `QuickstartTranscriptPanel.tsx`: live transcript panel.
-- `QuickstartPipelineMetrics.tsx`: latency chips from metrics stream.
+- `QuickstartPipelineMetrics.tsx`: latency chips from metrics stream (empty on v3 preview sessions, which do not deliver metrics).
 - `ConnectionStatusPanel.tsx` + `ConversationErrorCard.tsx`: issue rendering/severity.
 
 ## Shared Logic (`lib`)
@@ -42,6 +42,7 @@ types/               Shared TypeScript route/component contracts
 - `scripts/verify-api-contracts.ts`: imports route handlers and validates contract behavior.
 - `scripts/doctor.mjs`: local setup checks consumed by `pnpm run doctor`.
 - `tailwind.config.ts`: includes `agora-agent-uikit` dist classes in content scan.
+- `vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz`: pre-release `agora-agents` build pinned by `package.json` until published.
 
 ## Fast File Lookup
 

@@ -5,6 +5,10 @@
 ## Critical Runtime Pitfalls
 
 - Using RTC-only token generation breaks RTM login and transcript/state events.
+- Adding `advancedFeatures` (`enable_rtm`, `enable_tools`) or `parameters` (`data_channel`, `enable_metrics`, `enable_error_message`, `audio_scenario`) to the agent makes v3 reject the session.
+- The v3 session API preview is US-only; a non-US `Area` on the `AgoraClient` fails.
+- Agent metrics and agent error events are not delivered on v3 preview sessions; an empty latency header is expected, not a regression.
+- Interrupt, speak, and think are not available on Platform (v3) sessions.
 - Removing `isReady` guard can trigger StrictMode double-initialization and duplicate/missing tracks.
 - Manual `client.leave()` conflicts with `useJoin` cleanup contract.
 - Manual `localMicrophoneTrack.close()` conflicts with hook-owned lifecycle.
@@ -36,7 +40,7 @@
 ## Fast Triage Checklist
 
 1. Run `agora project doctor --deep`.
-2. Verify token route still uses `buildTokenWithRtm`.
+2. Verify token route still uses `generateClientToken` (RTC + RTM, no ConvoAI service).
 3. Check `uid="0"` remap path.
 4. Check `isReady` guard and hook ownership constraints.
 5. Inspect connection issues panel for RTM/SAL/agent error signals.
@@ -55,7 +59,7 @@
 | RTM login fails | `app/api/generate-agora-token/route.ts`, `components/LandingPage.tsx` |
 | Agent starts but no transcript | `components/ConversationComponent.tsx`, `lib/conversation.ts` |
 | Conversation hangs on end | `components/LandingPage.tsx`, `app/api/stop-conversation/route.ts` |
-| Metrics panel empty | `components/ConversationComponent.tsx`, `components/QuickstartPipelineMetrics.tsx` |
+| Metrics panel empty | Expected on v3 preview sessions (metrics not delivered); otherwise `components/ConversationComponent.tsx`, `components/QuickstartPipelineMetrics.tsx` |
 
 ## Sandbox and Local Dev Caveats
 
@@ -78,7 +82,7 @@
 
 ## Toolkit 2.10.0 Migration
 
-Pass `rtmEngine` directly to `AgoraVoiceAI.init`; the nested `rtmConfig` is no longer supported. UIKit 1.1.0 declares an optional Toolkit ^1.2.0 peer, while this workspace resolves Toolkit 2.10.0. Validate transcript, agent state, metrics, and teardown in a real call before shipping.
+Pass `rtmEngine` directly to `AgoraVoiceAI.init`; the nested `rtmConfig` is no longer supported. UIKit 1.1.0 declares an optional Toolkit ^1.2.0 peer, while this workspace resolves Toolkit 2.10.0. Validate transcript, agent state, and teardown in a real call before shipping (metrics are not delivered on v3 preview sessions).
 
 ## Related Deep Dives
 

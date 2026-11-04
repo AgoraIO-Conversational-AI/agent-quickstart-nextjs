@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org/)
 
-Build a production-style voice agent in minutes with Next.js and the Agora Conversational AI Engine, including voice agent visualizer ([Agent UIKit](https://agoraio-conversational-ai.github.io/agent-uikit/)), live transcript, and real-time pipeline latency via `AGENT_METRICS` ([Agent Toolkit](https://github.com/AgoraIO-Conversational-AI/agent-client-toolkit-ts)).
+Build a production-style voice agent in minutes with Next.js and the Agora Conversational AI Engine, including voice agent visualizer ([Agent UIKit](https://agoraio-conversational-ai.github.io/agent-uikit/)), live transcript, and a real-time pipeline latency header wired to `AGENT_METRICS` ([Agent Toolkit](https://github.com/AgoraIO-Conversational-AI/agent-client-toolkit-ts)).
 
 ## Prerequisites
 
@@ -96,6 +96,12 @@ Defined in [`env.local.example`](env.local.example).
 
 The default agent configuration in [`app/api/invite-agent/route.ts`](app/api/invite-agent/route.ts) uses Agora-managed STT, LLM, and TTS, so no extra vendor API keys are required for the base quickstart.
 
+### SDK version and v3 preview
+
+- This branch pins `agora-agents` to a vendored pre-release build, `vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz` (3.0.0-alpha.3 plus `generateClientToken`, [AgoraIO/agora-agents-ts#127](https://github.com/AgoraIO/agora-agents-ts/pull/127)). It will be replaced with the published npm version once released. `pnpm install` resolves it from the repo; `.gitignore` un-ignores `vendor/*.tgz` so the tarball is committed.
+- Agents start as ephemeral v3 sessions (`agent.createEphemeralSession`). The v3 session API is a preview and is **US-only**, so both API routes use `Area.US`.
+- On v3 sessions RTM is the only data channel and is always on. Transcripts and agent state arrive over RTM; agent metrics and error events are not delivered in this preview.
+
 ## Commands
 
 ```bash
@@ -122,7 +128,7 @@ Run `pnpm run verify` before shipping changes — it covers local prerequisites,
   <img src="./system-architecture.svg" alt="System architecture">
 </picture>
 
-The browser fetches a combined RTC + RTM token (`buildTokenWithRtm`) from this app, joins the channel using a single RTC client, and uses RTM as the data channel for transcript, agent state, metrics, and error events. The Conversational AI Engine joins the same channel as the shared agent UID in [`lib/agora.ts`](lib/agora.ts) and runs the STT → LLM → TTS pipeline in Agora Cloud.
+The browser fetches a combined RTC + RTM token (`generateClientToken`, no ConvoAI service) from this app, joins the channel using a single RTC client, and uses RTM as the data channel for transcript and agent state events (metrics and error events are not delivered on v3 preview sessions). The Conversational AI Engine joins the same channel as the shared agent UID in [`lib/agora.ts`](lib/agora.ts) and runs the STT → LLM → TTS pipeline in Agora Cloud.
 
 ## What You Get
 
@@ -130,16 +136,16 @@ The browser fetches a combined RTC + RTM token (`buildTokenWithRtm`) from this a
 - RTC audio plus RTM transcript and state events
 - server routes for token generation, invite, and stop
 - [`AgentVisualizer`](https://agoraio-conversational-ai.github.io/agent-uikit/) for agent state and a built-in transcript panel for live turns
-- per-stage latency header driven by `AGENT_METRICS`
+- per-stage latency header driven by `AGENT_METRICS` (stays empty on v3 preview sessions, which do not deliver metrics)
 - Agora-managed default STT, LLM, and TTS configuration
 
 ## How It Works
 
-1. The browser requests an RTC + RTM token from `/api/generate-agora-token`.
-2. The backend invites an Agora cloud agent with `/api/invite-agent`.
+1. The browser requests an RTC + RTM token from `/api/generate-agora-token`. The token cannot call the Conversational AI REST API.
+2. The backend starts an ephemeral v3 agent session with `/api/invite-agent` and returns the session ID as `agent_id`.
 3. The browser joins the channel and publishes mic audio.
-4. The client receives transcript, agent state, and `AGENT_METRICS` (per-stage latency) events over RTM.
-5. On end, the client calls `/api/stop-conversation`, logs out RTM, and unmounts the call view so Agora React hooks clean up RTC publish/join and the local microphone track.
+4. The client receives transcript and agent state events over RTM.
+5. On end, the client calls `/api/stop-conversation` (which stops the session by ID), logs out RTM, and unmounts the call view so Agora React hooks clean up RTC publish/join and the local microphone track.
 
 ## Optional BYOK
 
@@ -160,8 +166,8 @@ NEXT_ELEVENLABS_VOICE_ID=...
 
 ## Repo Map
 
-- `app/api/generate-agora-token/route.ts` — issues RTC + RTM tokens
-- `app/api/invite-agent/route.ts` — starts the agent session and configures the pipeline
+- `app/api/generate-agora-token/route.ts` — issues RTC + RTM tokens (no ConvoAI service)
+- `app/api/invite-agent/route.ts` — starts the ephemeral v3 agent session and configures the pipeline
 - `app/api/stop-conversation/route.ts` — stops the agent session
 - `components/LandingPage.tsx` — entry point: token fetch, RTM login, conversation lifecycle
 - `components/ConversationComponent.tsx` — RTC client, transcript state, `AGENT_METRICS`, mic release
@@ -178,7 +184,8 @@ NEXT_ELEVENLABS_VOICE_ID=...
 - **Agent does not join or transcripts are missing:** run `agora project doctor --deep`.
 - **`pnpm run doctor` fails:** run `agora project env write .env.local`, then retry.
 - **Manual clone / env values:** `agora project use <your-project>` then `agora project env write .env.local`.
-- **RTM login fails:** keep [`app/api/generate-agora-token/route.ts`](app/api/generate-agora-token/route.ts) on `RtcTokenBuilder.buildTokenWithRtm` — RTC-only tokens will not satisfy `rtm.login`.
+- **RTM login fails:** keep [`app/api/generate-agora-token/route.ts`](app/api/generate-agora-token/route.ts) on `generateClientToken` (RTC + RTM, no ConvoAI service) — RTC-only tokens will not satisfy `rtm.login`.
+- **Latency header stays empty / no agent errors in the issues panel:** expected on v3 preview sessions; agent metrics and agent error events are not delivered yet.
 - **Transcript speakers inverted:** check the `uid === "0"` remap in [`components/ConversationComponent.tsx`](components/ConversationComponent.tsx).
 - **Agent never appears in channel:** ensure the shared agent UID in [`lib/agora.ts`](lib/agora.ts) is used by both the client and invite route.
 

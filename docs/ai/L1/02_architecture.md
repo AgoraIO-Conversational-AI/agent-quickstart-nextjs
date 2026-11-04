@@ -5,8 +5,8 @@
 ## High-Level Shape
 
 - Next.js App Router frontend and API routes in one deployable app.
-- Browser joins Agora RTC channel and uses RTM for transcript/state/metrics/errors.
-- Server-side routes mint token and call Agora Agent Server SDK.
+- Browser joins Agora RTC channel and uses RTM for transcript/state. RTM is the only data channel on v3 sessions (always on); agent metrics and error events are not delivered in the v3 preview.
+- Server-side routes mint token and call Agora Agent Server SDK (v3 ephemeral sessions, US-only preview).
 - Agent executes STT -> LLM -> TTS pipeline in Agora cloud.
 
 ## Component Graph
@@ -20,12 +20,12 @@ Browser UI (LandingPage + ConversationComponent)
   -> POST /api/stop-conversation
 
 Next.js API routes
-  -> agora-token (RtcTokenBuilder.buildTokenWithRtm)
-  -> agora-agents (start/stop managed agent)
+  -> agora-agents generateClientToken (RTC + RTM, no ConvoAI service)
+  -> agora-agents createEphemeralSession / client.v3.sessions.stop
 
 Agora Cloud
   -> Agent session (Deepgram STT + OpenAI LLM + MiniMax TTS by default)
-  -> RTM payloads (transcript, state, metrics, error)
+  -> RTM payloads (transcript, state; metrics/error not delivered in v3 preview)
 ```
 
 ## Start Sequence
@@ -34,11 +34,11 @@ Agora Cloud
 2. UI invites agent and initializes RTM in parallel.
 3. UI mounts conversation view.
 4. `useJoin` connects RTC once `isReady` guard passes.
-5. `AgoraVoiceAI.init()` subscribes transcript/state/metrics streams.
+5. `AgoraVoiceAI.init()` subscribes transcript/state/metrics streams (metrics stay empty on v3 sessions).
 
 ## End Sequence
 
-1. UI calls `/api/stop-conversation` with `agent_id` if present.
+1. UI calls `/api/stop-conversation` with `agent_id` (the v3 session ID) if present.
 2. UI logs out RTM client.
 3. RTC hook ownership handles leave/unpublish cleanup.
 4. Component state resets to pre-call shell.
@@ -48,14 +48,14 @@ Agora Cloud
 - Session bootstrap: `LandingPage` (`agoraData`, `rtmClient`, loading/error flags).
 - RTC transport and mic: `ConversationComponent` + `agora-rtc-react` hooks.
 - Transcript + agent state: `AgoraVoiceAI` events mapped through `lib/conversation.ts`.
-- Metrics and connection issues: `AGENT_METRICS`, `MESSAGE_ERROR`, `SAL_STATUS`, RTM fallback parsing.
+- Metrics and connection issues: `AGENT_METRICS`, `MESSAGE_ERROR`, `SAL_STATUS`, RTM fallback parsing. Agent metrics and agent error events are not delivered on v3 preview sessions; the handlers remain wired.
 
 ## External Dependencies
 
 - `agora-rtc-react` / `agora-rtc-sdk-ng` for media transport.
 - `agora-rtm` for data channel.
 - `agora-agent-client-toolkit` and `agora-agent-uikit` for conversation logic/UI.
-- `agora-agents` for managed agent lifecycle.
+- `agora-agents` (vendored pre-release 3.0.0-alpha.3 build) for client tokens and v3 session lifecycle.
 
 ## Deployment Modes
 
@@ -64,9 +64,9 @@ Agora Cloud
 
 ## Data and Control Boundaries
 
-- Browser never sees the app certificate; only receives signed short-lived tokens.
+- Browser never sees the app certificate; only receives signed short-lived RTC + RTM tokens that cannot call the ConvoAI REST API.
 - Agent lifecycle control (`start`, `stop`) is server-routed.
-- Transcript/state/metrics are data-plane RTM events from agent to browser.
+- Transcript/state are data-plane RTM events from agent to browser (metrics are not delivered in the v3 preview).
 - UI control-plane actions (start/end, renew) originate in `LandingPage`.
 
 ## Internal Interfaces Between Components

@@ -26,10 +26,11 @@ The sections below (Start Here, Patterns, Anti-Patterns, etc.) remain the canoni
 
 - App shell: Next.js 16 App Router, React 19, and TypeScript
 - Client RTC: `agora-rtc-react` hooks over `agora-rtc-sdk-ng`
-- Messaging: `agora-rtm` for transcripts, agent state, metrics, and error events
+- Messaging: `agora-rtm` for transcripts and agent state. RTM is the only data channel on v3 sessions and is always on; agent metrics and error events are not delivered in the current v3 preview.
 - Toolkit core: `agora-agent-client-toolkit` for `AgoraVoiceAI`, transcript helpers, and turn status
 - UI components: `agora-agent-uikit` for visualizer, transcript, and mic controls
-- Server SDK: `agora-agents` for managed agent session startup
+- Server SDK: `agora-agents` for ephemeral v3 session startup (`createEphemeralSession`), session stop (`client.v3.sessions.stop`), and client tokens (`generateClientToken`). This branch pins a vendored pre-release build (`vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz`) until it is published to npm.
+- v3 session API: preview, US-only (`Area.US`)
 - API routes: token generation, agent invite, chat, and stop routes live in `app/api`
 - Default agent config: Agora-managed STT, LLM, and TTS; `.env.local` contains only Agora project credentials
 
@@ -56,14 +57,14 @@ The sections below (Start Here, Patterns, Anti-Patterns, etc.) remain the canoni
 
 ## Key Files
 
-- `app/api/generate-agora-token/route.ts`: issues RTC + RTM tokens for the browser user.
-- `app/api/invite-agent/route.ts`: starts the managed agent session; edit here for system prompt, VAD, model, or voice changes.
-- `app/api/stop-conversation/route.ts`: stops the agent session.
+- `app/api/generate-agora-token/route.ts`: issues RTC + RTM tokens (no ConvoAI service) for the browser user via `generateClientToken`.
+- `app/api/invite-agent/route.ts`: starts an ephemeral v3 agent session and returns its session ID as `agent_id`; edit here for system prompt, VAD, model, or voice changes.
+- `app/api/stop-conversation/route.ts`: stops the session by ID with `client.v3.sessions.stop`; treats 404 and 409 `TaskNotRunning`/`TaskConflict` as already stopped.
 - `app/api/chat/completions/route.ts`: optional OpenAI-compatible SSE proxy for a custom LLM (not wired by default).
 - `components/LandingPage.tsx`: session bootstrap, RTM setup, provider wiring, and conversation lifecycle.
 - `components/ConversationComponent.tsx`: RTC join, mic publication, `AgoraVoiceAI` init, transcript state, and renewals.
 - `components/QuickstartConversationLayout.tsx`: in-call header, transcript rail, and controls dock.
-- `components/QuickstartPipelineMetrics.tsx`: per-stage latency chips from `AGENT_METRICS`.
+- `components/QuickstartPipelineMetrics.tsx`: per-stage latency chips from `AGENT_METRICS` (not delivered on v3 preview sessions, so the chips stay empty).
 - `components/QuickstartTranscriptPanel.tsx`: live transcript rail.
 - `lib/chat-completions.ts`: server-side custom LLM SSE handler factory; the route only exports `POST`.
 - `lib/agora.ts`: shared agent UID defaults.
@@ -121,14 +122,15 @@ useEffect(() => {
 
 ### Tokens and Styling
 
-- RTM token access must come from `RtcTokenBuilder.buildTokenWithRtm`; a standard RTC-only token does not grant RTM access.
+- Browser tokens come from `generateClientToken` in `agora-agents` and carry RTC + RTM only; a standard RTC-only token does not grant RTM access. Tokens returned to clients must never include the ConvoAI service; ConvoAI-service tokens stay server-side.
 - Tailwind must scan uikit classes with `./node_modules/agora-agent-uikit/dist/**/*.{js,mjs}` in `tailwind.config.ts`.
 
 ## Working Rules
 
 - Prefer the smallest change that keeps the quickstart copyable and production-style.
 - Keep RTC client creation StrictMode-safe with `useRef`, not `useMemo`.
-- Keep token generation on `RtcTokenBuilder.buildTokenWithRtm`.
+- Keep the token route on `generateClientToken` (RTC + RTM, no ConvoAI service); RTC-only tokens fail `rtm.login`.
+- Do not add `advancedFeatures` (`enable_rtm`, `enable_tools`) or `parameters` (`data_channel`, `enable_metrics`, `enable_error_message`, `audio_scenario`) to the agent; v3 rejects them. Set `audioScenario` on the session instead.
 - Keep transcript UID remapping aligned with the toolkit sentinel behavior.
 - Do not require third-party vendor API keys unless the code actually introduces a BYOK provider path.
 - Keep README, AGENTS, and `docs/ai/` aligned with implementation changes.
@@ -173,7 +175,7 @@ pnpm run build
 - Do not remove the `isReady` guard.
 - Do not set `reactStrictMode: false` as a workaround.
 - Do not use the deprecated `turnDetection.type: 'agora_vad'` flat API; use `turnDetection.config.start_of_speech` and `turnDetection.config.end_of_speech`.
-- Do not replace `RtcTokenBuilder.buildTokenWithRtm` with an RTC-only token builder.
+- Do not replace `generateClientToken` with an RTC-only token builder, or with a token that includes the ConvoAI service.
 - Do not hide SDK requirements only in `CLAUDE.md`; all agent-facing guidance belongs in `AGENTS.md`.
 
 ## Done Criteria

@@ -4,11 +4,11 @@
 
 ## Overview
 
-Transcript and call diagnostics are delivered through AgoraVoiceAI events over RTM, then normalized for UI kit components.
+Transcript and call diagnostics are delivered through AgoraVoiceAI events over RTM, then normalized for UI kit components. On v3 sessions RTM is the only data channel (always on; there are no RTC data streams).
 
 Primary pipeline:
 
-1. RTM/RTC data arrives.
+1. RTM data arrives.
 2. `AgoraVoiceAI` emits transcript/state/metrics/error events.
 3. `ConversationComponent` stores raw transcript and issue streams.
 4. `lib/conversation.ts` normalizes UID/text/timestamps.
@@ -40,7 +40,7 @@ This avoids showing optimistic speech/listen states while transport is degraded.
 
 ## Metrics and Error Streams
 
-Handled signals:
+Handled signals (agent metrics and agent error events are not delivered on v3 preview sessions; the handlers remain wired):
 
 - `AGENT_METRICS` for per-stage latency chips.
 - `MESSAGE_ERROR` and `AGENT_ERROR` for surfaced issues.

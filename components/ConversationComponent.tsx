@@ -281,7 +281,7 @@ export default function ConversationComponent({
             timestamp: normalizeTimestampMs(error.timestamp),
           });
         });
-        // subscribeMessage binds the toolkit to both RTC stream messages and RTM payloads.
+        // subscribeMessage binds the toolkit to RTM payloads (the only data channel on v3 sessions).
         ai.subscribeMessage(agoraData.channel);
       } catch (error) {
         if (!cancelled) {

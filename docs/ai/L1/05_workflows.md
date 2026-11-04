@@ -24,6 +24,7 @@ Typical edits:
 - Shared agent UID (`DEFAULT_AGENT_UID` in `lib/agora.ts`).
 - VAD (`turnDetection.config.*`).
 - STT/LLM/TTS model/provider blocks.
+- Session options on `createEphemeralSession` (`idleTimeout`, `maxDuration`, `audioScenario`, `expiresIn`). Do not add `advancedFeatures` or `parameters` to the agent; v3 rejects them.
 
 Validation path:
 
@@ -37,7 +38,7 @@ Validation path:
 Token behavior:
 
 - Edit `app/api/generate-agora-token/route.ts`.
-- Preserve RTM-capable token generation.
+- Preserve RTM-capable token generation: keep `generateClientToken` (RTC + RTM, no ConvoAI service).
 
 Bootstrap behavior:
 

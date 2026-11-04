@@ -19,6 +19,8 @@ Success response:
 
 Failure response: `{ "error": string, "details"?: string }` with `500`.
 
+The token is minted by `generateClientToken` and carries RTC + RTM only (no ConvoAI service), valid for 3600 seconds. It cannot call the ConvoAI REST API; ConvoAI-service tokens stay server-side.
+
 ### `POST /api/invite-agent`
 
 Body (`ClientStartRequest`):
@@ -35,14 +37,16 @@ Success (`AgentResponse`):
 
 Validation failures return `400`; server failures return `500`.
 
+`agent_id` carries the v3 session ID returned by `session.start()` on an ephemeral session (`agent.createEphemeralSession`). The field name is unchanged for wire compatibility.
+
 ### `POST /api/stop-conversation`
 
-Body (`StopConversationRequest`): `{ "agent_id": "..." }`.
+Body (`StopConversationRequest`): `{ "agent_id": "..." }` (the session ID). The route calls `client.v3.sessions.stop({ agentSessionId: agent_id })`.
 
 Responses:
 
 - `{ "success": true }`
-- `{ "success": true, "state": "already-stopping" }` for idempotent stop state
+- `{ "success": true, "state": "already-stopping" }` when the stop call returns 404 or 409 `TaskNotRunning`/`TaskConflict`
 - `{ "error": string }` on failure
 
 ### `POST /api/chat/completions`
@@ -51,9 +55,10 @@ Optional SSE proxy path (not default runtime path). Requires `NEXT_LLM_API_KEY` 
 
 ## Event/Data Interfaces
 
-- RTM transcript/state/metrics/errors consumed through `AgoraVoiceAI` event emitter.
+- RTM transcript/state consumed through `AgoraVoiceAI` event emitter. RTM is the only data channel on v3 sessions and is always on.
+- Agent metrics and agent error events are not delivered on v3 preview sessions; the `AGENT_METRICS`/`AGENT_ERROR` handlers stay wired but receive nothing.
 - Raw RTM `message` event parsed as fallback for `message.error` and `message.sal_status` payloads.
-- `AGENT_METRICS` payloads displayed by `QuickstartPipelineMetrics`.
+- `AGENT_METRICS` payloads displayed by `QuickstartPipelineMetrics` (empty on v3 preview sessions).
 
 ## Environment Contract
 
@@ -66,7 +71,7 @@ This is the complete base `.env.local` contract. The optional BYOK route and pro
 
 ## Test Coverage for Interfaces
 
-- `scripts/verify-api-contracts.ts` asserts token generation, input validation, env failures, and SSE framing cases.
+- `scripts/verify-api-contracts.ts` asserts token generation (decodes the real token and checks its services are exactly RTC + RTM), input validation, env failures, SSE framing, the invite route's `createEphemeralSession` options (mocked on `Agent.prototype`) with no `advancedFeatures`/`parameters`, and stop via mocked `client.v3.sessions.stop` including the already-stopped case.
 
 ## Shared Client-Side Interfaces
 

@@ -35,7 +35,7 @@ This base recipe provides a copyable browser voice-agent starter with:
 - browser RTC audio and RTM event transport
 - server-side token, invite, stop, and optional custom LLM routes
 - managed default STT, LLM, and TTS provider configuration
-- pre-call, in-call, transcript, metrics, and connection-status UI
+- pre-call, in-call, transcript, metrics, and connection-status UI (agent metrics and agent error events are not delivered on v3 preview sessions)
 
 ## Baseline Implementation Guidance
 
@@ -52,7 +52,7 @@ Do not recreate Agora ConvoAI integration from memory. Provider schemas, SDK bui
 
 ## Invariants
 
-- Keep `RtcTokenBuilder.buildTokenWithRtm` for RTM-capable tokens.
+- Keep the token route on `generateClientToken` (RTC + RTM, no ConvoAI service); RTC-only tokens fail `rtm.login`, and ConvoAI-service tokens stay server-side.
 - Treat this repo as the official baseline; customize after preserving a working token, invite, RTC, RTM, and transcript flow.
 - Preserve StrictMode `isReady` guard for join/mic initialization.
 - Preserve UID remap (`uid="0"`) and `INTERRUPTED` message-list inclusion.
@@ -61,8 +61,8 @@ Do not recreate Agora ConvoAI integration from memory. Provider schemas, SDK bui
 ## Stable Contracts
 
 - `GET /api/generate-agora-token` returns `{ token, uid, channel }`.
-- `POST /api/invite-agent` accepts `{ requester_id, channel_name }` and returns the agent id/state payload.
-- `POST /api/stop-conversation` accepts `{ agent_id }` and treats already-stopping sessions as success.
+- `POST /api/invite-agent` accepts `{ requester_id, channel_name }` and returns the agent id/state payload; `agent_id` carries the v3 session ID.
+- `POST /api/stop-conversation` accepts `{ agent_id }` (session ID) and treats already-stopping sessions as success.
 - Required env vars are `NEXT_PUBLIC_AGORA_APP_ID` and `NEXT_AGORA_APP_CERTIFICATE`.
 - `components/LandingPage.tsx` owns pre-call bootstrap and RTM client lifecycle.
 - `components/ConversationComponent.tsx` owns joined-session RTC/toolkit lifecycle.

@@ -25,11 +25,11 @@ Why: provider schemas, SDK builder fields, token behavior, and RTM event details
 
 Implement these pieces in order:
 
-1. Create a Next.js App Router project with React, TypeScript, Tailwind, and the Agora dependencies from `package.json`.
+1. Create a Next.js App Router project with React, TypeScript, Tailwind, and the Agora dependencies from `package.json`. `agora-agents` is currently a vendored pre-release build (`vendor/agora-agents-3.0.0-alpha.3-c6955ec.tgz`); copy the tarball or use the published npm version once released.
 2. Add `env.local.example` with only `NEXT_PUBLIC_AGORA_APP_ID` and `NEXT_AGORA_APP_CERTIFICATE`; keep optional BYOK examples in the README and source comments.
-3. Implement `GET /api/generate-agora-token` with `RtcTokenBuilder.buildTokenWithRtm`; return `{ token, uid, channel }` and replace invalid or zero UIDs.
-4. Implement `POST /api/invite-agent` with `AgoraClient`, `Agent`, managed `DeepgramSTT`, `OpenAI`, `MiniMaxTTS`, RTM enabled, metrics enabled, and `{ requester_id, channel_name }` input.
-5. Implement `POST /api/stop-conversation` with idempotent already-stopping/not-found handling.
+3. Implement `GET /api/generate-agora-token` with `generateClientToken` from `agora-agents` (RTC + RTM, no ConvoAI service, `tokenExpire: 3600` relative seconds); return `{ token, uid, channel }` and replace invalid or zero UIDs.
+4. Implement `POST /api/invite-agent` with `AgoraClient` (`Area.US`; the v3 session API preview is US-only), `Agent`, managed `DeepgramSTT`, `OpenAI`, `MiniMaxTTS`, and `{ requester_id, channel_name }` input. Start with `agent.createEphemeralSession(...)` and return the session ID from `session.start()` as `agent_id`. Do not set `advancedFeatures` or `parameters`; v3 rejects them, and RTM is always on.
+5. Implement `POST /api/stop-conversation` with `client.v3.sessions.stop({ agentSessionId })` and idempotent already-stopping/not-found handling (404, 409 `TaskNotRunning`/`TaskConflict`).
 6. Implement optional `POST /api/chat/completions` only when exposing a custom LLM SSE proxy.
 7. Implement `LandingPage` to fetch token, start the agent, log into RTM, subscribe to the channel, mount the conversation, renew tokens, and log out RTM on end.
 8. Implement `ConversationComponent` with StrictMode-safe `isReady`, `useJoin`, `useLocalMicrophoneTrack`, `usePublish`, `AgoraVoiceAI.init`, event subscriptions, token renewal, and hook-owned teardown.
@@ -38,7 +38,7 @@ Implement these pieces in order:
 
 ## Required Copy-Forward Invariants
 
-- Token generation uses `RtcTokenBuilder.buildTokenWithRtm`, not an RTC-only builder.
+- Token generation uses `generateClientToken` (RTC + RTM, no ConvoAI service), not an RTC-only builder. ConvoAI-service tokens never go to the browser.
 - The browser never receives `NEXT_AGORA_APP_CERTIFICATE`.
 - `LandingPage` creates/logs in/subscribes/logs out the RTM client.
 - `ConversationComponent` waits for `isReady && joinSuccess` before `AgoraVoiceAI.init`.

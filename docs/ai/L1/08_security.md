@@ -17,16 +17,17 @@
 
 ## Token Security Model
 
-- Tokens expire (default 1 hour).
+- Tokens expire 3600 seconds after issue (`tokenExpire` is relative, not an absolute timestamp).
 - Token endpoint allows caller-provided UID/channel but still uses server secret signing.
 - Renewal flow requests new RTC/RTM tokens near expiry.
-- RTM capability is required and intentionally embedded by `buildTokenWithRtm`.
+- Client tokens come from `generateClientToken` and carry RTC + RTM only. RTM capability is required; the ConvoAI service is intentionally excluded, so a browser token cannot call the ConvoAI REST API.
+- Policy: tokens returned to clients must be RTC + RTM only; ConvoAI-service tokens stay server-side.
 
 ## Input Validation and Failure Handling
 
 - Route handlers validate required fields and env availability.
 - Errors return structured JSON with bounded detail.
-- Stop route treats already-stopping/not-found agent as idempotent success.
+- Stop route treats already-stopping/not-found sessions (404, 409 `TaskNotRunning`/`TaskConflict`) as idempotent success.
 
 ## Agent Behavior Safety
 
@@ -47,7 +48,7 @@
 ## Security Review Checklist
 
 1. Confirm `NEXT_AGORA_APP_CERTIFICATE` is never referenced in client files.
-2. Confirm token minting still uses server route only.
+2. Confirm token minting still uses server route only, and the returned token has no ConvoAI service (`pnpm run verify:api` decodes it).
 3. Confirm route error payloads do not leak secrets.
 4. Confirm BYOK keys are optional and remain server-side.
 5. Confirm docs do not instruct users to expose secrets in public config.
